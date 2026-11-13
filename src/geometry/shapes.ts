@@ -60,6 +60,40 @@ export function tubeOutline(pts: Vec[], r0: number, r1: number): Vec[] {
   return [...left, ...right.reverse()];
 }
 
+/**
+ * Unit tangent at the start (`atEnd` false) or end (`atEnd` true) of a
+ * centreline, in the direction of travel from first to last point.
+ *
+ * For a quadratic Bézier sampled at uniform t (as `centreline` does) the chord
+ * of a segment is parallel to the derivative at its mid-parameter, and the
+ * derivative is linear in t, so 1.5·chord₁ − 0.5·chord₂ is exactly the end
+ * derivative. A two-point (straight) centreline gives its chord.
+ */
+export function endTangent(pts: Vec[], atEnd = false): Vec {
+  if (pts.length < 2) return v(1, 0);
+  const p = atEnd ? [...pts].reverse() : pts;
+  const c1 = sub(p[1], p[0]);
+  if (pts.length < 3) return norm(atEnd ? mul(c1, -1) : c1);
+  const c2 = sub(p[2], p[1]);
+  const t = sub(mul(c1, 1.5), mul(c2, 0.5));
+  return norm(atEnd ? mul(t, -1) : t);
+}
+
+/** Point on a polyline at a given x (linear between samples); null if outside its x range. */
+export function pointAtX(pts: Vec[], x: number): Vec | null {
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1];
+    const b = pts[i];
+    const lo = Math.min(a.x, b.x);
+    const hi = Math.max(a.x, b.x);
+    if (x >= lo - 1e-9 && x <= hi + 1e-9) {
+      const k = hi - lo < 1e-12 ? 0 : (x - a.x) / (b.x - a.x);
+      return lerp(a, b, k);
+    }
+  }
+  return null;
+}
+
 /** Point and unit tangent at a distance along a polyline. */
 export function pointAlong(pts: Vec[], dist: number): { p: Vec; t: Vec } {
   let acc = 0;

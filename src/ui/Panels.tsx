@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Design, numOf } from '../model/schema';
 import { Geometry } from '../geometry/solve';
 import { fitAdvice, fitMetrics, estimateBodyFromHeight, gearTable } from '../fit/rider';
-import { tubeCuts, fixtureTable } from '../export/mitre';
+import { tubeCuts, fixtureTable, cutListWarnings } from '../export/mitre';
 import { specRows } from '../export/spec';
 import { LibraryItem } from './state';
 
@@ -182,9 +182,17 @@ export function GearPanel({ d, g }: { d: Design; g: Geometry }) {
 export function MitrePanel({ d, g }: { d: Design; g: Geometry }) {
   const cuts = useMemo(() => tubeCuts(d, g), [d, g]);
   const fixture = useMemo(() => fixtureTable(d, g), [d, g]);
+  const notes = useMemo(() => cutListWarnings(d, g, cuts), [d, g, cuts]);
   return (
     <div className="panel mitres">
       <h4>Cut list</h4>
+      {notes.length > 0 && (
+        <ul className="warnings">
+          {notes.map((w) => (
+            <li key={w}>{w}</li>
+          ))}
+        </ul>
+      )}
       <table>
         <thead>
           <tr>

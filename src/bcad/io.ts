@@ -62,9 +62,9 @@ function readSpecial(e: Map<string, string>): Partial<Design> {
   // exactly). Open Bike CAD uses the straight-line axle-to-crown length, so convert.
   const fi = forkIndex(e);
   const forkL = n(`FORK${fi}L`) ?? n('FORK0L');
-  const forkR = n(`FORK${fi}R`) ?? n('FORK0R') ?? 0;
-  if (forkL != null) out.forkLength = round1(forkAxialIsMeasured(e, fi) ? Math.hypot(forkL, forkR) : forkL);
-  out.forkRake = forkR;
+  const forkR = n(`FORK${fi}R`) ?? n('FORK0R');
+  if (forkL != null) out.forkLength = round1(forkAxialIsMeasured(e, fi) ? Math.hypot(forkL, forkR ?? 0) : forkL);
+  if (forkR != null) out.forkRake = forkR;
   if (e.get('DUAL_CROWN') === 'true') out.forkType = 'dualCrown';
   else if (fi === 1) out.forkType = 'suspension';
   else if (e.get('Fork straight blade') === 'true') out.forkType = 'straight';
@@ -253,9 +253,42 @@ function round1(x: number) {
 
 export function importBcad(xml: string, fileName = 'design.bcad'): BikeFile {
   const doc = parseProperties(xml);
-  const e = doc.entries;
+  const { design, mappedKeys } = designFromEntries(doc.entries);
+  titleFromFileName(design, fileName);
+  return { design, source: doc, fileName, mappedKeys };
+}
+
+function titleFromFileName(design: Design, fileName: string) {
+  if (!design.title || design.title === PARAM_BY_ID.title.default) {
+    design.title = fileName.replace(/\.bcad$/i, '');
+  }
+}
+
+/** Key holding a fingerprint of the BikeCAD values as we last wrote them. */
+const FINGERPRINT = NS + 'fingerprint';
+
+/**
+ * A short hash of every non-Open-Bike-CAD entry. If it still matches on import, nothing
+ * has edited the file since we saved it, so our own keys can be trusted in full.
+ */
+function fingerprint(e: Map<string, string>): string {
+  let h = 0x811c9dc5;
+  const keys = [...e.keys()].filter((k) => !k.startsWith(NS)).sort();
+  for (const k of keys) {
+    const s = `${k}\u0000${e.get(k)}\u0001`;
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 0x01000193) >>> 0;
+    }
+  }
+  return h.toString(16).padStart(8, '0');
+}
+
+function designFromEntries(e: Map<string, string>): { design: Design; mappedKeys: string[] } {
   const design = defaultDesign();
   const mappedKeys = new Set<string>();
+  /** Parameters whose value came from a BikeCAD key. */
+  const fromBikeCad = new Set<string>();
 
   for (const p of PARAMS) {
     if (!p.bcad) continue;
@@ -266,31 +299,30 @@ export function importBcad(xml: string, fileName = 'design.bcad'): BikeFile {
       if (val !== undefined) {
         design[p.id] = val;
         mappedKeys.add(key);
+        fromBikeCad.add(p.id);
         break;
       }
     }
   }
-  Object.assign(design, readSpecial(e));
+  const special = readSpecial(e);
+  Object.assign(design, special);
+  for (const id of Object.keys(special)) fromBikeCad.add(id);
   for (const k of e.keys()) if (SPECIAL_KEYS.has(k)) mappedKeys.add(k);
 
-  // Our own namespaced keys.
+  // Our own namespaced keys. If the file is exactly as we saved it, they hold the design
+  // in full. Otherwise BikeCAD (or a person) has edited it since, so they only fill in
+  // parameters BikeCAD itself doesn't store, and BikeCAD's values win.
+  const untouched = e.get(FINGERPRINT) === fingerprint(e);
   for (const [k, raw] of e) {
     if (!k.startsWith(NS)) continue;
     const id = k.slice(NS.length);
     const p = PARAM_BY_ID[id];
     if (!p) continue;
-    // Only use them for parameters BikeCAD itself doesn't store, so edits
-    // made in BikeCAD win over stale values we wrote earlier.
-    if (p.bcad && p.bcad.some((bk) => e.has(bk))) continue;
+    if (!untouched && fromBikeCad.has(id)) continue;
     const val = coerce(p.kind, raw);
     if (val !== undefined) design[id] = val;
   }
-
-  if (!design.title || design.title === PARAM_BY_ID.title.default) {
-    design.title = fileName.replace(/\.bcad$/i, '');
-  }
-
-  return { design, source: doc, fileName, mappedKeys: [...mappedKeys] };
+  return { design, mappedKeys: [...mappedKeys] };
 }
 
 const SPECIAL_KEYS = new Set([
@@ -341,100 +373,197 @@ function coerce(kind: string, raw: string): ParamValue | undefined {
   }
 }
 
-/** Write a design to .bcad XML, preserving every key from the source file. */
+function sameValue(a: ParamValue | undefined, b: ParamValue | undefined): boolean {
+  if (typeof a === 'number' && typeof b === 'number') return Math.abs(a - b) < 1e-9;
+  return a === b;
+}
+
+/**
+ * Write a design to .bcad XML, preserving every key from the source file.
+ *
+ * Only values the user actually changed are written back to BikeCAD's keys: a file that is
+ * opened and saved without edits keeps every BikeCAD value exactly as it was.
+ */
 export function exportBcad(file: BikeFile, derived?: Record<string, number>): string {
+  void derived;
   const entries = new Map<string, string>(file.source?.entries ?? []);
   const d = file.design;
-  const setNum = (key: string, n: number) => entries.set(key, formatJavaNumber(n, entries.get(key)));
+  // The design exactly as it was read from the source, to tell which values were edited.
+  const base = file.source ? designFromEntries(file.source.entries).design : null;
+  if (base) titleFromFileName(base, file.fileName);
+  const changed = (...ids: string[]) => !base || ids.some((id) => !sameValue(d[id], base[id]));
+  const g = solve(d);
+  const gBase = base ? solve(base) : null;
+  /** A derived dimension moved (or there is no source file to compare with). */
+  const dimChanged = (k: keyof typeof g.dims) => !gBase || Math.abs(g.dims[k] - gBase.dims[k]) > 1e-6;
+
+  const setNum = (key: string, n: number) => {
+    const prev = entries.get(key);
+    const prevN = numFrom(prev);
+    // Keep the original spelling ("74.50", "686") when the value hasn't really moved.
+    if (prev != null && prevN != null && Math.abs(prevN - n) < 1e-9) return;
+    entries.set(key, formatJavaNumber(n, prev));
+  };
   const setInt = (key: string, n: number) => entries.set(key, String(Math.round(n)));
+  const setBool = (key: string, b: boolean) => entries.set(key, b ? 'true' : 'false');
   // Only add keys we are unsure of to new files; for existing files, update keys that are already there.
   const setKnown = (key: string, n: number) => {
     if (!file.source || entries.has(key)) setNum(key, n);
   };
+  const setKnownBool = (key: string, b: boolean) => {
+    if (!file.source || entries.has(key)) setBool(key, b);
+  };
 
   for (const p of PARAMS) {
     const v = d[p.id];
-    if (p.bcad && p.bcad.length && (!file.source || p.bcad.some((k) => entries.has(k)))) {
+    if (p.bcad && p.bcad.length && changed(p.id) && (!file.source || p.bcad.some((k) => entries.has(k)))) {
       const key = p.bcad.find((k) => entries.has(k)) ?? p.bcad[0];
       if (p.toBcad) entries.set(key, p.toBcad(v, d));
       else if (typeof v === 'number') setNum(key, v);
       else entries.set(key, String(v));
     }
-    entries.set(NS + p.id, typeof v === 'number' ? formatJavaNumber(v) : String(v));
   }
 
   // Special mappings (inverse of readSpecial).
   const n = (id: string) => Number(d[id]);
-  const g = solve(d);
   const num = (k: string) => numFrom(entries.get(k));
   for (const side of ['rear', 'front'] as const) {
-    const bsd = n(side === 'rear' ? 'rearBSD' : 'frontBSD');
-    const tyre = n(side === 'rear' ? 'rearTyre' : 'frontTyre');
-    setNum(`BSD ${side}`, bsd);
-    setNum(`Wheel diameter ${side}`, bsd + 2 * tyre);
+    const bsdId = side === 'rear' ? 'rearBSD' : 'frontBSD';
+    const tyreId = side === 'rear' ? 'rearTyre' : 'frontTyre';
+    if (!changed(bsdId, tyreId)) continue;
+    setNum(`BSD ${side}`, n(bsdId));
+    setNum(`Wheel diameter ${side}`, n(bsdId) + 2 * n(tyreId));
   }
 
   // Fork (BikeCAD measures the length along the steering axis).
-  const fi = forkIndex(entries);
-  const rake = n('forkRake');
-  const L = n('forkLength');
-  setNum(`FORK${fi}L`, round1(forkAxialIsMeasured(entries, fi) ? Math.sqrt(Math.max(0, L * L - rake * rake)) : L));
-  setNum(`FORK${fi}R`, rake);
+  if (changed('forkLength', 'forkRake')) {
+    const fi = forkIndex(entries);
+    const rake = n('forkRake');
+    const L = n('forkLength');
+    setNum(`FORK${fi}L`, round1(forkAxialIsMeasured(entries, fi) ? Math.sqrt(Math.max(0, L * L - rake * rake)) : L));
+    setNum(`FORK${fi}R`, rake);
+  }
+  if (changed('forkType')) {
+    setKnownBool('DUAL_CROWN', d.forkType === 'dualCrown');
+    setKnownBool('Fork straight blade', d.forkType === 'straight');
+  }
 
   // Front end: keep the file's measure style, writing the value it expects.
   const style = num('Top tube front center measure style') ?? 3;
   if (!entries.has('Top tube front center measure style')) setInt('Top tube front center measure style', 3);
-  const fcd = style === 3 ? g.dims.reach : style === 0 ? g.dims.ett : style === 2 ? g.dims.ttCC : g.dims.frontCenter;
-  setNum('FCD textfield', round1(fcd));
-  setNum('Stack', round1(g.dims.stack));
-  setNum('Head tube length textfield', round1(g.dims.headTubeLength));
-  setNum('Top tube angle textfield', round1(g.dims.ttAngle));
+  const fcdKey = style === 3 ? 'reach' : style === 0 ? 'ett' : style === 2 ? 'ttCC' : 'frontCenter';
+  if (dimChanged(fcdKey)) setNum('FCD textfield', round1(g.dims[fcdKey]));
+  if (dimChanged('stack') && (style === 3 || entries.has('Stack'))) setNum('Stack', round1(g.dims.stack));
+  if (dimChanged('headTubeLength')) setNum('Head tube length textfield', round1(g.dims.headTubeLength));
+  if (dimChanged('ttAngle')) setNum('Top tube angle textfield', round1(g.dims.ttAngle));
 
   // BB and chainstay in the file's measure styles.
-  setNum('BB textfield', num('BB measure style') === 1 ? round1(g.dims.bbHeight) : n('bbDrop'));
-  setNum('CS textfield', num('CS measure style') === 1 ? round1(g.dims.rearCenterHoriz) : n('chainstayLength'));
+  if (num('BB measure style') === 1 ? dimChanged('bbHeight') : changed('bbDrop')) {
+    setNum('BB textfield', num('BB measure style') === 1 ? round1(g.dims.bbHeight) : n('bbDrop'));
+  }
+  if (num('CS measure style') === 1 ? dimChanged('rearCenterHoriz') : changed('chainstayLength')) {
+    setNum('CS textfield', num('CS measure style') === 1 ? round1(g.dims.rearCenterHoriz) : n('chainstayLength'));
+  }
 
   // Junction offsets and seat tube.
-  setNum('Head tube upper extension2', n('ttHeadOffset'));
-  setNum('Head tube lower extension2', n('dtHeadOffset'));
+  if (changed('ttHeadOffset')) setNum('Head tube upper extension2', n('ttHeadOffset'));
+  if (changed('dtHeadOffset')) setNum('Head tube lower extension2', n('dtHeadOffset'));
   const stExt = n('seatTubeLength') - g.dims.stCC;
-  setNum('Seat tube extension2', round1(stExt));
-  setNum('Seat tube length', num('ST measure style') === 1 ? round1(g.dims.stCC) : n('seatTubeLength'));
-  setNum(entries.has('Seat stay junction') && !entries.has('Seat stay junction0') ? 'Seat stay junction' : 'Seat stay junction0', n('ssSeatOffset'));
+  const stExtBase = base && gBase ? Number(base.seatTubeLength) - gBase.dims.stCC : NaN;
+  if (!base || Math.abs(stExt - stExtBase) > 1e-6) setNum('Seat tube extension2', round1(stExt));
+  if (num('ST measure style') === 1 ? dimChanged('stCC') : changed('seatTubeLength')) {
+    setNum('Seat tube length', num('ST measure style') === 1 ? round1(g.dims.stCC) : n('seatTubeLength'));
+  }
+  if (changed('ssSeatOffset')) {
+    setNum(entries.has('Seat stay junction') && !entries.has('Seat stay junction0') ? 'Seat stay junction' : 'Seat stay junction0', n('ssSeatOffset'));
+  }
 
   // Tubes
-  setKnown('Top tube rear diameter', n('ttOD'));
-  setKnown('Top tube front diameter', n('ttOD'));
-  setKnown('Top tube diameter', n('ttOD'));
-  setKnown('Down tube front diameter', n('dtOD'));
-  setKnown('Down tube diameter', n('dtOD'));
-  setKnown('Seat tube diameter', n('stOD'));
-  if (d.htProfile === 'straight') setKnown('Head tube diameter', n('htOD'));
-  setKnown('Wall thickness Top tube', n('ttWall'));
-  setKnown('Wall thickness Down tube', n('dtWall'));
-  setKnown('Wall thickness Seat tube', n('stWall'));
-  setKnown('Wall thickness Chain stay', n('csWall'));
-  setKnown('Wall thickness Seat stay', n('ssWall'));
-  setKnown('Wall thickness Head tube', n('htWall'));
-  setKnown('Chain stay vertical diameter', n('csOD'));
-  setKnown('Chain stay back diameter', n('csODTip'));
-  setKnown('SEATSTAY_HR', n('ssOD'));
-  setKnown('Seat stay bottom diameter', n('ssODTip'));
-  setKnown('Dropout spacing', n('rearSpacing'));
-  setKnown('BB length', n('bbShellWidth'));
-  setKnown('BB diameter', n('bbShellOD'));
-  setKnown('Saddle thickness', n('saddleHeightAbove'));
-  setKnown('Crank length', n('crankLength'));
-  setKnown('Handlebar width', n('barWidth'));
+  if (changed('ttOD')) {
+    setKnown('Top tube rear diameter', n('ttOD'));
+    setKnown('Top tube front diameter', n('ttOD'));
+    setKnown('Top tube diameter', n('ttOD'));
+  }
+  if (changed('dtOD')) {
+    setKnown('Down tube front diameter', n('dtOD'));
+    setKnown('Down tube diameter', n('dtOD'));
+  }
+  if (changed('stOD')) setKnown('Seat tube diameter', n('stOD'));
+  if (changed('htOD', 'htODBottom', 'htProfile')) {
+    if (d.htProfile === 'tapered') {
+      // Put the top and bottom diameters back in whichever key held each.
+      const a = numFrom(file.source?.entries.get('Head tube diameter'));
+      const b = numFrom(file.source?.entries.get('Head tube d'));
+      const topInD = a != null && b != null && b < a;
+      setNum('Head tube diameter', topInD ? n('htODBottom') : n('htOD'));
+      setNum('Head tube d', topInD ? n('htOD') : n('htODBottom'));
+      setInt('Head tube type', 1);
+    } else {
+      setNum('Head tube diameter', n('htOD'));
+      if (num('Head tube type') === 1) setInt('Head tube type', 0);
+    }
+  }
+  const walls: [string, string][] = [
+    ['Wall thickness Top tube', 'ttWall'],
+    ['Wall thickness Down tube', 'dtWall'],
+    ['Wall thickness Seat tube', 'stWall'],
+    ['Wall thickness Chain stay', 'csWall'],
+    ['Wall thickness Seat stay', 'ssWall'],
+    ['Wall thickness Head tube', 'htWall'],
+  ];
+  const known: [string, string][] = [
+    ...walls,
+    ['Chain stay vertical diameter', 'csOD'],
+    ['Chain stay back diameter', 'csODTip'],
+    ['SEATSTAY_HR', 'ssOD'],
+    ['Seat stay bottom diameter', 'ssODTip'],
+    ['Dropout spacing', 'rearSpacing'],
+    ['BB length', 'bbShellWidth'],
+    ['BB diameter', 'bbShellOD'],
+    ['Saddle thickness', 'saddleHeightAbove'],
+    ['Crank length', 'crankLength'],
+    ['Handlebar width', 'barWidth'],
+  ];
+  for (const [key, id] of known) if (changed(id)) setKnown(key, n(id));
+
+  // Components and title-block values BikeCAD also stores.
+  if (changed('title')) entries.set('MODEL_NAME', String(d.title));
+  if (changed('material') && d.material) entries.set('MATERIAL', String(d.material).toUpperCase());
+  if (changed('fenders')) {
+    setKnownBool('Front Fender include', d.fenders === true);
+    setKnownBool('Rear Fender include', d.fenders === true);
+  }
+  if (changed('rearRack')) setKnownBool('Display RACK', d.rearRack === true);
+  if (changed('seatpostType')) setKnownBool('DROPPER', d.seatpostType === 'dropper');
+  if (changed('dtBottles')) setKnownBool('bottle DOWNTUBE0 show', n('dtBottles') > 0);
+  if (changed('stBottles')) setKnownBool('bottle SEATTUBE0 show', n('stBottles') > 0);
+  if (changed('seatstayStyle')) setKnownBool('Seat stay wishbone', d.seatstayStyle === 'wishbone');
+  if (changed('csYoke')) setKnownBool('Chain stay wishbone', d.csYoke === true);
+  if (changed('driveType') && (d.driveType === 'belt' || entries.get('BELTorCHAIN') === '0')) {
+    if (!file.source || entries.has('BELTorCHAIN')) entries.set('BELTorCHAIN', d.driveType === 'belt' ? '0' : '1');
+  }
+  if (changed('barType') && (d.barType === 'drop' || d.barType === 'bullhorn' || entries.has('Handlebar style'))) {
+    setInt('Handlebar style', d.barType === 'drop' ? 0 : d.barType === 'bullhorn' ? 2 : 1);
+  }
 
   // Gearing: "Number of …" is the index of the last ring/cog in use.
-  const rings = String(d.chainrings).split(/[,;\s]+/).map(Number).filter((x) => x > 0);
-  rings.forEach((t, i) => setInt(`Teeth on chainring ${i}`, t));
-  if (rings.length) setInt('Number of chainrings', rings.length - 1);
-  const cogs = String(d.cogs).split(/[,;\s]+/).map(Number).filter((x) => x > 0);
-  cogs.forEach((t, i) => setInt(`Teeth on cog ${i}`, t));
-  if (cogs.length) setInt('Number of cogs', cogs.length - 1);
-  void derived;
+  if (changed('chainrings')) {
+    const rings = String(d.chainrings).split(/[,;\s]+/).map(Number).filter((x) => x > 0);
+    rings.forEach((t, i) => setInt(`Teeth on chainring ${i}`, t));
+    if (rings.length) setInt('Number of chainrings', rings.length - 1);
+  }
+  if (changed('cogs')) {
+    const cogs = String(d.cogs).split(/[,;\s]+/).map(Number).filter((x) => x > 0);
+    cogs.forEach((t, i) => setInt(`Teeth on cog ${i}`, t));
+    if (cogs.length) setInt('Number of cogs', cogs.length - 1);
+  }
+
+  // Our own copy of every parameter, plus a fingerprint of the BikeCAD values as written.
+  for (const p of PARAMS) {
+    const v = d[p.id];
+    entries.set(NS + p.id, typeof v === 'number' ? formatJavaNumber(v) : String(v));
+  }
+  entries.set(FINGERPRINT, fingerprint(entries));
 
   return serializeProperties({ comment: file.source?.comment ?? `Created by Open Bike CAD on ${new Date().toString()}`, entries });
 }

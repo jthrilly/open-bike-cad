@@ -6,7 +6,7 @@
  * published rules of thumb, not any particular commercial fit system.
  */
 import { Design, numOf, parseTeeth } from '../model/schema';
-import { Geometry } from '../geometry/solve';
+import { Geometry, footModel, BALL_TO_HEEL } from '../geometry/solve';
 import { Vec, v, add, sub, mul, dist, twoLinkIK, rad, deg, angleBetween, dirDeg, norm } from '../geometry/vec';
 
 export interface RiderPose {
@@ -72,12 +72,13 @@ function hipOf(g: Geometry): Vec {
 }
 
 function legPose(hip: Vec, pedal: Vec, b: Body, d: Design) {
-  // Ball of foot over the pedal axle (adjusted by cleat), foot roughly level with heel a little down.
-  const cleat = numOf(d, 'cleatSetback');
-  const ball = add(pedal, v(-cleat, numOf(d, 'pedalStack')));
+  // Ball of foot over the pedal axle, moved forward by a positive cleat
+  // setback (shared foot model with the toe-overlap check), foot roughly
+  // level with the heel a little down.
+  const { ball } = footModel(d, pedal);
   const footDir = norm(v(-1, 0.18));
   const ankle = add(add(ball, mul(footDir, b.footLen * 0.5)), v(0, b.ankleH * 0.7));
-  const heel = add(ball, mul(footDir, b.footLen * 0.8));
+  const heel = add(ball, mul(footDir, b.footLen * BALL_TO_HEEL));
   const ik = twoLinkIK(hip, ankle, b.thigh, b.shin, 1);
   return { ball, ankle, heel, knee: ik.joint, reached: ik.reached };
 }

@@ -6,7 +6,7 @@ import { DIM_OPTIONS } from '../render/DimensionLayer';
 
 interface Props {
   d: Design;
-  onChange: (patch: Partial<Design>, coalesce?: boolean) => void;
+  onChange: (patch: Partial<Design>, coalesce?: boolean | string) => void;
   openGroup: GroupId | null;
   setOpenGroup: (g: GroupId | null) => void;
   sections?: string[];
@@ -55,7 +55,11 @@ export function ParamPanel({ d, onChange, openGroup, setOpenGroup, sections }: P
               }}
               open={open}
               onToggle={(e) => {
-                const isOpen = (e.target as HTMLDetailsElement).open;
+                // While searching every group is forced open; toggles that just
+                // reflect what we rendered are not user choices either.
+                if (q) return;
+                const isOpen = (e.currentTarget as HTMLDetailsElement).open;
+                if (isOpen === open) return;
                 if (isOpen && openGroup !== g.id) setOpenGroup(g.id);
                 if (!isOpen && openGroup === g.id) setOpenGroup(null);
               }}
@@ -145,12 +149,25 @@ export function Field({ p, value, onChange }: { p: ParamDef; value: ParamValue; 
 export function NumberInput({ id, value, step, min, max, onChange }: { id?: string; value: number; step: number; min?: number; max?: number; onChange: (v: number) => void }) {
   const [text, setText] = useState(fmt(value));
   const focused = useRef(false);
+  /** True once the user has typed since focusing (or since the last step/commit from outside). */
+  const typed = useRef(false);
+  const lastSent = useRef<number | null>(null);
   useEffect(() => {
-    if (!focused.current) setText(fmt(value));
+    // Resync from the model unless the user is mid-typing and this is the value they typed.
+    if (!focused.current || !typed.current || lastSent.current !== value) {
+      setText(fmt(value));
+      typed.current = false;
+    }
   }, [value]);
   const commit = (s: string) => {
-    const n = parseFloat(s);
-    if (Number.isFinite(n)) onChange(clamp(n, min, max));
+    // Accept a decimal comma; reject anything that isn't a whole number ("0x10", "72abc").
+    const t = s.trim().replace(',', '.');
+    const n = t === '' || t === '-' || t === '.' ? NaN : Number(t);
+    if (Number.isFinite(n)) {
+      const c = clamp(n, min, max);
+      lastSent.current = c;
+      onChange(c);
+    }
   };
   return (
     <input
@@ -158,12 +175,17 @@ export function NumberInput({ id, value, step, min, max, onChange }: { id?: stri
       type="text"
       inputMode="decimal"
       value={text}
-      onFocus={() => (focused.current = true)}
+      onFocus={() => {
+        focused.current = true;
+        typed.current = false;
+      }}
       onBlur={() => {
         focused.current = false;
+        typed.current = false;
         setText(fmt(value));
       }}
       onChange={(e) => {
+        typed.current = true;
         setText(e.target.value);
         commit(e.target.value);
       }}
@@ -172,6 +194,7 @@ export function NumberInput({ id, value, step, min, max, onChange }: { id?: stri
           e.preventDefault();
           const mult = e.shiftKey ? 10 : e.altKey ? 0.1 : 1;
           const n = clamp(round(value + (e.key === 'ArrowUp' ? 1 : -1) * step * mult), min, max);
+          typed.current = false;
           setText(fmt(n));
           onChange(n);
         } else if (e.key === 'Enter') {

@@ -4,15 +4,42 @@ import { parseProperties } from '../bcad/properties';
 import { Design, GroupId, PARAMS, defaultDesign } from '../model/schema';
 import { solve } from '../geometry/solve';
 import { Canvas, CanvasHandle } from './Canvas';
-import { ParamPanel } from './ParamPanel';
+import { NumberInput, ParamPanel } from './ParamPanel';
 import { FitPanel, GearPanel, LibraryPanel, MitrePanel, SpecPanel } from './Panels';
 import { Sheet } from './Sheet';
 import { useAutosave, useBikeHistory, useLibrary, loadAutosave, upgradeDesign, LibraryItem } from './state';
-import { SHEETS, baseName, compareCsv, download, frameDxf, mitreDxf, mitrePdf, specCsv, svgToPdf, svgToString } from '../export/exporters';
+import { SHEETS, baseName, compareCsv, download, frameDxf, mitreDxf, mitrePdf, sideViewSvgString, specCsv, svgFileName, svgToPdf, svgToString } from '../export/exporters';
 import { PRESETS } from '../model/presets';
 
 type RightTab = 'spec' | 'fit' | 'gears' | 'mitres' | 'library' | 'compare';
 type View = 'design' | 'sheet';
+type Photo = { url: string; x: number; y: number; scale: number; opacity: number };
+type Compare = { name: string; file: BikeFile };
+
+/** Text-editing controls keep their own Ctrl+Z / Ctrl+Y. */
+function isEditable(t: EventTarget | null): boolean {
+  const el = t as HTMLElement | null;
+  if (!el || !el.tagName) return false;
+  if (el.isContentEditable) return true;
+  if (el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') return true;
+  if (el.tagName === 'INPUT') return !['checkbox', 'radio', 'range', 'button', 'submit', 'reset', 'color', 'file', 'image'].includes((el as HTMLInputElement).type);
+  return false;
+}
+
+function Menu({ id, label, menu, setMenu, children }: { id: string; label: string; menu: string | null; setMenu: (m: string | null) => void; children: React.ReactNode }) {
+  return (
+    <div className="menu" onMouseLeave={() => menu === id && setMenu(null)}>
+      <button type="button" className={menu === id ? 'open' : ''} onClick={() => setMenu(menu === id ? null : id)}>
+        {label} ▾
+      </button>
+      {menu === id && (
+        <div className="menu-items" onClick={() => setMenu(null)}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function initialFile(): BikeFile {
   const saved = loadAutosave();
@@ -35,12 +62,17 @@ function derivedFor(f: BikeFile) {
 export function App() {
   const hist = useBikeHistory(initialFile);
   const { file, update, replace, undo, redo, canUndo, canRedo } = hist;
-  const [compare, setCompare] = useState<{ name: string; design: Design } | null>(null);
+  const [compare, setCompareRaw] = useState<Compare | null>(null);
   const [morph, setMorph] = useState(0);
+  // A new or cleared comparison always starts from the real design (no morph).
+  const setCompare = useCallback((c: Compare | null) => {
+    setCompareRaw(c);
+    setMorph(0);
+  }, []);
   const [openGroup, setOpenGroup] = useState<GroupId | null>('frontEnd');
   const [rightTab, setRightTab] = useState<RightTab>('spec');
   const [view, setView] = useState<View>('design');
-  const [photo, setPhoto] = useState<{ url: string; x: number; y: number; scale: number; opacity: number } | null>(null);
+  const [photo, setPhoto] = useState<Photo | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [menu, setMenu] = useState<string | null>(null);
   const canvasRef = useRef<CanvasHandle>(null);
@@ -50,17 +82,32 @@ export function App() {
   const photoInput = useRef<HTMLInputElement>(null);
   const library = useLibrary();
 
-  const shown: Design = useMemo(() => (compare && morph > 0 ? morphDesign(file.design, compare.design, morph) : file.design), [file.design, compare, morph]);
-  const g = useMemo(() => solve(shown), [shown]);
-  const ghost = useMemo(() => (compare && morph === 0 ? { d: compare.design, g: solve(compare.design) } : null), [compare, morph]);
+  const morphing = !!compare && morph > 0;
+  // Real design and geometry: used for editing, panels and every export.
+  const gReal = useMemo(() => solve(file.design), [file.design]);
+  // On-screen preview only: the canvas (and its status bar) show the morph.
+  const shown: Design = useMemo(() => (compare && morph > 0 ? morphDesign(file.design, compare.file.design, morph) : file.design), [file.design, compare, morph]);
+  const g = useMemo(() => (shown === file.design ? gReal : solve(shown)), [shown, file.design, gReal]);
+  const ghost = useMemo(() => (compare && morph === 0 ? { d: compare.file.design, g: solve(compare.file.design) } : null), [compare, morph]);
+
+  // Revoke a photo's object URL once it is replaced or removed.
+  const photoUrl = photo?.url;
+  useEffect(() => {
+    return () => {
+      if (photoUrl?.startsWith('blob:')) URL.revokeObjectURL(photoUrl);
+    };
+  }, [photoUrl]);
 
   const serializeSource = useCallback(() => (file.source ? exportBcad(file, derivedFor(file)) : undefined), [file]);
   useAutosave(file, serializeSource);
 
-  const flash = (msg: string) => {
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const flash = useCallback((msg: string) => {
     setToast(msg);
-    setTimeout(() => setToast(null), 3500);
-  };
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 3500);
+  }, []);
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   // ------------------------------------------------------------ file ops
   const openText = useCallback(
@@ -74,13 +121,26 @@ export function App() {
         flash(`Could not open ${name}: ${(e as Error).message}`);
       }
     },
-    [replace],
+    [replace, flash],
   );
 
-  const openFiles = async (files: FileList | null) => {
+  const readAndOpen = useCallback(
+    async (f: File) => {
+      let text: string;
+      try {
+        text = await f.text();
+      } catch (e) {
+        flash(`Could not read ${f.name}: ${(e as Error).message}`);
+        return;
+      }
+      openText(text, f.name);
+    },
+    [openText, flash],
+  );
+
+  const openFiles = (files: FileList | null) => {
     const f = files?.[0];
-    if (!f) return;
-    openText(await f.text(), f.name);
+    if (f) void readAndOpen(f);
   };
 
   const saveBcad = useCallback(() => {
@@ -97,16 +157,33 @@ export function App() {
 
   // ------------------------------------------------------------- exports
   const exportSvg = () => {
-    const el = view === 'sheet' ? sheetRef.current : canvasRef.current?.svg;
-    if (el) download(`${baseName(file.design)}.svg`, svgToString(el), 'image/svg+xml');
+    if (view === 'sheet') {
+      const el = sheetRef.current;
+      if (el) download(svgFileName(file.design, 'sheet'), svgToString(el), 'image/svg+xml');
+    } else {
+      const el = canvasRef.current?.svg;
+      if (el) download(svgFileName(file.design, 'side'), sideViewSvgString(el, shown, g), 'image/svg+xml');
+    }
   };
   const exportPdf = async () => {
-    setView('sheet');
-    await new Promise((r) => setTimeout(r, 50));
-    const el = sheetRef.current;
-    if (!el) return;
-    const [w, h] = SHEETS[String(file.design.sheetSize)] ?? SHEETS.A3;
-    await svgToPdf(el, w, h, `${baseName(file.design)}.pdf`);
+    try {
+      setView('sheet');
+      await new Promise((r) => setTimeout(r, 50));
+      const el = sheetRef.current;
+      if (!el) return;
+      const [w, h] = SHEETS[String(file.design.sheetSize)] ?? SHEETS.A3;
+      await svgToPdf(el, w, h, `${baseName(file.design)}_sheet.pdf`);
+    } catch (e) {
+      flash(`PDF export failed: ${(e as Error).message}`);
+    }
+  };
+  const runExport = (what: string, fn: () => unknown) => {
+    try {
+      const r = fn();
+      if (r instanceof Promise) r.catch((e: unknown) => flash(`${what} export failed: ${(e as Error).message}`));
+    } catch (e) {
+      flash(`${what} export failed: ${(e as Error).message}`);
+    }
   };
 
   // --------------------------------------------------------- keyboard
@@ -114,14 +191,13 @@ export function App() {
     const onKey = (e: KeyboardEvent) => {
       const mod = e.ctrlKey || e.metaKey;
       if (!mod) return;
-      const tag = (e.target as HTMLElement)?.tagName;
-      if (e.key.toLowerCase() === 'z' && tag !== 'TEXTAREA') {
+      const key = e.key.toLowerCase();
+      if (key === 'z' || key === 'y') {
+        // Leave text undo to the focused field.
+        if (isEditable(e.target)) return;
         e.preventDefault();
-        if (e.shiftKey) redo();
+        if (key === 'y' || e.shiftKey) redo();
         else undo();
-      } else if (e.key.toLowerCase() === 'y') {
-        e.preventDefault();
-        redo();
       } else if (e.key.toLowerCase() === 's') {
         e.preventDefault();
         saveBcad();
@@ -143,7 +219,7 @@ export function App() {
       if (!f) return;
       if (/\.(png|jpe?g|gif|webp)$/i.test(f.name)) {
         setPhoto({ url: URL.createObjectURL(f), x: -1000, y: 800, scale: 2, opacity: 0.5 });
-      } else openText(await f.text(), f.name);
+      } else await readAndOpen(f);
     };
     window.addEventListener('dragover', over);
     window.addEventListener('drop', drop);
@@ -151,7 +227,7 @@ export function App() {
       window.removeEventListener('dragover', over);
       window.removeEventListener('drop', drop);
     };
-  }, [openText]);
+  }, [readAndOpen]);
 
   const onPick = (grp: string) => {
     setOpenGroup(grp as GroupId);
@@ -166,7 +242,7 @@ export function App() {
 
   const saveToLibrary = () => {
     const name = String(file.design.title || 'Untitled');
-    library.save({
+    const ok = library.save({
       id: `${Date.now()}`,
       name,
       savedAt: new Date().toISOString(),
@@ -174,25 +250,22 @@ export function App() {
       design: file.design,
       sourceXml: file.source ? exportBcad(file, derivedFor(file)) : undefined,
     });
-    flash(`Saved “${name}” to the library.`);
+    flash(ok ? `Saved “${name}” to the library.` : `Could not save “${name}”: browser storage is full or blocked. Use Save .bcad instead.`);
   };
+  const libraryFile = (it: LibraryItem): BikeFile => ({
+    design: upgradeDesign(it.design),
+    source: it.sourceXml ? parseProperties(it.sourceXml) : null,
+    fileName: `${it.name}.bcad`,
+    mappedKeys: [],
+  });
   const openFromLibrary = (it: LibraryItem) => {
-    replace({ design: upgradeDesign(it.design), source: it.sourceXml ? parseProperties(it.sourceXml) : null, fileName: `${it.name}.bcad`, mappedKeys: [] });
-    setTimeout(() => canvasRef.current?.fit(), 0);
+    try {
+      replace(libraryFile(it));
+      setTimeout(() => canvasRef.current?.fit(), 0);
+    } catch (e) {
+      flash(`Could not open “${it.name}”: ${(e as Error).message}`);
+    }
   };
-
-  const Menu = ({ id, label, children }: { id: string; label: string; children: React.ReactNode }) => (
-    <div className="menu" onMouseLeave={() => menu === id && setMenu(null)}>
-      <button type="button" className={menu === id ? 'open' : ''} onClick={() => setMenu(menu === id ? null : id)}>
-        {label} ▾
-      </button>
-      {menu === id && (
-        <div className="menu-items" onClick={() => setMenu(null)}>
-          {children}
-        </div>
-      )}
-    </div>
-  );
 
   return (
     <div className="app">
@@ -207,7 +280,7 @@ export function App() {
           </svg>
           <span>Open Bike CAD</span>
         </div>
-        <Menu id="file" label="File">
+        <Menu id="file" label="File" menu={menu} setMenu={setMenu}>
           {PRESETS.map((p) => (
             <button type="button" key={p.id} onClick={() => newDesign(p.make)}>
               New {p.label}
@@ -227,25 +300,25 @@ export function App() {
             Save to library
           </button>
         </Menu>
-        <Menu id="export" label="Export">
+        <Menu id="export" label="Export" menu={menu} setMenu={setMenu}>
           <button type="button" onClick={exportPdf}>
             Drawing sheet (PDF)
           </button>
           <button type="button" onClick={exportSvg}>
             {view === 'sheet' ? 'Drawing sheet' : 'Side view'} (SVG)
           </button>
-          <button type="button" onClick={() => download(`${baseName(file.design)}_frame.dxf`, frameDxf(shown, g), 'application/dxf')}>
+          <button type="button" onClick={() => runExport('DXF', () => download(`${baseName(file.design)}_frame.dxf`, frameDxf(file.design, gReal), 'application/dxf'))}>
             Frame outline (DXF)
           </button>
           <hr />
-          <button type="button" onClick={() => mitrePdf(shown, g)}>
+          <button type="button" onClick={() => runExport('Mitre PDF', () => mitrePdf(file.design, gReal))}>
             Mitre templates (PDF, 1:1)
           </button>
-          <button type="button" onClick={() => download(`${baseName(file.design)}_mitres.dxf`, mitreDxf(shown, g), 'application/dxf')}>
+          <button type="button" onClick={() => runExport('DXF', () => download(`${baseName(file.design)}_mitres.dxf`, mitreDxf(file.design, gReal), 'application/dxf'))}>
             Mitre templates (DXF)
           </button>
           <hr />
-          <button type="button" onClick={() => download(`${baseName(file.design)}_spec.csv`, specCsv(shown, g), 'text/csv')}>
+          <button type="button" onClick={() => runExport('CSV', () => download(`${baseName(file.design)}_spec.csv`, specCsv(file.design, gReal), 'text/csv'))}>
             Spec, cut list & parameters (CSV)
           </button>
           {compare && (
@@ -255,8 +328,8 @@ export function App() {
                 download(
                   'comparison.csv',
                   compareCsv([
-                    { name: String(file.design.title), d: file.design, g: solve(file.design) },
-                    { name: compare.name, d: compare.design, g: solve(compare.design) },
+                    { name: String(file.design.title), d: file.design, g: gReal },
+                    { name: compare.name, d: compare.file.design, g: solve(compare.file.design) },
                   ]),
                   'text/csv',
                 )
@@ -302,7 +375,7 @@ export function App() {
             if (f) {
               try {
                 const bf = importBcad(await f.text(), f.name);
-                setCompare({ name: f.name, design: bf.design });
+                setCompare({ name: f.name, file: bf });
                 setRightTab('compare');
               } catch (err) {
                 flash(`Could not open ${f.name}: ${(err as Error).message}`);
@@ -331,10 +404,10 @@ export function App() {
 
         <section className="center">
           {view === 'design' ? (
-            <Canvas ref={canvasRef} d={shown} g={g} ghost={ghost} onChange={update} onPick={onPick} photo={photo} />
+            <Canvas ref={canvasRef} d={shown} g={g} ghost={ghost} onChange={update} onPick={onPick} photo={photo} editable={!morphing} />
           ) : (
             <div className="sheet-wrap">
-              <Sheet ref={sheetRef} d={shown} g={g} />
+              <Sheet ref={sheetRef} d={file.design} g={gReal} />
             </div>
           )}
           <div className="statusbar">
@@ -343,7 +416,9 @@ export function App() {
             </span>
             {g.warnings.length > 0 && <span className="warn">⚠ {g.warnings[0]}</span>}
             <span className="grow" />
-            <span className="muted">Drag the blue handles · scroll to zoom · drag to pan · click a part to edit it</span>
+            <span className="muted">
+              {morphing ? 'Morph preview: set the slider to 0% to edit with the handles' : 'Drag the blue handles · scroll to zoom · drag to pan · click a part to edit it'}
+            </span>
           </div>
         </section>
 
@@ -364,10 +439,10 @@ export function App() {
               </button>
             ))}
           </nav>
-          {rightTab === 'spec' && <SpecPanel d={shown} g={g} onToggleDim={toggleDim} />}
-          {rightTab === 'fit' && <FitPanel d={shown} g={g} onChange={update} />}
-          {rightTab === 'gears' && <GearPanel d={shown} g={g} />}
-          {rightTab === 'mitres' && <MitrePanel d={shown} g={g} />}
+          {rightTab === 'spec' && <SpecPanel d={file.design} g={gReal} onToggleDim={toggleDim} />}
+          {rightTab === 'fit' && <FitPanel d={file.design} g={gReal} onChange={update} />}
+          {rightTab === 'gears' && <GearPanel d={file.design} g={gReal} />}
+          {rightTab === 'mitres' && <MitrePanel d={file.design} g={gReal} />}
           {rightTab === 'library' && (
             <LibraryPanel
               items={library.items}
@@ -375,7 +450,12 @@ export function App() {
               onDelete={library.remove}
               onSaveCurrent={saveToLibrary}
               onCompare={(it) => {
-                setCompare({ name: it.name, design: upgradeDesign(it.design) });
+                try {
+                  setCompare({ name: it.name, file: libraryFile(it) });
+                } catch (e) {
+                  flash(`Could not open “${it.name}”: ${(e as Error).message}`);
+                  return;
+                }
                 setRightTab('compare');
               }}
             />
@@ -387,15 +467,12 @@ export function App() {
               morph={morph}
               setMorph={setMorph}
               onLoad={() => compareInput.current?.click()}
-              onClear={() => {
-                setCompare(null);
-                setMorph(0);
-              }}
+              onClear={() => setCompare(null)}
               onSwap={() => {
                 if (!compare) return;
-                const cur = file.design;
-                replace(newBikeFile(compare.design));
-                setCompare({ name: String(cur.title), design: cur });
+                const cur = file;
+                replace(compare.file);
+                setCompare({ name: cur.fileName && cur.fileName !== 'untitled.bcad' ? cur.fileName : String(cur.design.title), file: cur });
               }}
               photo={photo}
               setPhoto={setPhoto}
@@ -436,18 +513,18 @@ function ComparePanel({
   onPhoto,
 }: {
   current: Design;
-  compare: { name: string; design: Design } | null;
+  compare: Compare | null;
   morph: number;
   setMorph: (n: number) => void;
   onLoad: () => void;
   onClear: () => void;
   onSwap: () => void;
-  photo: { url: string; x: number; y: number; scale: number; opacity: number } | null;
-  setPhoto: (p: { url: string; x: number; y: number; scale: number; opacity: number } | null) => void;
+  photo: Photo | null;
+  setPhoto: (p: Photo | null) => void;
   onPhoto: () => void;
 }) {
   const ga = solve(current);
-  const gb = compare ? solve(compare.design) : null;
+  const gb = compare ? solve(compare.file.design) : null;
   const rows: [string, (g: ReturnType<typeof solve>) => number][] = [
     ['Stack', (g) => g.dims.stack],
     ['Reach', (g) => g.dims.reach],
@@ -538,7 +615,7 @@ function ComparePanel({
           ).map(([k, label, step]) => (
             <label key={k}>
               {label}
-              <input type="number" step={step} value={Number(photo[k])} onChange={(e) => setPhoto({ ...photo, [k]: Number(e.target.value) })} />
+              <NumberInput value={Number(photo[k])} step={step} min={k === 'opacity' ? 0 : k === 'scale' ? 0.01 : undefined} max={k === 'opacity' ? 1 : undefined} onChange={(n) => setPhoto({ ...photo, [k]: n })} />
             </label>
           ))}
         </div>

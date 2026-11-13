@@ -6,7 +6,8 @@
  * front wheel, +y up.
  */
 import { Design, numOf } from '../model/schema';
-import { Vec, v, add, sub, mul, dist, rad, deg, lineIntersect, angleOf, rot, norm, len } from './vec';
+import { Vec, v, add, sub, mul, dist, dot, rad, deg, lineIntersect, angleOf, rot, norm, len } from './vec';
+import { centreline, pointAtX } from './shapes';
 
 export interface Geometry {
   bb: Vec;
@@ -195,12 +196,10 @@ function solveWithHtTop(d: Design, T: Vec, htlOverride?: number): Geometry {
   const saddleClamp = add(seatpostTop, v(-setback, 0));
   const saddleTop = add(add(stBottom, mul(s, saddleH - postTravelDrop)), v(-setback + slide, 0));
 
-  // Pedal & toe
+  // Pedal & toe (crank horizontal, forward), using the shared foot model.
   const crank = numOf(d, 'crankLength');
   const pedalForward = v(crank, 0);
-  const footLen = numOf(d, 'footLength');
-  const toeReach = footLen * 0.3 + numOf(d, 'cleatSetback');
-  const toe = v(crank + toeReach, numOf(d, 'pedalStack') + 15);
+  const toe = footModel(d, pedalForward).toe;
   let toeOverlap = frontWheelR - dist(toe, frontAxle);
   if (d.fenders === true) toeOverlap += numOf(d, 'fenderClearance') + 3;
 
@@ -214,8 +213,11 @@ function solveWithHtTop(d: Design, T: Vec, htlOverride?: number): Geometry {
   const mechanicalTrail = trail * Math.sin(rad(HA));
   const flop = trail * Math.sin(rad(HA)) * Math.cos(rad(HA));
 
-  // Standover: top of top tube at the mid-point of the top tube's horizontal span.
-  const midTT = mul(add(ttFront, ttRear), 0.5);
+  // Standover: top of top tube at the mid-point of the top tube's horizontal
+  // span, on the (possibly curved) centreline. Same curve as the drawing's
+  // frameTubes(): centreline(ttRear, ttFront, ttBend).
+  const ttLine = centreline(ttRear, ttFront, numOf(d, 'ttBend'));
+  const midTT = pointAtX(ttLine, (ttFront.x + ttRear.x) / 2) ?? mul(add(ttFront, ttRear), 0.5);
   const standover = midTT.y + numOf(d, 'ttOD') / 2 - groundY;
 
   const angleAt = (vertex: Vec, a: Vec, b: Vec) => {
@@ -225,12 +227,18 @@ function solveWithHtTop(d: Design, T: Vec, htlOverride?: number): Geometry {
   };
 
   const headsetTop = sub(htTop, mul(u, upperStack));
-  const exposed = dist(seatpostTop, stTop);
-  const seatpostMinLength = exposed + numOf(d, 'minPostInsertion');
+  // Signed: positive when the seatpost top is above the seat tube top, measured along the seat tube.
+  const exposed = dot(sub(seatpostTop, stTop), s);
+  // The post must still reach minPostInsertion below the seat tube top, so a
+  // negative exposure does not shorten it.
+  const seatpostMinLength = Math.max(0, exposed) + numOf(d, 'minPostInsertion');
+  const frameStyle = String(d.frameStyle);
 
-  if (htl < 50) warnings.push(`Head tube is very short (${htl.toFixed(1)} mm).`);
+  if (htl <= 0) warnings.push(`Head tube length is ${htl.toFixed(1)} mm: the stack is too low for this fork length, headset lower stack and head angle. Raise the stack or use a shorter fork.`);
+  else if (htl < 50) warnings.push(`Head tube is very short (${htl.toFixed(1)} mm).`);
   if (dist(ttFront, htBottom) < numOf(d, 'dtHeadOffset') + 10) warnings.push('Top tube and down tube junctions overlap on the head tube.');
-  if (dist(ttRear, stBottom) > stLen + 1) warnings.push('Top tube meets the seat tube above its top.');
+  // A step-through has no top tube at the seat tube, and a beam frame has no seat tube.
+  if (frameStyle !== 'stepThrough' && frameStyle !== 'beam' && dot(sub(ttRear, stBottom), s) > stLen + 1) warnings.push('Top tube meets the seat tube above its top.');
   if (exposed < 0 && d.seatpostType !== 'integrated') warnings.push('Saddle height is lower than the top of the seat tube.');
   if (toeOverlap > 0) warnings.push(`Toe overlap: ${toeOverlap.toFixed(1)} mm.`);
   if (rearWheelR + 4 > dist(rearAxle, bb)) warnings.push('Rear tyre hits the seat tube / BB.');
@@ -409,11 +417,14 @@ export function solve(d: Design): Geometry {
   const off = frontEndOffsets(d, htl);
   const stack = fy - off.dy;
   let x: number;
+  // Targets that may be unreachable: checked against the solved result below.
+  let check: { label: string; target: number; got: (g: Geometry) => number; why: string } | null = null;
   switch (mode) {
     case 'frontCenter': {
       const fc = numOf(d, 'frontCenter');
       const fx = Math.sqrt(Math.max(0, fc * fc - fy * fy));
       x = fx - off.dx;
+      check = { label: 'Front centre', target: fc, got: (g) => g.dims.frontCenter, why: `it must be at least the front axle height above/below the BB (${Math.abs(fy).toFixed(1)} mm)` };
       break;
     }
     case 'ett':
@@ -422,13 +433,38 @@ export function solve(d: Design): Geometry {
     case 'ttLength': {
       const target = numOf(d, 'ttLengthCC');
       x = bisect((xx) => solveWithHtTop(d, v(xx, stack), htl).dims.ttCC - target, 0, 2000, numOf(d, 'reach'));
+      check = { label: 'Top tube length (c-c)', target, got: (g) => g.dims.ttCC, why: 'no reach between 0 and 2000 mm gives it with this head tube, seat angle and top tube angle; reach was left at its stored value' };
       break;
     }
     case 'reachHtl':
     default:
       x = numOf(d, 'reach');
   }
-  return solveWithHtTop(d, v(x, stack), htl);
+  const g = solveWithHtTop(d, v(x, stack), htl);
+  if (check) {
+    const got = check.got(g);
+    if (Math.abs(got - check.target) > 0.5) {
+      g.warnings.unshift(`${check.label} target ${check.target.toFixed(1)} mm can't be met (${check.why}); the frame uses ${got.toFixed(1)} mm.`);
+    }
+  }
+  return g;
+}
+
+/**
+ * Shared foot model, used by the toe-overlap check and the rider pose.
+ * `cleatSetback` follows the usual convention: positive = cleat further back
+ * on the shoe, so the ball of the foot (and the toe) sit further forward of
+ * the pedal axle.
+ */
+export const BALL_TO_TOE = 0.3; // fraction of foot/shoe length from ball to toe
+export const BALL_TO_HEEL = 1 - BALL_TO_TOE;
+/** Height of the shoe toe above the ball/sole line at the pedal. */
+export const TOE_HEIGHT = 15;
+export function footModel(d: Design, pedal: Vec): { ball: Vec; toe: Vec; footLen: number } {
+  const footLen = numOf(d, 'footLength');
+  const ball = add(pedal, v(numOf(d, 'cleatSetback'), numOf(d, 'pedalStack')));
+  const toe = add(ball, v(footLen * BALL_TO_TOE, TOE_HEIGHT));
+  return { ball, toe, footLen };
 }
 
 function bisect(f: (x: number) => number, lo: number, hi: number, fallback: number): number {

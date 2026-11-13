@@ -9,26 +9,36 @@
  *
  *   z(φ) = √(R² − (r·sinφ + e)²) / sinθ − r·cosφ / tanθ
  *
- * Unrolling the cut tube (x = r·φ) gives a paper template that wraps round
- * the tube for marking.
+ * Unrolling the cut tube gives a paper template that wraps round the tube for
+ * marking. z(φ) always uses the true tube radius; the paper thickness t only
+ * widens the template (x = (r + t/2)·φ, circumference π·(OD + t)) so it wraps
+ * the tube exactly. Cut lengths do not depend on t.
+ *
+ * Where |r·sinφ + e| > R the cut tube's side passes beside the receiving tube
+ * (the branch is larger than the tube it meets, or offset past its edge):
+ * those points are not part of the cope. They are drawn at the receiving
+ * tube's edge but left out of zMin/zMax, and a warning is added.
  */
 import { Design, numOf } from '../model/schema';
 import { Geometry } from '../geometry/solve';
-import { dist, angleBetween, sub, Vec } from '../geometry/vec';
+import { angleBetween, sub, dot, dist, mul, add, Vec } from '../geometry/vec';
 import { frameTubes } from '../render/BikeDrawing';
-import { polyLength } from '../geometry/shapes';
+import { polyLength, endTangent } from '../geometry/shapes';
 
 export interface MitreEnd {
   /** What it mitres into. */
   into: string;
+  /** Receiving tube radius at the junction (local radius for a tapered/hourglass head tube). */
   R: number;
   angle: number;
   offset: number;
   /** Curve points in template coordinates (mm): x around, y along tube. */
   curve: { x: number; y: number }[];
-  /** z of the shortest and longest points relative to the axes' crossing. */
+  /** z of the shortest and longest points relative to the axes' crossing (cope points only). */
   zMin: number;
   zMax: number;
+  /** Problems with this end (e.g. branch larger than the receiving tube). */
+  warnings: string[];
 }
 
 export interface TubeCut {
@@ -38,34 +48,55 @@ export interface TubeCut {
   wall: number;
   cc: number;
   ends: MitreEnd[];
-  /** Length between the long points of the two mitres. */
+  /** Length between the long points of the two mitres (never negative). */
   lengthLongPoints: number;
-  /** Length to cut from stock, including the face allowance at each end. */
+  /** Length to cut from stock, including the face allowance at each end (never negative). */
   cutLength: number;
   /** Rotation between the two ends' reference lines (degrees). */
   phaseDeg: number;
   quantity: number;
+  /** Problems a builder must know about for this tube (includes its ends' warnings). */
+  warnings: string[];
 }
 
-export function mitreCurve(r: number, R: number, angleDeg: number, e = 0, steps = 180): { pts: { x: number; y: number }[]; zMin: number; zMax: number } {
+/**
+ * @param wrapR radius the template is unrolled on (tube radius + half the paper thickness). Defaults to r.
+ */
+export function mitreCurve(
+  r: number,
+  R: number,
+  angleDeg: number,
+  e = 0,
+  steps = 180,
+  wrapR = r,
+): { pts: { x: number; y: number }[]; zMin: number; zMax: number; clamped: number } {
   const th = (Math.max(1, Math.min(179, angleDeg)) * Math.PI) / 180;
-  const raw: { x: number; z: number }[] = [];
+  const raw: { x: number; z: number; ok: boolean }[] = [];
   for (let i = 0; i <= steps; i++) {
     const phi = (i / steps) * Math.PI * 2;
     const k = r * Math.sin(phi) + e;
-    const under = Math.max(0, R * R - k * k);
-    const z = Math.sqrt(under) / Math.sin(th) - (r * Math.cos(phi)) / Math.tan(th);
-    raw.push({ x: r * phi, z });
+    const under = R * R - k * k;
+    const z = Math.sqrt(Math.max(0, under)) / Math.sin(th) - (r * Math.cos(phi)) / Math.tan(th);
+    raw.push({ x: wrapR * phi, z, ok: under >= -1e-9 });
   }
-  const zs = raw.map((p) => p.z);
+  const good = raw.filter((p) => p.ok);
+  const zs = (good.length ? good : raw).map((p) => p.z);
   const zMin = Math.min(...zs);
   const zMax = Math.max(...zs);
-  return { pts: raw.map((p) => ({ x: p.x, y: p.z - zMin })), zMin, zMax };
+  return { pts: raw.map((p) => ({ x: p.x, y: p.z - zMin })), zMin, zMax, clamped: raw.length - good.length };
 }
 
-function end(into: string, r: number, R: number, angle: number, e = 0): MitreEnd {
-  const c = mitreCurve(r, R, angle, e);
-  return { into, R, angle, offset: e, curve: c.pts, zMin: c.zMin, zMax: c.zMax };
+function end(into: string, r: number, R: number, angle: number, e: number, paper: number): MitreEnd {
+  const c = mitreCurve(r, R, angle, e, 180, r + paper / 2);
+  const warnings: string[] = [];
+  if (c.clamped > 0) {
+    warnings.push(
+      r + e > R + 1e-9 && r > R
+        ? `Tube Ø${(2 * r).toFixed(1)} is larger than the ${into} it meets (Ø${(2 * R).toFixed(1)}): its sides pass beside the ${into}, so this is not a plain cope. ${c.clamped} of ${c.pts.length} template points are off the ${into} and excluded from the cut length.`
+        : `Tube is offset ${e.toFixed(1)} mm so its side passes beside the ${into} (Ø${(2 * R).toFixed(1)}): ${c.clamped} of ${c.pts.length} template points are off the ${into} and excluded from the cut length.`,
+    );
+  }
+  return { into, R, angle, offset: e, curve: c.pts, zMin: c.zMin, zMax: c.zMax, warnings };
 }
 
 /** Included angle between two directions, as seen from the joint (0..180). */
@@ -73,18 +104,42 @@ function ang(a: Vec, b: Vec) {
   return angleBetween(a, b);
 }
 
+/**
+ * Head tube radius at a point on its axis, interpolated as the drawing does:
+ * straight; tapered linearly htOD (top) → htODBottom (bottom); hourglass
+ * htODBottom at both ends, htOD at mid-length. Ends include the extensions.
+ */
+export function headTubeRadiusAt(d: Design, g: Geometry, p: Vec): number {
+  const top = numOf(d, 'htOD');
+  if (d.htProfile !== 'tapered' && d.htProfile !== 'hourglass') return top / 2;
+  const bot = numOf(d, 'htODBottom');
+  const a = sub(g.htTop, mul(g.steerDir, numOf(d, 'htExtTop')));
+  const b = add(g.htBottom, mul(g.steerDir, numOf(d, 'htExtBottom')));
+  const L = dist(a, b);
+  const t = L > 1e-9 ? Math.max(0, Math.min(1, dot(sub(p, a), g.steerDir) / L)) : 0;
+  if (d.htProfile === 'tapered') return (top + (bot - top) * t) / 2;
+  const w = t < 0.5 ? t / 0.5 : (1 - t) / 0.5; // 0 at the ends, 1 at the waist
+  return (bot + (top - bot) * w) / 2;
+}
+
 export function tubeCuts(d: Design, g: Geometry): TubeCut[] {
-  const comp = numOf(d, 'paperThicknessComp');
+  const paper = numOf(d, 'paperThicknessComp');
   const allowance = numOf(d, 'faceAllowance');
-  const htR = numOf(d, 'htOD') / 2;
   const stR = numOf(d, 'stOD') / 2;
   const bbR = numOf(d, 'bbShellOD') / 2;
+  const frameStyle = String(d.frameStyle);
+  const hasTT = frameStyle !== 'stepThrough';
+  const hasST = frameStyle !== 'beam';
   const { ttPts, dtPts, stPts, csPts, ssPts } = frameTubes(d, g);
   const tubes: TubeCut[] = [];
 
-  const make = (id: string, name: string, odKey: string, wallKey: string, cc: number, ends: MitreEnd[], phaseDeg = 0, quantity = 1) => {
+  /** `trim`: length removed from the c-c at square-cut (dropout) ends. */
+  const make = (id: string, name: string, odKey: string, wallKey: string, cc: number, ends: MitreEnd[], quantity = 1, trim = 0, extra: string[] = []) => {
     const od = numOf(d, odKey);
-    const longPts = cc - ends.reduce((s, e) => s + e.zMin, 0);
+    const warnings = [...extra, ...ends.flatMap((e) => e.warnings)];
+    const raw = cc - trim - ends.reduce((s, e) => s + e.zMin, 0);
+    if (raw <= 0) warnings.push(`${name} has no length left between its mitres (${raw.toFixed(1)} mm); check the geometry.`);
+    const longPts = Math.max(0, raw);
     tubes.push({
       id,
       name,
@@ -93,57 +148,93 @@ export function tubeCuts(d: Design, g: Geometry): TubeCut[] {
       cc,
       ends,
       lengthLongPoints: longPts,
-      cutLength: longPts + allowance * ends.length,
-      phaseDeg,
+      cutLength: longPts > 0 ? longPts + allowance * ends.length : 0,
+      phaseDeg: 0,
       quantity,
+      warnings,
     });
   };
 
-  // Top tube: rear end into seat tube, front end into head tube.
-  {
-    const r = numOf(d, 'ttOD') / 2 + comp;
-    const dirTT = sub(g.ttFront, g.ttRear);
-    const a1 = ang(sub(g.stTop, g.ttRear), dirTT); // ST up vs TT forward
-    const a2 = ang(sub(g.htTop, g.ttFront), sub(g.ttRear, g.ttFront));
-    make('tt', 'Top tube', 'ttOD', 'ttWall', polyLength(ttPts), [end('seat tube', r, stR, 180 - a1), end('head tube', r, htR, 180 - a2)]);
+  // Top tube: rear end into seat tube, front end into head tube. Angles use
+  // the centreline's end tangents so a curved tube is coped correctly.
+  if (hasTT) {
+    const r = numOf(d, 'ttOD') / 2;
+    const tRear = endTangent(ttPts, false); // forward along TT at the seat tube
+    const tFront = endTangent(ttPts, true); // forward along TT at the head tube
+    const ends: MitreEnd[] = [];
+    const extra: string[] = [];
+    if (hasST) ends.push(end('seat tube', r, stR, 180 - ang(g.seatDir, tRear), 0, paper)); // seat tube up vs TT forward
+    else extra.push('Beam frame: no seat tube, so the rear end is left square (joint design is up to the builder).');
+    const a2 = ang(sub(g.htTop, g.ttFront), mul(tFront, -1));
+    ends.push(end('head tube', r, headTubeRadiusAt(d, g, g.ttFront), 180 - a2, 0, paper));
+    make('tt', 'Top tube', 'ttOD', 'ttWall', polyLength(ttPts), ends, 1, 0, extra);
   }
   // Down tube: BB shell (perpendicular), head tube.
   {
-    const r = numOf(d, 'dtOD') / 2 + comp;
-    const a = ang(sub(g.htBottom, g.dtFront), sub(g.bb, g.dtFront));
-    make('dt', 'Down tube', 'dtOD', 'dtWall', polyLength(dtPts), [end('BB shell', r, bbR, 90), end('head tube', r, htR, a)]);
+    const r = numOf(d, 'dtOD') / 2;
+    const tFront = endTangent(dtPts, true);
+    const a = ang(sub(g.htBottom, g.dtFront), mul(tFront, -1));
+    make('dt', 'Down tube', 'dtOD', 'dtWall', polyLength(dtPts), [end('BB shell', r, bbR, 90, 0, paper), end('head tube', r, headTubeRadiusAt(d, g, g.dtFront), a, 0, paper)]);
   }
   // Seat tube into BB shell (square cut at top).
-  {
-    const r = numOf(d, 'stODBottom') / 2 + comp;
-    make('st', 'Seat tube', 'stOD', 'stWall', polyLength(stPts), [end('BB shell', r, bbR, 90)]);
+  if (hasST) {
+    const r = numOf(d, 'stODBottom') / 2;
+    make('st', 'Seat tube', 'stOD', 'stWall', polyLength(stPts), [end('BB shell', r, bbR, 90, 0, paper)]);
   }
-  // Chainstays into BB shell, seatstays into seat tube. Dropout ends are slotted, so square cut.
+  // Chainstays into BB shell, seatstays into seat tube. The stays stop short
+  // of the axle by the dropout offsets (as drawn); those ends are square.
   {
-    const r = numOf(d, 'csOD') / 2 + comp;
-    make('cs', 'Chainstay', 'csOD', 'csWall', polyLength(csPts), [end('BB shell', r, bbR, 90)], 0, 2);
+    const r = numOf(d, 'csOD') / 2;
+    make('cs', 'Chainstay', 'csOD', 'csWall', polyLength(csPts), [end('BB shell', r, bbR, 90, 0, paper)], 2, numOf(d, 'csDropoutOffset'));
   }
   {
-    const r = numOf(d, 'ssOD') / 2 + comp;
-    const a = ang(sub(g.stBottom, g.ssTop), sub(g.rearAxle, g.ssTop));
-    const e = Math.max(0, stR - numOf(d, 'ssOD') / 2 + 1);
-    make('ss', 'Seatstay', 'ssOD', 'ssWall', polyLength(ssPts), [end('seat tube', r, stR, 180 - a, e)], 0, 2);
+    const r = numOf(d, 'ssOD') / 2;
+    const ends: MitreEnd[] = [];
+    const extra: string[] = [];
+    if (hasST) {
+      // Stays sit on the sides of the seat tube: offset so the stay's outer
+      // surface is flush with the seat tube's side (r + e = R), never outside it.
+      const a = ang(sub(g.stBottom, g.ssTop), sub(g.rearAxle, g.ssTop));
+      const e = Math.max(0, stR - r);
+      ends.push(end('seat tube', r, stR, 180 - a, e, paper));
+    } else extra.push('Beam frame: no seat tube, so the seatstay top end is left square (joint design is up to the builder).');
+    make('ss', 'Seatstay', 'ssOD', 'ssWall', polyLength(ssPts), ends, 2, numOf(d, 'ssDropoutOffset'), extra);
   }
   // Head tube: square both ends.
-  tubes.push({
-    id: 'ht',
-    name: 'Head tube',
-    od: numOf(d, 'htOD'),
-    wall: numOf(d, 'htWall'),
-    cc: g.dims.headTubeLength,
-    ends: [],
-    lengthLongPoints: g.dims.headTubeLength + numOf(d, 'htExtTop') + numOf(d, 'htExtBottom'),
-    cutLength: g.dims.headTubeLength + numOf(d, 'htExtTop') + numOf(d, 'htExtBottom') + 2 * allowance,
-    phaseDeg: 0,
-    quantity: 1,
-  });
-  void dist;
+  {
+    const htl = g.dims.headTubeLength;
+    const raw = htl + numOf(d, 'htExtTop') + numOf(d, 'htExtBottom');
+    const warnings: string[] = [];
+    if (htl <= 0) warnings.push(`Head tube length is ${htl.toFixed(1)} mm (stack too low for this fork); cut length shown is clamped at zero plus any extensions.`);
+    const lp = Math.max(0, raw);
+    tubes.push({
+      id: 'ht',
+      name: 'Head tube',
+      od: numOf(d, 'htOD'),
+      wall: numOf(d, 'htWall'),
+      cc: Math.max(0, htl),
+      ends: [],
+      lengthLongPoints: lp,
+      cutLength: lp > 0 ? lp + 2 * allowance : 0,
+      phaseDeg: 0,
+      quantity: 1,
+      warnings,
+    });
+  }
   return tubes;
+}
+
+/**
+ * Frame-level notes for the cut list: tubes the frame style has that the cut
+ * list cannot give, followed by every tube's warnings (prefixed with its name).
+ */
+export function cutListWarnings(d: Design, g: Geometry, cuts: TubeCut[] = tubeCuts(d, g)): string[] {
+  const out: string[] = [];
+  const frameStyle = String(d.frameStyle);
+  if (frameStyle === 'stepThrough') out.push('Step-through tube is not in the cut list (its geometry is drawing-only); cut and mitre it from the drawing.');
+  if (frameStyle === 'mixte') out.push('Mixte stays are not in the cut list (their geometry is drawing-only); cut and mitre them from the drawing.');
+  for (const t of cuts) for (const w of t.warnings) out.push(`${t.name}: ${w}`);
+  return out;
 }
 
 /** Positions a builder needs to set a frame jig, relative to BB centre. */

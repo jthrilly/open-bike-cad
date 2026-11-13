@@ -547,6 +547,7 @@ tr.off td {
   }
   aside {
     overflow: visible;
+    min-height: auto;
   }
   .title-edit input {
     min-width: 0;

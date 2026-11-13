@@ -174,7 +174,7 @@ export const PARAMS: ParamDef[] = [
     max: 200,
     bcad: ['BB textfield'],
   }),
-  num('seatTubeLength', 'Seat tube length (c-t)', 'frame', 540, {
+  num('seatTubeLength', 'Seat tube length (c-t)', 'frame', 580, {
     help: 'From BB centre to the top of the seat tube, along the seat tube.',
     min: 200,
     max: 800,
@@ -454,7 +454,7 @@ export const PARAMS: ParamDef[] = [
   num('footLength', 'Foot / shoe length', 'rider', 280),
   num('shoulderWidth', 'Shoulder width', 'rider', 400),
   num('riderMass', 'Rider mass', 'rider', 75, { unit: 'kg' }),
-  num('cleatSetback', 'Cleat: ball of foot to pedal axle', 'rider', 0),
+  num('cleatSetback', 'Cleat: ball of foot to pedal axle', 'rider', 0, { help: 'Positive = cleat further back on the shoe, so the ball of the foot (and the toe) sit this far forward of the pedal axle.' }),
 
   // ------------------------------------------------------------------- fit
   en('fitScheme', 'Fit scheme', 'fit', 'road', [
@@ -479,7 +479,7 @@ export const PARAMS: ParamDef[] = [
     ['letter', 'Letter 8.5×11"'],
     ['tabloid', 'Tabloid 11×17"'],
   ]),
-  num('paperThicknessComp', 'Paper thickness allowance', 'fixture', 0.2, { step: 0.05, help: 'Added to tube OD so the wrapped template matches the tube surface.' }),
+  num('paperThicknessComp', 'Paper thickness allowance', 'fixture', 0.2, { step: 0.05, help: 'Paper thickness. Added to tube OD for the template wrap only (circumference π·(OD + t)); the cope shape and cut lengths do not change.' }),
   num('fixtureHTExtension', 'Fixture head tube cone extension', 'fixture', 0),
   num('fixtureRefHeight', 'Fixture BB reference height', 'fixture', 0),
   num('faceAllowance', 'Tube cut allowance (each end)', 'fixture', 2, { step: 0.5 }),
