@@ -193,6 +193,7 @@ export function geometry3d(d: Design, g: Geometry) {
                     charge_port: R3(e.battery.chargePort),
                     headlight: R3(e.battery.headlight),
                     removal_xz: V(e.battery.removal),
+                    brace: { boss: R3(e.battery.brace.boss), from: R3(e.battery.brace.from), bar: e.battery.brace.bar, note: 'M5 boss brazed to the front of the head tube; flat-bar stay up to the cradle floor.' },
                     block_load_kg: e.battery.blockLoadKg,
                     block_rating_kg: e.battery.blockRatingKg,
                   }

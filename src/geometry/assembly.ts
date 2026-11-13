@@ -96,6 +96,8 @@ export interface EAssist {
     headlight: P3;
     /** Direction the pack lifts out (side view). */
     removal: Vec;
+    /** Flat-bar brace from the cradle floor to an M5 boss low on the front of the head tube, so pothole loads don't all go through the block's two M5 screws. */
+    brace: { boss: P3; from: P3; bar: string };
     blockLoadKg: number;
     blockRatingKg: number;
   };
@@ -563,6 +565,11 @@ export function buildAssembly(d: Design, g: Geometry): Assembly {
         chargePort: p3(at(face, plate + baseT + pd * 0.6, lift + ph / 2 - 30), pw / 2 + 2),
         headlight: p3(at(face, plate + baseT + pd + 10, lift - ph / 2 + 25)),
         removal: up,
+        brace: (() => {
+          const htR = numOf(d, 'htOD') / 2;
+          const boss = add(lerp(g.htTop, g.htBottom, 0.8), mul(fwd, htR + 6));
+          return { boss: p3(boss), from: p3(at(face, plate + 10, cradleBottom)), bar: '20 x 4 mm steel flat, M5 at each end' };
+        })(),
         blockLoadKg: Math.round((kg + 0.9 + 0.4 + 0.2) * 10) / 10,
         blockRatingKg: cb.block.loadKg,
       };
