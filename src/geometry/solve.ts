@@ -151,7 +151,7 @@ function solveWithHtTop(d: Design, T: Vec, htlOverride?: number): Geometry {
   // Top tube
   const ttFront = add(htTop, mul(u, numOf(d, 'ttHeadOffset')));
   let ttRear: Vec;
-  if (d.topTubeMode === 'extension') {
+  if (d.topTubeMode === 'extension' || d.frontEndMode === 'ett') {
     ttRear = add(stBottom, mul(s, stLen - numOf(d, 'seatTubeExtension')));
   } else {
     const ta = numOf(d, 'topTubeAngle');
@@ -205,7 +205,9 @@ function solveWithHtTop(d: Design, T: Vec, htlOverride?: number): Geometry {
 
   // Derived dimensions
   const seatLineXAt = (y: number) => stBottom.x + (y / Math.tan(rad(SA))) * -1;
-  const ett = htTop.x - seatLineXAt(htTop.y);
+  // Measured as BikeCAD does: horizontally from the seat tube line to the top tube /
+  // head tube centreline junction, at the junction's height.
+  const ett = ttFront.x - seatLineXAt(ttFront.y);
   const ttCC = dist(ttFront, ttRear);
   const ttVec = sub(ttFront, ttRear);
   const ttAngle = angleOf(ttVec); // positive when sloping down to the rear
@@ -412,6 +414,23 @@ export function solve(d: Design): Geometry {
     return solveWithHtTop(d, T, htlForStack(d, T.y));
   }
 
+  if (mode === 'ett') {
+    // As BikeCAD: the top tube leaves the seat tube junction at the top tube angle and meets
+    // the head tube where it is the effective top tube length from the seat tube line.
+    // Head tube length follows from the fork and front wheel.
+    const s = v(-Math.cos(SA), Math.sin(SA));
+    const J0 = add(v(bbOffset, 0), mul(s, numOf(d, 'seatTubeLength') - numOf(d, 'seatTubeExtension')));
+    const ta = rad(numOf(d, 'topTubeAngle'));
+    const dir = v(Math.cos(ta), Math.sin(ta));
+    // J = J0 + t·dir with J.x − seatLineXAt(J.y) = ETT
+    const t = (numOf(d, 'ettLength') - (J0.x - seatLineXAt(J0.y))) / (dir.x + dir.y / Math.tan(SA));
+    const J = add(J0, mul(dir, t));
+    const HA = rad(numOf(d, 'headAngle'));
+    const u = v(Math.cos(HA), -Math.sin(HA));
+    const T = sub(J, mul(u, numOf(d, 'ttHeadOffset')));
+    return solveWithHtTop(d, T, htlForStack(d, T.y));
+  }
+
   // Remaining modes: HTL is an input, so stack is fixed; solve for x.
   const htl = numOf(d, 'headTubeLength');
   const off = frontEndOffsets(d, htl);
@@ -427,9 +446,6 @@ export function solve(d: Design): Geometry {
       check = { label: 'Front centre', target: fc, got: (g) => g.dims.frontCenter, why: `it must be at least the front axle height above/below the BB (${Math.abs(fy).toFixed(1)} mm)` };
       break;
     }
-    case 'ett':
-      x = seatLineXAt(stack) + numOf(d, 'ettLength');
-      break;
     case 'ttLength': {
       const target = numOf(d, 'ttLengthCC');
       x = bisect((xx) => solveWithHtTop(d, v(xx, stack), htl).dims.ttCC - target, 0, 2000, numOf(d, 'reach'));
@@ -496,6 +512,11 @@ export function switchFrontEndMode(d: Design, mode: string): Design {
   out.headTubeLength = round(g.dims.headTubeLength);
   out.frontCenter = round(g.dims.frontCenter);
   out.ettLength = round(g.dims.ett);
+  if (mode === 'ett') {
+    // ETT mode builds the top tube from these, so carry the current values over.
+    out.topTubeAngle = round(g.dims.ttAngle);
+    out.seatTubeExtension = round(numOf(d, 'seatTubeLength') - g.dims.stCC);
+  }
   out.ttLengthCC = round(g.dims.ttCC);
   out.barReachTarget = round(g.barClamp.x);
   out.barStackTarget = round(g.barClamp.y);

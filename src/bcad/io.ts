@@ -80,9 +80,14 @@ function readSpecial(e: Map<string, string>): Partial<Design> {
   else if (e.get('Fork straight blade') === 'true') out.forkType = 'straight';
 
   // Front end. "Top tube front center measure style" says what "FCD textfield" holds:
-  //   3 = reach (with "Stack")  — verified against real files
-  //   1 = front centre          — matches how published BikeCAD datasets interpret it
-  //   0 = effective top tube, 2 = top tube c-c — best guess, not yet verified
+  //   0 = effective top tube, with "Top tube angle textfield"; head tube length is an output
+  //   1 = front centre, with "Head tube length textfield"
+  //   2 = handlebar clamp X from the BB, with "Handlebar Y textfield" above the BB
+  //   3 = reach, with "Stack"
+  //   4 = rider compartment, 5 = BB to hands: converted to a handlebar position afterwards
+  //       by riderFrontEndToBars()
+  // All checked by exporting real files through BikeCAD and measuring its drawings, and
+  // against its FrontTriangle code.
   const style = n('Top tube front center measure style');
   const fcd = n('FCD textfield');
   if (fcd != null) {
@@ -93,14 +98,23 @@ function readSpecial(e: Map<string, string>): Partial<Design> {
     } else if (style === 0) {
       out.frontEndMode = 'ett';
       out.ettLength = fcd;
-    } else if (style === 2) {
-      out.frontEndMode = 'ttLength';
-      out.ttLengthCC = fcd;
-    } else {
+      const tta = n('Top tube angle textfield');
+      if (tta != null) out.topTubeAngle = tta;
+    } else if (style === 2 && e.has('Handlebar Y textfield')) {
+      out.frontEndMode = 'bars';
+      out.barReachTarget = fcd;
+      out.barStackTarget = n('Handlebar Y textfield')!;
+    } else if (style !== 4 && style !== 5) {
       out.frontEndMode = 'frontCenter';
       out.frontCenter = fcd;
     }
   } else if (e.has('Head tube length textfield')) out.frontEndMode = 'reachHtl';
+
+  // "OFFSET_AT_BB st": the seat tube axis is moved forward of the BB centre by this much,
+  // measured square to the seat tube. Our bbOffset is horizontal at BB height.
+  const stOff = n('OFFSET_AT_BB st');
+  const saDeg = n('Seat angle');
+  if (stOff != null && saDeg != null) out.bbOffset = stOff / Math.sin((saDeg * Math.PI) / 180);
 
   // BB: style 0 = drop below axle, 1 = height above ground.
   const bbv = n('BB textfield');
@@ -427,8 +441,56 @@ function designFromEntries(e: Map<string, string>): { design: Design; mappedKeys
     const val = coerce(p.kind, raw);
     if (val !== undefined) design[id] = val;
   }
-  if (!untouched) edgeExtensionsToCentreline(design, e);
+  if (!untouched) {
+    riderFrontEndToBars(design, e);
+    edgeExtensionsToCentreline(design, e);
+  }
+  for (const k of RIDER_FRONT_KEYS) if (e.has(k)) mappedKeys.add(k);
   return { design, mappedKeys: [...mappedKeys] };
+}
+
+const RIDER_FRONT_KEYS = ['BB to handlebar direct', 'BB to hands angle', 'Handlebar Y textfield'];
+
+/**
+ * Where BikeCAD's style 5 puts the hands: probing BikeCAD with drop bars matched the bar clamp
+ * itself to within 0.2 mm (other handlebar styles move it by about 10 mm).
+ */
+const riderHandOffset = v(0, 0);
+/** BikeCAD's saddle point for style 4. Our saddle top lands within about 3 mm of BikeCAD's. */
+const saddlePointOf = (_d: Design, g: Geometry): Vec => g.saddleTop;
+
+/**
+ * Front-end styles 4 and 5 place the handlebar from the rider's contact points:
+ *   4 "rider compartment": FCD is the saddle-to-handlebar distance and "BB to handlebar direct"
+ *     the BB-to-handlebar distance; with the saddle height they form a triangle at the BB.
+ *   5 "BB to hands": FCD is the distance from the BB to the hands at "BB to hands angle" (degrees
+ *     above horizontal); the bar sits behind the hands as the handlebar dictates.
+ * We read both as a handlebar position (our 'bars' mode). From BikeCAD's FrontTriangle code.
+ */
+function riderFrontEndToBars(d: Design, e: Map<string, string>) {
+  const style = numFrom(e.get('Top tube front center measure style'));
+  const fcd = numFrom(e.get('FCD textfield'));
+  if (fcd == null || (style !== 4 && style !== 5)) return;
+  const g = solve(d);
+  let clamp: Vec | null = null;
+  if (style === 4) {
+    const D = numFrom(e.get('BB to handlebar direct'));
+    const S = saddlePointOf(d, g);
+    const H = Math.hypot(S.x, S.y);
+    if (D == null || !H) return;
+    const cosPhi = (D * D + H * H - fcd * fcd) / (2 * D * H);
+    if (Math.abs(cosPhi) > 1) return;
+    const a = Math.atan2(S.y, S.x) - Math.acos(cosPhi);
+    clamp = v(D * Math.cos(a), D * Math.sin(a));
+  } else {
+    const ang = numFrom(e.get('BB to hands angle'));
+    if (ang == null) return;
+    const a = (ang * Math.PI) / 180;
+    clamp = sub(v(fcd * Math.cos(a), fcd * Math.sin(a)), riderHandOffset);
+  }
+  d.frontEndMode = 'bars';
+  d.barReachTarget = Math.round(clamp.x * 100) / 100;
+  d.barStackTarget = Math.round(clamp.y * 100) / 100;
 }
 
 /** BikeCAD keys whose value depends on a measure style, written only by exportBcad's special code. */
@@ -574,8 +636,30 @@ export function exportBcad(file: BikeFile, derived?: Record<string, number>): st
   // Front end: keep the file's measure style, writing the value it expects.
   const style = num('Top tube front center measure style') ?? 3;
   if (!entries.has('Top tube front center measure style')) setInt('Top tube front center measure style', 3);
-  const fcdKey = style === 3 ? 'reach' : style === 0 ? 'ett' : style === 2 ? 'ttCC' : 'frontCenter';
-  if (dimChanged(fcdKey)) setNum('FCD textfield', round1(g.dims[fcdKey]));
+  if (style === 4 || style === 5) {
+    const barMoved = !base || !gBase || Math.hypot(g.barClamp.x - gBase.barClamp.x, g.barClamp.y - gBase.barClamp.y) > 1e-6 || changed('saddleHeight');
+    if (barMoved && style === 4) {
+      setNum('FCD textfield', round1(dist(saddlePointOf(d, g), g.barClamp)));
+      setNum('BB to handlebar direct', round1(Math.hypot(g.barClamp.x, g.barClamp.y)));
+    } else if (barMoved) {
+      const h = add(g.barClamp, riderHandOffset);
+      setNum('FCD textfield', round1(Math.hypot(h.x, h.y)));
+      setNum('BB to hands angle', round1((Math.atan2(h.y, h.x) * 180) / Math.PI));
+    }
+  } else if (style === 2) {
+    // Handlebar clamp position.
+    const barMoved = !base || !gBase || Math.hypot(g.barClamp.x - gBase.barClamp.x, g.barClamp.y - gBase.barClamp.y) > 1e-6;
+    if (barMoved) {
+      setNum('FCD textfield', round1(g.barClamp.x));
+      setNum('Handlebar Y textfield', round1(g.barClamp.y));
+    }
+  } else {
+    const fcdKey = style === 3 ? 'reach' : style === 0 ? 'ett' : 'frontCenter';
+    if (dimChanged(fcdKey)) setNum('FCD textfield', round1(g.dims[fcdKey]));
+  }
+  if (changed('bbOffset', 'seatAngle') && (entries.has('OFFSET_AT_BB st') || n('bbOffset') !== 0)) {
+    setNum('OFFSET_AT_BB st', round1(n('bbOffset') * Math.sin((n('seatAngle') * Math.PI) / 180)));
+  }
   if (dimChanged('stack') && (style === 3 || entries.has('Stack'))) setNum('Stack', round1(g.dims.stack));
   if (changed('headTubeLength') || dimChanged('headTubeLength')) setNum('Head tube length textfield', round1(g.dims.headTubeLength));
   if (changed('topTubeAngle') || dimChanged('ttAngle')) setNum('Top tube angle textfield', round1(g.dims.ttAngle));

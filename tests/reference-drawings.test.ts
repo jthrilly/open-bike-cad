@@ -84,3 +84,38 @@ describe('saving keeps BikeCAD geometry', () => {
     expect(parseFloat(e.get('Seat tube length')!)).toBeCloseTo(588.7, 1);
   });
 });
+
+// Wheel positions measured from BikeCAD's drawings of the same files (x from the BB, mm).
+// The files cover every front-end style in the samples and both chainstay styles.
+const axles: Record<string, { front?: number; rear?: number; tol?: number; note: string }> = {
+  'biked-tt-bike.bcad': { front: 623.2, note: 'effective top tube + top tube angle, seat tube offset 20 mm at the BB' },
+  'biked-bike1.bcad': { front: 585.4, rear: -339.4, note: 'effective top tube; chainstay as 5 mm tyre clearance' },
+  'biked-bike4.bcad': { front: 619.0, note: 'handlebar position (FCD = clamp X, Handlebar Y)' },
+  'biked-bike7.bcad': { front: 533.1, note: 'handlebar position' },
+  'biked-bike2.bcad': { rear: -300.4, note: 'chainstay as 28 mm tyre clearance, BB height style' },
+  // BIKED Road.bcad switched to the rider-based styles (no real files use them).
+  'biked-road-style4.bcad': { front: 501.7, tol: 3.5, note: 'rider compartment: saddle to bar 600, BB to bar 750' },
+  'biked-road-style5.bcad': { front: 659.9, note: 'BB to hands: 800 mm at 45°' },
+};
+
+describe('wheel positions match BikeCAD drawings', () => {
+  for (const [file, w] of Object.entries(axles)) {
+    it(`${file}: ${w.note}`, () => {
+      const g = solve(importBcad(load(file), file).design);
+      if (w.front != null) expect(Math.abs(g.frontAxle.x - w.front)).toBeLessThan(w.tol ?? 1);
+      if (w.rear != null) expect(Math.abs(g.rearAxle.x - w.rear)).toBeLessThan(1.5);
+    });
+  }
+
+  it('keeps the handlebar and effective-top-tube styles when saving', () => {
+    for (const file of ['biked-bike4.bcad', 'biked-tt-bike.bcad', 'biked-road-style4.bcad', 'biked-road-style5.bcad']) {
+      const f = importBcad(load(file), file);
+      const d = { ...f.design, headAngle: Number(f.design.headAngle) + 1 };
+      const xml = exportBcad({ ...f, design: d });
+      const g0 = solve(d);
+      const g1 = solve(importBcad(xml, file).design);
+      expect(Math.abs(g1.frontAxle.x - g0.frontAxle.x)).toBeLessThan(0.2);
+      expect(Math.abs(g1.htTop.y - g0.htTop.y)).toBeLessThan(0.2);
+    }
+  });
+});

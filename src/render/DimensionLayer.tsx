@@ -55,8 +55,8 @@ export function DimensionLayer({ d, g, onPick }: { d: Design; g: Geometry; onPic
   if (set.has('reach'))
     out.push(<LinearDim key="reach" a={v(0, g.htTop.y)} b={g.htTop} offset={ts * 3} mode="horizontal" label={`Reach ${f1(D.reach)}`} style={style} onClick={pk('frontEnd')} />);
   if (set.has('ett')) {
-    const sl = v(g.stBottom.x - g.htTop.y / Math.tan((D.seatAngle * Math.PI) / 180), g.htTop.y);
-    out.push(<LinearDim key="ett" a={sl} b={g.htTop} offset={ts * 6} mode="horizontal" label={`ETT ${f1(D.ett)}`} style={style} onClick={pk('frontEnd')} />);
+    const sl = v(g.stBottom.x - g.ttFront.y / Math.tan((D.seatAngle * Math.PI) / 180), g.ttFront.y);
+    out.push(<LinearDim key="ett" a={sl} b={g.ttFront} offset={ts * 6} mode="horizontal" label={`ETT ${f1(D.ett)}`} style={style} onClick={pk('frontEnd')} />);
   }
   if (set.has('htl'))
     out.push(<LinearDim key="htl" a={g.htTop} b={g.htBottom} offset={-(numOf(d, 'htOD') / 2 + ts * 1.5)} label={`HT ${f1(D.headTubeLength)}`} style={style} onClick={pk('frontEnd')} />);

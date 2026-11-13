@@ -118,7 +118,6 @@ const color = (id: string, label: string, group: GroupId, def: string, extra: Pa
 });
 
 const isMode = (m: string) => (d: Design) => d.frontEndMode === m;
-const notMode = (m: string) => (d: Design) => d.frontEndMode !== m;
 
 export const PARAMS: ParamDef[] = [
   // ---------------------------------------------------------------- front end
@@ -131,7 +130,7 @@ export const PARAMS: ParamDef[] = [
       ['stackReach', 'Stack & reach'],
       ['reachHtl', 'Reach & head tube length'],
       ['frontCenter', 'Front centre & head tube length'],
-      ['ett', 'Effective top tube & head tube length'],
+      ['ett', 'Effective top tube & top tube angle'],
       ['ttLength', 'Top tube length (c-c) & head tube length'],
       ['bars', 'Handlebar position'],
     ],
@@ -149,7 +148,7 @@ export const PARAMS: ParamDef[] = [
   }),
   num('frontCenter', 'Front centre', 'frontEnd', 590, { showIf: isMode('frontCenter') }),
   num('ettLength', 'Effective top tube', 'frontEnd', 550, {
-    help: 'Horizontal distance from the head tube top to the seat tube line (or its extension).',
+    help: 'Horizontal distance from the seat tube line to where the top tube centreline meets the head tube. With the top tube angle and seat tube junction it places the head tube; head tube length is calculated.',
     showIf: isMode('ett'),
   }),
   num('ttLengthCC', 'Top tube length c-c', 'frontEnd', 540, { showIf: isMode('ttLength') }),
@@ -162,7 +161,7 @@ export const PARAMS: ParamDef[] = [
   num('headTubeLength', 'Head tube length', 'frontEnd', 150, {
     min: 40,
     max: 400,
-    showIf: notMode('stackReach'),
+    showIf: (d) => !['stackReach', 'ett', 'bars'].includes(String(d.frontEndMode)),
     bcad: ['Head tube length textfield'],
   }),
 
@@ -194,12 +193,12 @@ export const PARAMS: ParamDef[] = [
     help: 'Positive slopes down towards the seat tube.',
     min: -30,
     max: 45,
-    showIf: (d) => d.topTubeMode === 'angle',
+    showIf: (d) => d.topTubeMode === 'angle' || d.frontEndMode === 'ett',
     bcad: ['Top tube angle textfield'],
   }),
   num('seatTubeExtension', 'Seat tube extension', 'frame', 20, {
     help: 'Top of seat tube above the top tube centreline intersection.',
-    showIf: (d) => d.topTubeMode === 'extension',
+    showIf: (d) => d.topTubeMode === 'extension' || d.frontEndMode === 'ett',
   }),
   num('ttHeadOffset', 'Top tube junction below HT top', 'frame', 20, {
     help: 'Distance along the head tube from its top to the top tube centreline.',
