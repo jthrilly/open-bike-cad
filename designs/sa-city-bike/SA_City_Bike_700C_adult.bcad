@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
-<comment>Created by Open Bike CAD on Fri Nov 13 2026 15:40:42 GMT+0000 (Coordinated Universal Time)</comment>
+<comment>Created by Open Bike CAD on Fri Nov 13 2026 16:02:09 GMT+0000 (Coordinated Universal Time)</comment>
 <entry key="Head angle">69.0</entry>
 <entry key="Seat angle">70.0</entry>
 <entry key="DISCONTINUOUS">false</entry>
@@ -29,24 +29,24 @@
 <entry key="Saddle angle">0.0</entry>
 <entry key="Wheel diameter rear">734.0</entry>
 <entry key="Wheel diameter front">734.0</entry>
-<entry key="FORK0L">400.2</entry>
+<entry key="FORK0L">410.3</entry>
 <entry key="FORK0R">62.0</entry>
 <entry key="DUAL_CROWN">false</entry>
 <entry key="Fork straight blade">false</entry>
 <entry key="Top tube front center measure style">3</entry>
 <entry key="FCD textfield">375.0</entry>
-<entry key="Stack">630.7</entry>
+<entry key="Stack">640.1</entry>
 <entry key="Head tube length textfield">210.0</entry>
-<entry key="Top tube angle textfield">39.7</entry>
+<entry key="Top tube angle textfield">40.4</entry>
 <entry key="BB textfield">72.0</entry>
 <entry key="CS textfield">470.0</entry>
 <entry key="ST measure style">1</entry>
 <entry key="Head tube upper extension2">110.0</entry>
 <entry key="Head tube lower extension2">30.0</entry>
 <entry key="Seat tube extension2">310.0</entry>
-<entry key="Head tube upper extension">99.7</entry>
-<entry key="Head tube lower extension">1.6</entry>
-<entry key="Seat tube extension">286.8</entry>
+<entry key="Head tube upper extension">99.8</entry>
+<entry key="Head tube lower extension">1.2</entry>
+<entry key="Seat tube extension">286.5</entry>
 <entry key="Seat tube length">460.0</entry>
 <entry key="Seat stay junction0">-235.0</entry>
 <entry key="Top tube diameter">31.8</entry>
@@ -126,7 +126,7 @@
 <entry key="OpenBikeCAD.csBridgePos">70.0</entry>
 <entry key="OpenBikeCAD.ssBridgePos">130.0</entry>
 <entry key="OpenBikeCAD.forkType">rigid</entry>
-<entry key="OpenBikeCAD.forkLength">405.0</entry>
+<entry key="OpenBikeCAD.forkLength">415.0</entry>
 <entry key="OpenBikeCAD.forkRake">62.0</entry>
 <entry key="OpenBikeCAD.forkBladeBendLength">140.0</entry>
 <entry key="OpenBikeCAD.forkCrownHeight">25.0</entry>
@@ -288,5 +288,5 @@
 <entry key="OpenBikeCAD.dimTextSize">14.0</entry>
 <entry key="OpenBikeCAD.dimColor">#c2410c</entry>
 <entry key="OpenBikeCAD.dimSet">stack,reach,ha,sa,htl,cs,bbdrop,bbh,wb,fc,trail,st,tt,dt,standover,fork,rake</entry>
-<entry key="OpenBikeCAD.fingerprint">7a3804a1</entry>
+<entry key="OpenBikeCAD.fingerprint">919e7b91</entry>
 </properties>
