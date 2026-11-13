@@ -1075,5 +1075,4 @@ def main():
                 print(f"  rendered {scene.render.filepath}")
 
 
-if __name__ == "__main__":
-    main()
+main()
