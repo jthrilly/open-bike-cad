@@ -333,17 +333,7 @@ def build(g):
     lathe(part("stem", M["alu"]), [(0, -2), (19, -2), (19, 0), (0, 0)], pivot + steer_dir * (stem_clamp_h / 2 + 2), steer_dir, 32, closed=True)
     sweep(part("stem", M["alu"]), [pivot, clamp], 15, segs=24)
     lathe(part("stem", M["alu"]), disc_profile(16, 21, 44), clamp, Y, 32)
-    bw = ck["bar"]["width"]
-    bar_pts = [clamp + Vector((-30 * (abs(y) / (bw / 2)) ** 2, y, 0)) for y in [bw / 2 * (k / 10 - 1) for k in range(21)]]
-    radii = [ck["bar"]["clamp_dia"] / 2 if abs(p.y - clamp.y) < 40 else 11.1 for p in bar_pts]
-    sweep(part("handlebar", M["alu"]), bar_pts, 0, segs=24, radii=radii)
-    for s in (1, -1):
-        end = clamp + Vector((-30, s * bw / 2, 0))
-        lathe(part("grips", M["black"]), disc_profile(11, 16, 130), end - Vector((0, s * 65, 0)), Y, 32)
-        lever_root = end - Vector((0, s * 150, 0))
-        lathe(part("brake_levers", M["black"]), disc_profile(11, 15, 22), lever_root, Y, 24)
-        sweep(part("brake_levers", M["alu"]), [lever_root + Vector((10, 0, 0)), lever_root + Vector((45, -s * 15, -10)), lever_root + Vector((55, -s * 85, -14))], 4, segs=12)
-        lathe(part("brake_levers", M["black"]), disc_profile(0, 4, 2), lever_root + Vector((55, -s * 85, -14)), Y, 12)
+    controls = cockpit_controls(part, M, ck, clamp)
 
     # seatpost and saddle
     sd = g["saddle"]
@@ -363,6 +353,7 @@ def build(g):
 
     # accessories
     accessories(part, M, g, wheel_info, tubes)
+    cables(part, M, g, tubes, controls, wheel_info)
 
     # CITY decal on both sides of the down tube
     decal(col, M["accent"], tubes["down tube"], paint.get("decal", ""))
@@ -661,7 +652,7 @@ def accessories(part, M, g, wheels, tubes):
     if isinstance(rl, dict):
         c = Vector(rl["centre"])
         radial = Vector((rl["radial_xz"][0], 0, rl["radial_xz"][1])).normalized()
-        travel = Y.cross(radial).normalized()
+        travel = Vector((rl["tangent_xz"][0], 0, rl["tangent_xz"][1])).normalized() if "tangent_xz" in rl else Y.cross(radial).normalized()
         ri, ro, L = rl["inner_radius"], rl["outer_radius"], rl["body_length"]
         half = math.radians(rl["body_arc_deg"]) / 2
         lp = part("ring_lock", M["black"])
@@ -681,9 +672,15 @@ def accessories(part, M, g, wheels, tubes):
             phi = half + (2 * math.pi - 2 * half) * i / 24
             d = math.cos(phi) * radial + math.sin(phi) * Y
             shackle.append(c + d * (ri + ro) / 2)
-        sweep(part("ring_lock_shackle", M["steel"]), shackle, 4.5, segs=12)
+        sweep(part("ring_lock_shackle", M["steel"]), shackle, 5, segs=12)
         for m in rl.get("mounts", []):
-            boss(Vector(m["at"]), 4, 6)
+            at = Vector(m["at"])
+            boss(at, 4, 6)
+            v = at - c
+            face = 1 if v.dot(travel) > 0 else -1
+            v -= travel * v.dot(travel)
+            target = c + v.normalized() * (ri + ro) / 2 + travel * face * L / 2
+            sweep(part("ring_lock_brackets", M["steel"]), [at, target], 3, segs=10)
 
     # Brompton-style front carrier block: brazed mount block plus the bolted-on block
     cb = acc.get("front_carrier_block")
@@ -709,27 +706,169 @@ def accessories(part, M, g, wheels, tubes):
         for foot in ks["feet"]:
             sweep(part("kickstand", M["black"]), [pivot + Vector((0, math.copysign(15, foot[1]), 0)), foot], 8, segs=12)
 
-    # V-brakes (accessories.brakes names the type; arms are a generic V-brake at the rim)
-    if acc.get("brakes"):
-        brake_r = front["rim_bsd"] / 2
-        brakes = []
-        if "blade_left" in g["fork"]:
-            post, _ = point_at_distance(g["fork"]["blade_left"], fa, brake_r)
-            if post is not None:
-                brakes.append((fa, post))
-        ss = tubes["seatstay left"]["centreline"]
-        post, _ = point_at_distance(list(reversed(ss)), ra, brake_r)
-        if post is not None:
-            brakes.append((ra, post))
-        for ax, post in brakes:
-            radial = (post - Vector((ax.x, post.y, ax.z))).normalized()
-            for s in (1, -1):
-                p = Vector((post.x, s * abs(post.y), post.z))
-                out = Vector((0, s * 14, 0))
-                top = p + radial * 105 + out
-                sweep(part("brakes", M["alu"]), [p + out * 0.5, p + radial * 30 + out, top], 0, segs=12, radii=[6, 5, 4])
-                box(part("brakes", M["black"]), p + radial * 8 + Vector((0, s * 6, 0)), (8, 8, 30), basis_from(radial.cross(Y), radial))
-            sweep(part("brakes", M["steel"]), [post + radial * 100 + Vector((0, abs(post.y) + 16, 0)) - Vector((0, post.y, 0)), post + radial * 100 - Vector((0, abs(post.y) + 16, 0)) - Vector((0, post.y, 0))], 2, segs=8)
+    if acc.get("brakes") == "vbrake":
+        for vb in vbrakes(g, tubes, wheels):
+            for side in vb["arms"]:
+                sweep(part("brakes", M["alu"]), side["arm"], 0, segs=12, radii=[6.5, 6, 5, 4.5])
+                lathe(part("brake_pads", M["black"]), disc_profile(0, 7, 12), side["arm"][0], Y, 16)
+                b0 = side["arm"][0]
+                sweep(part("brake_cable", M["steel"]), [Vector((b0.x, b0.y * 0.75, b0.z)), b0], 4, segs=12)
+                pad, inward, tang = side["pad"], side["inward"], vb["tangent"]
+                box(part("brake_pads", M["black"]), pad, (8, abs(inward.y) * 1 + 10, 34), basis_from(vb["radial"], tang))
+            sweep(part("brake_cable", M["steel"]), vb["noodle"], 3.2, segs=10)
+            sweep(part("brake_cable", M["steel"]), [vb["noodle"][-1], vb["cable_end"]], 0.9, segs=6, caps=True)
+
+
+def vbrakes(g, tubes, wheels):
+    """V-brake bosses below the braking track on the fork blades and seatstays, arms rising past the tyre."""
+    out = []
+    mounts = []
+    if "blade_left" in g["fork"]:
+        mounts.append((wheels["front"], g["fork"]["blade_left"], g["fork"]["blade_od"]))
+    mounts.append((wheels["rear"], list(reversed(tubes["seatstay left"]["centreline"])), tubes["seatstay left"]["od"]))
+    for w, poly, od in mounts:
+        ax = Vector(w["axle"])
+        bsd = w["rim_bsd"] / 2
+        tyre_r = w["outer_diameter"] / 2
+        post, _ = point_at_distance(poly, ax, bsd - 28)
+        if post is None:
+            continue
+        radial = (Vector((post.x, 0, post.z)) - Vector((ax.x, 0, ax.z))).normalized()
+        tangent = Y.cross(radial).normalized()
+        arm_len = tyre_r + 9 - (bsd - 28)
+        arms = []
+        for sgn in (1, -1):
+            boss_p = Vector((post.x, sgn * (abs(post.y) + od / 2 + 8), post.z))
+            top = boss_p + radial * arm_len
+            top.y = sgn * max(w["tyre_width"] / 2 + 14, abs(boss_p.y) - 10)
+            arm = [boss_p, boss_p + radial * 25 + Vector((0, -sgn * 2, 0)), boss_p + radial * (arm_len - 15), top]
+            inward = Vector((0, -sgn * (abs(boss_p.y) - 16), 0))
+            pad = boss_p + radial * 36 + inward / 2
+            arms.append({"arm": arm, "top": top, "pad": pad, "inward": inward})
+        lt, rt = arms[0]["top"], arms[1]["top"]
+        noodle = catmull([lt + radial * 45 + Vector((0, 4, 0)), lt + radial * 12 + Vector((0, 2, 0)), lt + Vector((0, -10, 0))], 6)
+        out.append({"arms": arms, "radial": radial, "tangent": tangent, "noodle": noodle, "cable_end": rt, "housing_start": noodle[0]})
+    return out
+
+
+def catmull(pts, n=8):
+    pts = [Vector(p) for p in pts]
+    ext = [pts[0] * 2 - pts[1]] + pts + [pts[-1] * 2 - pts[-2]]
+    res = []
+    for i in range(1, len(ext) - 2):
+        p0, p1, p2, p3 = ext[i - 1], ext[i], ext[i + 1], ext[i + 2]
+        for k in range(n):
+            t = k / n
+            res.append(0.5 * ((2 * p1) + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (-p0 + 3 * p1 - 3 * p2 + p3) * t ** 3))
+    res.append(pts[-1])
+    return res
+
+
+def cockpit_controls(part, M, ck, clamp):
+    """Bar, grips, V-brake levers and the twist shifter, from cockpit.bar_centreline, grips, brake_levers and shifter."""
+    bar = [Vector(p) for p in ck["bar_centreline"]]
+    grip_r = ck.get("bar_grip_dia", 22.2) / 2
+    clamp_r = ck["bar"]["clamp_dia"] / 2
+    clamp_half = abs(bar[1].y - clamp.y) if len(bar) > 2 else 40
+    dense = []
+    for a, b in zip(bar, bar[1:]):
+        n = max(2, int((a - b).length / 10))
+        dense += [a.lerp(b, k / n) for k in range(n)]
+    dense.append(bar[-1])
+    radii = []
+    for p in dense:
+        off = abs(p.y - clamp.y)
+        t = min(1.0, max(0.0, (off - clamp_half) / 20))
+        radii.append(clamp_r + (grip_r - clamp_r) * t)
+    sweep(part("handlebar", M["alu"]), dense, 0, segs=24, radii=radii)
+    ctrl = {}
+    for gp in ck.get("grips", []):
+        g0, g1 = Vector(gp["from"]), Vector(gp["to"])  # from = bar end
+        d = (g0 - g1).normalized()
+        r = gp["od"] / 2
+        sweep(part("grips", M["black"]), [g1, g0 - d * 6], r, segs=24)
+        sweep(part("grips", M["black"]), [g0 - d * 8, g0 + d * 2], r + 2, segs=24)
+    for lv in ck.get("brake_levers", []):
+        cc, pivot, tip = Vector(lv["clamp_centre"]), Vector(lv["pivot"]), Vector(lv["blade_tip"])
+        d = Vector((0, 1 if tip.y > cc.y else -1, 0))
+        w = lv.get("clamp_width", 20)
+        lathe(part("brake_levers", M["black"]), disc_profile(grip_r, grip_r + 4, w), cc, Y, 24)
+        fwd = (pivot - cc)
+        fwd.y = 0
+        body_len = fwd.length + 8
+        fwd.normalize()
+        box(part("brake_levers", M["black"]), cc + fwd * body_len / 2, (body_len, w, 20), Matrix((fwd, Y, fwd.cross(Y))).transposed())
+        # adjuster barrel on the inboard side of the lever body, where the housing leaves
+        barrel = cc + fwd * (body_len - 10) - d * (w / 2 + 6)
+        lathe(part("brake_lever_blades", M["alu"]), disc_profile(0, 4, 12), barrel, Y, 16)
+        bend = pivot + fwd * 12 + d * 18
+        blade = catmull([pivot, bend, bend.lerp(tip, 0.5) + fwd * 2, tip], 6)
+        sweep(part("brake_lever_blades", M["alu"]), blade, 0, segs=12, radii=[6 - 2.5 * i / (len(blade) - 1) for i in range(len(blade))])
+        ctrl[("brake", lv["brake"])] = barrel - d * 6
+    sh = ck.get("shifter")
+    if sh:
+        s0, s1 = Vector(sh["from"]), Vector(sh["to"])
+        d = (s1 - s0).normalized()  # outboard end to inboard end
+        r = sh["od"] / 2
+        sweep(part("shifter", M["black"]), [s0, s1], r - 2, segs=24)
+        n = 10
+        for k in range(n):
+            p = s0.lerp(s0.lerp(s1, 0.6), (k + 0.5) / n)
+            lathe(part("shifter", M["black"]), disc_profile(r - 2, r, 2.5), p, d, 24)
+        box(part("shifter", M["black"]), s1 - d * 8 + Vector((0, 0, -r - 4)), (30, 16, 14))
+        lathe(part("shifter_paddle", M["alu"]), disc_profile(0, r - 1.5, 3), s0.lerp(s1, 0.75), d, 24)
+        ctrl["shift"] = s1 + d * 2 + Vector((6, 0, -r - 8))
+    return ctrl
+
+
+def cables(part, M, g, tubes, controls, wheels):
+    """Cable housings: left lever to the front brake, right lever to the rear brake, shifter to the hub."""
+    if not controls:
+        return
+    ht = [Vector(p) for p in tubes["head tube"]["centreline"]]  # top, bottom
+    ht_dir = (ht[1] - ht[0]).normalized()
+    ht_fwd = Y.cross(ht_dir).normalized()
+    if ht_fwd.x < 0:
+        ht_fwd = -ht_fwd
+    vbs = vbrakes(g, tubes, wheels) if g["accessories"].get("brakes") == "vbrake" else []
+    housing = part("cables", M["black"])
+    r = 2.6
+    upper = tubes.get("top tube") or tubes["step tube"]
+    ua, ub = (Vector(p) for p in upper["centreline"])  # rear end, front end
+    top_off = Vector((0, 0, upper["od"] / 2 + r + 0.5))
+    ht_r = tubes["head tube"]["od"] / 2
+
+    def beside_ht(t, side, extra=0.0):
+        return ht[0].lerp(ht[1], t) + Vector((0, side * (ht_r + 18 + extra), 0)) + ht_fwd * 6
+
+    if vbs and controls.get(("brake", "front")):
+        fb = vbs[0]
+        lv = controls.get(("brake", "front"))
+        hs = fb["housing_start"]
+        pts = [lv, lv + Vector((15, 15, -50)), beside_ht(-0.1, -1), beside_ht(0.55, -1, 4) + ht_fwd * 10, ht[0].lerp(ht[1], 0.85) + ht_fwd * (ht_r + 30), beside_ht(1.0, 1, 10) + ht_fwd * 14, hs + fb["radial"] * 40, hs]
+        sweep(housing, catmull(pts, 10), r, segs=10)
+    if len(vbs) > 1 and controls.get(("brake", "rear")):
+        rb = vbs[1]
+        lv = controls[("brake", "rear")]
+        ss = [Vector(p) for p in tubes["seatstay left"]["centreline"]]
+        ss_dir = (ss[1] - ss[0]).normalized()
+        ss_top = Vector((-ss_dir.z, 0, ss_dir.x)) * (tubes["seatstay left"]["od"] / 2 + r + 0.5)
+        if ss_top.z < 0:
+            ss_top = -ss_top
+        hs = rb["housing_start"]
+        pts = [lv, lv + Vector((15, -15, -50)), beside_ht(-0.1, 1, 4), beside_ht(0.3, 1, 4), ub + top_off + Vector((-45, 0, 0)), ub.lerp(ua, 0.5) + top_off, ua + top_off + Vector((25, 0, 0)), ss[1] + ss_top + Vector((0, 0, 4)), ss[1].lerp(ss[0], 0.35) + ss_top, hs + rb["radial"] * 30, hs]
+        sweep(housing, catmull(pts, 10), r, segs=10)
+    if "shift" in controls:
+        lv = controls["shift"]
+        dt = [Vector(p) for p in tubes["down tube"]["centreline"]]  # BB, head tube
+        dt_dir = (dt[1] - dt[0]).normalized()
+        dt_under = Vector((dt_dir.z, 0, -dt_dir.x)) * (tubes["down tube"]["od"] / 2 + r + 0.5)
+        cs = [Vector(p) for p in tubes["chainstay right"]["centreline"]]  # dropout, BB
+        cs_r = tubes["chainstay right"]["od"] / 2
+        rear = wheels["rear"]
+        hub = Vector(rear["axle"]) + Vector((22, -(rear["hub"].get("old", 130) / 2) + 8, 18))
+        pts = [lv, lv + Vector((15, 20, -50)), beside_ht(-0.1, -1, 8), beside_ht(0.85, -1, 8), dt[1] - dt_dir * 90 + dt_under, dt[0] + dt_dir * 120 + dt_under, dt[0] + Vector((-25, -18, -38)), cs[1].lerp(cs[0], 0.25) + Vector((0, -cs_r - r, 4)), cs[1].lerp(cs[0], 0.85) + Vector((0, -cs_r - r, 4)), hub]
+        sweep(housing, catmull(pts, 10), r, segs=10)
 
 
 def decal(col, mat, tube, text):
@@ -936,4 +1075,5 @@ def main():
                 print(f"  rendered {scene.render.filepath}")
 
 
-main()
+if __name__ == "__main__":
+    main()

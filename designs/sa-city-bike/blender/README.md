@@ -4,7 +4,7 @@
 so it can be re-run whenever the geometry changes. From `designs/sa-city-bike`:
 
 ```bash
-/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P blender/build_bike.py -- OUT_DIR SA_City_Bike_700C_adult_geometry.json SA_City_Bike_24_kids_geometry.json
+/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P blender/build_bike.py -- OUT_DIR SA_City_Bike_700C_adult_geometry.json SA_City_Bike_24_kids_geometry.json SA_City_Bike_700C_eassist_geometry.json
 ```
 
 For each bike it writes `<name>.blend`, `<name>.glb` (in metres, without the ground plane)
@@ -15,7 +15,9 @@ the crown.
 
 Accessories are built only from the `accessories` section of the geometry (format version 2):
 fenders and their stays, the rear rack tubes, the chainguard outline and lip, the ring lock,
-the front carrier block, the kickstand and the V-brakes. Nothing there is invented by the
+the front carrier block and the kickstand. The cockpit (bar, grips, brake levers and twist
+shifter) comes from `cockpit`. V-brake arms, pads and the link cable sit on the fork blade
+and seatstay below the rim, and the cable housings run from the levers to the brakes and hub. Nothing there is invented by the
 script, so a change to a drawing shows up in the model once the JSON is regenerated. The
 saddle is a sprung leather city saddle (twin coil springs, rivets) sized from
 `saddle.saddle_length`; it is the one part not described by the JSON.
