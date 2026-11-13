@@ -182,3 +182,21 @@ describe('drawing sheet spec table', () => {
     expect(t.perCol * 2).toBeGreaterThanOrEqual(rows.length);
   });
 });
+
+describe('drawing sheet notes', () => {
+  it('wraps long notes to the title block width', async () => {
+    const { wrapNotes } = await import('../src/ui/Sheet');
+    const long = 'word '.repeat(100).trim();
+    const lines = wrapNotes(long, 40, 20);
+    expect(lines.every((l) => l.length <= 40)).toBe(true);
+    expect(lines.join(' ')).toBe(long);
+  });
+  it('keeps line breaks and ends overflow with an ellipsis', async () => {
+    const { wrapNotes } = await import('../src/ui/Sheet');
+    expect(wrapNotes('a\nb', 10, 5)).toEqual(['a', 'b']);
+    const lines = wrapNotes('x '.repeat(50), 5, 2);
+    expect(lines).toHaveLength(2);
+    expect(lines[1].endsWith('…')).toBe(true);
+    expect(wrapNotes('abcdefghij', 4, 5)).toEqual(['abcd', 'efgh', 'ij']);
+  });
+});

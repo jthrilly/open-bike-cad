@@ -44,6 +44,37 @@ export function specTableLayout(rows: SpecRow[], availH: number, maxW: number) {
   return { cols, perCol, rowH, fs, colWidths, width, headH, height };
 }
 
+/**
+ * Word-wraps the drawing notes to fit the title block: `maxChars` per line
+ * (estimated from the font size), at most `maxLines` lines, keeping the
+ * user's own line breaks. Overflow ends the last line with an ellipsis.
+ */
+export function wrapNotes(text: string, maxChars: number, maxLines: number): string[] {
+  const out: string[] = [];
+  for (const para of text.split('\n')) {
+    let line = '';
+    for (const word of para.split(/\s+/).filter(Boolean)) {
+      // Break a word longer than a whole line.
+      let w = word;
+      while (w.length > maxChars) {
+        if (line) (out.push(line), (line = ''));
+        out.push(w.slice(0, maxChars));
+        w = w.slice(maxChars);
+      }
+      if (!line) line = w;
+      else if (line.length + 1 + w.length <= maxChars) line += ' ' + w;
+      else (out.push(line), (line = w));
+    }
+    out.push(line);
+  }
+  while (out.length && out[out.length - 1] === '') out.pop();
+  if (out.length <= maxLines) return out;
+  const kept = out.slice(0, maxLines);
+  const last = kept[maxLines - 1];
+  kept[maxLines - 1] = (last.length >= maxChars ? last.slice(0, maxChars - 1) : last) + '…';
+  return kept;
+}
+
 export const Sheet = forwardRef<SVGSVGElement, { d: Design; g: Geometry }>(function Sheet({ d, g }, ref) {
   const [W, H] = SHEETS[String(d.sheetSize)] ?? SHEETS.A3;
   const m = 10;
@@ -66,7 +97,10 @@ export const Sheet = forwardRef<SVGSVGElement, { d: Design; g: Geometry }>(funct
   const accent = String(d.titleBlockColor);
   const { rowH, fs, headH, perCol, colWidths } = tl;
   const colX = colWidths.map((_, c) => colWidths.slice(0, c).reduce((x, w) => x + w, 0));
-  const notes = String(d.notes ?? '').split('\n').slice(0, 6);
+  // Notes sit in the right 55 % of the title block at 2.8 mm text, 4 mm line pitch;
+  // Helvetica averages about 0.5 em per character.
+  const notesFs = 2.8;
+  const notes = wrapNotes(String(d.notes ?? ''), Math.floor(((W - 2 * m) * 0.55 - 4) / (notesFs * 0.5)), Math.floor((tbH - 7) / 4));
   return (
     <svg ref={ref} className="sheet" xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${W} ${H}`} width={`${W}mm`} height={`${H}mm`} fontFamily="Helvetica, Arial, sans-serif">
       <rect x={0} y={0} width={W} height={H} fill="#fff" />
@@ -117,7 +151,7 @@ export const Sheet = forwardRef<SVGSVGElement, { d: Design; g: Geometry }>(funct
         <text x={10} y={29} fill="#555">
           Scale 1:{nice} · all dimensions in mm · drawn with Open Bike CAD
         </text>
-        <g transform={`translate(${(W - 2 * m) * 0.45} 7)`} fontSize={2.8}>
+        <g transform={`translate(${(W - 2 * m) * 0.45} 7)`} fontSize={notesFs}>
           {notes.map((n, i) => (
             <text key={i} x={0} y={i * 4}>
               {n}
