@@ -1,6 +1,6 @@
 {
   "format": "open-bike-cad 3D geometry",
-  "version": 3,
+  "version": 4,
   "name": "SA City Bike 20 (G Line wheels)",
   "size": "One size, riders ~150-190 cm",
   "material": "Mild / high-tensile ERW steel, fillet brazed (bronze)",
@@ -78,7 +78,7 @@
     },
     {
       "what": "Rear fender to seatstays",
-      "mm": 21.1,
+      "mm": 26.1,
       "ok": true
     },
     {
@@ -113,7 +113,7 @@
     },
     {
       "what": "Ring lock inside to tyre, rim and fender",
-      "mm": 5.9,
+      "mm": 5.6,
       "ok": true
     },
     {
@@ -123,7 +123,7 @@
     },
     {
       "what": "Ring lock to rear rack",
-      "mm": 17.8,
+      "mm": 21.5,
       "ok": true
     },
     {
@@ -153,12 +153,22 @@
     },
     {
       "what": "Front bag to front tyre/fender at full steering lock",
-      "mm": 31.8,
+      "mm": 32.2,
       "ok": true
     },
     {
       "what": "Front bag top to handlebar/stem at full steering lock (room for hands)",
       "mm": 73.9,
+      "ok": true
+    },
+    {
+      "what": "Front V-brake bosses within 8 mm of 80 c-c (now 80; check the brake maker's range)",
+      "mm": 8,
+      "ok": true
+    },
+    {
+      "what": "Front fender to fork blades (sideways, at the crown)",
+      "mm": 3,
       "ok": true
     }
   ],
@@ -399,113 +409,113 @@
         0,
         232.3
       ],
-      "half_width": 53.7
+      "half_width": 46.7
     },
     "blade_od": 25.4,
     "blade_left": [
       [
         516,
-        53.7,
+        46.7,
         232.3
       ],
       [
         575.3,
-        53.7,
+        46.7,
         69.4
       ],
       [
         578,
-        53.6,
+        47,
         62.3
       ],
       [
         580.7,
-        53.6,
+        47.3,
         55.5
       ],
       [
         583.6,
-        53.5,
+        47.6,
         48.9
       ],
       [
         586.5,
-        53.5,
+        47.9,
         42.6
       ],
       [
         589.4,
-        53.4,
+        48.2,
         36.5
       ],
       [
         592.5,
-        53.3,
+        48.4,
         30.7
       ],
       [
         595.6,
-        53.3,
+        48.7,
         25.2
       ],
       [
         598.8,
-        53.2,
+        49,
         19.9
       ],
       [
         602.1,
-        53.2,
+        49.3,
         14.9
       ],
       [
         605.4,
-        53.1,
+        49.6,
         10.1
       ],
       [
         608.8,
-        53,
+        49.9,
         5.6
       ],
       [
         612.3,
-        53,
+        50.2,
         1.4
       ],
       [
         615.9,
-        52.9,
+        50.5,
         -2.5
       ],
       [
         619.6,
-        52.9,
+        50.8,
         -6.3
       ],
       [
         623.3,
-        52.8,
+        51.1,
         -9.7
       ],
       [
         627.1,
-        52.7,
+        51.3,
         -12.9
       ],
       [
         631,
-        52.7,
+        51.6,
         -15.8
       ],
       [
         634.9,
-        52.6,
+        51.9,
         -18.5
       ],
       [
         638.9,
-        52.6,
+        52.2,
         -20.9
       ],
       [
@@ -517,107 +527,107 @@
     "blade_right": [
       [
         516,
-        -53.7,
+        -46.7,
         232.3
       ],
       [
         575.3,
-        -53.7,
+        -46.7,
         69.4
       ],
       [
         578,
-        -53.6,
+        -47,
         62.3
       ],
       [
         580.7,
-        -53.6,
+        -47.3,
         55.5
       ],
       [
         583.6,
-        -53.5,
+        -47.6,
         48.9
       ],
       [
         586.5,
-        -53.5,
+        -47.9,
         42.6
       ],
       [
         589.4,
-        -53.4,
+        -48.2,
         36.5
       ],
       [
         592.5,
-        -53.3,
+        -48.4,
         30.7
       ],
       [
         595.6,
-        -53.3,
+        -48.7,
         25.2
       ],
       [
         598.8,
-        -53.2,
+        -49,
         19.9
       ],
       [
         602.1,
-        -53.2,
+        -49.3,
         14.9
       ],
       [
         605.4,
-        -53.1,
+        -49.6,
         10.1
       ],
       [
         608.8,
-        -53,
+        -49.9,
         5.6
       ],
       [
         612.3,
-        -53,
+        -50.2,
         1.4
       ],
       [
         615.9,
-        -52.9,
+        -50.5,
         -2.5
       ],
       [
         619.6,
-        -52.9,
+        -50.8,
         -6.3
       ],
       [
         623.3,
-        -52.8,
+        -51,
         -9.7
       ],
       [
         627.1,
-        -52.7,
+        -51.3,
         -12.9
       ],
       [
         631,
-        -52.7,
+        -51.6,
         -15.8
       ],
       [
         634.9,
-        -52.6,
+        -51.9,
         -18.5
       ],
       [
         638.9,
-        -52.6,
+        -52.2,
         -20.9
       ],
       [
@@ -660,17 +670,17 @@
     "cable_guides": [
       [
         590.1,
-        -52.7,
+        -51.5,
         3.9
       ],
       [
         551.8,
-        -53.1,
+        -49.7,
         85.3
       ],
       [
         520.9,
-        -53.5,
+        -47.9,
         170.2
       ]
     ],
@@ -900,7 +910,158 @@
     "saddle_height_bb_to_top": 720
   },
   "accessories": {
-    "brakes": "vbrake",
+    "brakes": {
+      "type": "vbrake",
+      "rear_hub_brake": "roller",
+      "note": "V-brake bosses sit 26 mm inside the bead seat radius (BSD/2) along the blade or stay (Shimano layout rule), about 80 mm apart centre to centre, facing forward on the fork and rearward on the seatstays. Arms pivot on the bosses and rise along the blade; pads meet the rim braking track about 4 mm inside the bead seat. The noodle sits on the left arm; bare cable runs across to the clamp on the right arm. A rear hub brake (roller or coaster) replaces the rear rim brake: no rear bosses.",
+      "v_brakes": [
+        {
+          "which": "front",
+          "boss_radius_from_axle": 177,
+          "track_radius_from_axle": 199,
+          "boss_spacing_cc": 80,
+          "bosses": [
+            {
+              "side": "left",
+              "base": [
+                563.8,
+                40,
+                132.7
+              ],
+              "tip": [
+                584.4,
+                40,
+                140.3
+              ],
+              "od": 16,
+              "length": 22
+            },
+            {
+              "side": "right",
+              "base": [
+                563.8,
+                -40,
+                132.7
+              ],
+              "tip": [
+                584.4,
+                -40,
+                140.3
+              ],
+              "od": 16,
+              "length": 22
+            }
+          ],
+          "arms": [
+            {
+              "side": "left",
+              "pivot": [
+                574.1,
+                46,
+                136.5
+              ],
+              "top": [
+                538.2,
+                44,
+                235.2
+              ],
+              "length": 105
+            },
+            {
+              "side": "right",
+              "pivot": [
+                574.1,
+                -46,
+                136.5
+              ],
+              "top": [
+                538.2,
+                -44,
+                235.2
+              ],
+              "length": 105
+            }
+          ],
+          "pads": [
+            {
+              "side": "left",
+              "centre": [
+                565.5,
+                23,
+                160.3
+              ],
+              "contact": [
+                565.5,
+                14,
+                160.3
+              ],
+              "length": 60,
+              "height": 12
+            },
+            {
+              "side": "right",
+              "centre": [
+                565.5,
+                -23,
+                160.3
+              ],
+              "contact": [
+                565.5,
+                -14,
+                160.3
+              ],
+              "length": 60,
+              "height": 12
+            }
+          ],
+          "noodle": {
+            "from": [
+              526.2,
+              44,
+              268.1
+            ],
+            "to": [
+              536.5,
+              20,
+              239.9
+            ]
+          },
+          "cable_clamp_right_arm": [
+            538.2,
+            -44,
+            235.2
+          ]
+        }
+      ],
+      "hub_brake": {
+        "type": "roller",
+        "unit_centre": [
+          -429.4,
+          49,
+          -23
+        ],
+        "unit_dia": 90,
+        "unit_width": 28,
+        "reaction_arm": {
+          "from": [
+            -429.4,
+            53,
+            -23
+          ],
+          "to": [
+            -309.6,
+            69.3,
+            -16.6
+          ]
+        },
+        "chainstay_clamp": [
+          -309.6,
+          56.2,
+          -16.6
+        ],
+        "note": "Approximate Nexus layout: roller unit on the left end of the hub, reaction arm forward to a band clamp on the left chainstay. Check the Shimano dealer manual for the exact hub and brake unit."
+      }
+    },
     "fenders": {
       "clearance": 14,
       "rear": {
@@ -910,7 +1071,7 @@
         ],
         "axis": "y",
         "radius_inner": 271,
-        "width": 72,
+        "width": 62,
         "start_deg": 5,
         "end_deg": 200,
         "angle_convention": "degrees around the axle in the side (x-z) plane: 0 = forward (+x), 90 = up (+z), 180 = back",
@@ -923,7 +1084,7 @@
             ],
             "to": [
               -684,
-              38,
+              33,
               69.7
             ],
             "od": 5
@@ -936,7 +1097,7 @@
             ],
             "to": [
               -684,
-              -38,
+              -33,
               69.7
             ],
             "od": 5
@@ -984,7 +1145,7 @@
         ],
         "axis": "y",
         "radius_inner": 271,
-        "width": 72,
+        "width": 62,
         "start_deg": 40,
         "end_deg": 195,
         "angle_convention": "degrees around the axle in the side (x-z) plane: 0 = forward (+x), 90 = up (+z), 180 = back",
@@ -997,7 +1158,7 @@
             ],
             "to": [
               408.3,
-              38,
+              33,
               112.5
             ],
             "od": 5
@@ -1010,7 +1171,7 @@
             ],
             "to": [
               408.3,
-              -38,
+              -33,
               112.5
             ],
             "od": 5
@@ -1471,16 +1632,16 @@
     },
     "ring_lock": {
       "centre": [
-        -321.7,
+        -322.9,
         0,
-        184.8
+        183.1
       ],
       "radial_xz": [
         0.5,
         0.9
       ],
-      "inner_radius": 59,
-      "outer_radius": 73,
+      "inner_radius": 57,
+      "outer_radius": 71,
       "tangent_xz": [
         -0.9,
         0.5
@@ -1492,36 +1653,36 @@
         {
           "name": "seatstay lock boss left lower",
           "at": [
-            -311.4,
+            -312.5,
             76.7,
-            149.5
+            147.8
           ],
           "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
         },
         {
           "name": "seatstay lock boss left upper",
           "at": [
-            -283.1,
+            -284.3,
             76.3,
-            190.8
+            189.1
           ],
           "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
         },
         {
           "name": "seatstay lock boss right lower",
           "at": [
-            -311.4,
+            -312.5,
             -76.7,
-            149.5
+            147.8
           ],
           "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
         },
         {
           "name": "seatstay lock boss right upper",
           "at": [
-            -283.1,
+            -284.3,
             -76.3,
-            190.8
+            189.1
           ],
           "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
         }

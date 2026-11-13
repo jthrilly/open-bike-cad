@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
-<comment>Created by Open Bike CAD on Fri Nov 13 2026 17:10:07 GMT+0000 (Coordinated Universal Time)</comment>
+<comment>Created by Open Bike CAD on Fri Nov 13 2026 17:33:42 GMT+0000 (Coordinated Universal Time)</comment>
 <entry key="Head angle">70.0</entry>
 <entry key="Seat angle">70.0</entry>
 <entry key="DISCONTINUOUS">false</entry>
@@ -238,6 +238,8 @@
 <entry key="OpenBikeCAD.stBossFromBB">160.0</entry>
 <entry key="OpenBikeCAD.bossSpacing">64.0</entry>
 <entry key="OpenBikeCAD.fenders">true</entry>
+<entry key="OpenBikeCAD.fenderWidthExtra">8.0</entry>
+<entry key="OpenBikeCAD.rearHubBrake">roller</entry>
 <entry key="OpenBikeCAD.fenderClearance">14.0</entry>
 <entry key="OpenBikeCAD.fenderRearStart">5.0</entry>
 <entry key="OpenBikeCAD.fenderRearEnd">200.0</entry>
@@ -251,13 +253,21 @@
 <entry key="OpenBikeCAD.rackRearOverhang">240.0</entry>
 <entry key="OpenBikeCAD.ringLock">true</entry>
 <entry key="OpenBikeCAD.carrierBlock">true</entry>
+<entry key="OpenBikeCAD.carrierBlockPosition">low</entry>
+<entry key="OpenBikeCAD.carrierBlockLowPos">60.0</entry>
+<entry key="OpenBikeCAD.frontBag">true</entry>
+<entry key="OpenBikeCAD.frontBagHeight">450.0</entry>
+<entry key="OpenBikeCAD.frontBagDepth">180.0</entry>
+<entry key="OpenBikeCAD.frontBagWidth">330.0</entry>
+<entry key="OpenBikeCAD.frontBagBelowBlock">60.0</entry>
 <entry key="OpenBikeCAD.blockBattery">false</entry>
-<entry key="OpenBikeCAD.blockBatteryHeight">200.0</entry>
-<entry key="OpenBikeCAD.blockBatteryDepth">85.0</entry>
-<entry key="OpenBikeCAD.blockBatteryWidth">110.0</entry>
+<entry key="OpenBikeCAD.blockBatteryHeight">151.0</entry>
+<entry key="OpenBikeCAD.blockBatteryDepth">111.0</entry>
+<entry key="OpenBikeCAD.blockBatteryWidth">85.0</entry>
 <entry key="OpenBikeCAD.blockBatteryLift">30.0</entry>
 <entry key="OpenBikeCAD.blockBatteryWh">360.0</entry>
-<entry key="OpenBikeCAD.blockBatteryKg">2.3</entry>
+<entry key="OpenBikeCAD.blockBatteryKg">2.2</entry>
+<entry key="OpenBikeCAD.blockBatteryLayout">10S2P of 21700 cells (5.0 Ah, 21.7 x 70.8 mm, ~69 g). Cells lie across the bike (axis = y) in a 4 deep x 5 high grid on 22.2 mm holder pitch: core 88.8 deep x 111 high x 74.5 wide incl. holders and nickel. Adds: kapton/fish-paper wrap 1 mm a side; 10S 20 A BMS (~60 x 45 x 8 mm) plus leads on the back face, 12 mm; EVA foam 1.5 mm a side; ABS/alu case wall 2.5 mm a side; slide-in lock and contact block under the cells 18 mm; carry handle and charge port in the top cap 12 mm. Pack 111 deep x 151 high x 85 wide, ~2.2 kg (cells 1.38 kg). Controller is not in the pack.</entry>
 <entry key="OpenBikeCAD.frontHubMotor">false</entry>
 <entry key="OpenBikeCAD.motorShellDia">130.0</entry>
 <entry key="OpenBikeCAD.motorShellWidth">80.0</entry>
@@ -306,7 +316,7 @@
 <entry key="OpenBikeCAD.size">One size, riders ~150-190 cm</entry>
 <entry key="OpenBikeCAD.material">Mild / high-tensile ERW steel, fillet brazed (bronze)</entry>
 <entry key="OpenBikeCAD.drawingDate"></entry>
-<entry key="OpenBikeCAD.notes">20 inch (ISO 406, Brompton G Line size) twin straight-tube step-through, one size for riders ~150-190 cm. 54-406 tyres on 406 x 22 rims (ERD ~392, check). 390 mm head tube puts the bars where the 700c bike has them. Upper tube meets the seat tube 150 mm above BB. Wishbone seatstays; chainstays dimpled 7 mm. Horizontal dropouts, 132 mm OLD, Shimano Nexus 7/8, 42/16. Seatpost 30.9 x 400. Braze-ons: V-brake posts, fender eyelets, rack mounts for an adult passenger, chainguard tabs, kickstand plate, ring-lock bosses, bottle mount. Carrier-block mounting block brazed LOW: centre 60 mm above the head tube bottom, so a bag up to ~495 mm tall fits under the bars (~330 mm at the standard position). Motor-ready fork: 310 A-C, 32 rake, 6 mm dropouts, 10 mm slots, torque arm, 3 cable guides.</entry>
+<entry key="OpenBikeCAD.notes">20 inch (ISO 406, Brompton G Line size) twin straight-tube step-through, one size for riders ~150-190 cm. 54-406 tyres on 406 x 22 rims (ERD ~392, check). 390 mm head tube puts the bars where the 700c bike has them. Upper tube meets the seat tube 150 mm above BB. Wishbone seatstays; chainstays dimpled 7 mm. Horizontal dropouts, 132 mm OLD, Shimano Nexus 7/8, 42/16. Seatpost 30.9 x 400. Brakes: V-brake front (posts ~80 c-c, 177 mm from axle), Nexus roller brake rear (reaction arm clip on left chainstay). Braze-ons: fender eyelets, rack mounts for an adult passenger, chainguard tabs, kickstand plate, ring-lock bosses, bottle mount. Carrier-block mounting block brazed LOW: centre 60 mm above the head tube bottom, so a bag up to ~495 mm tall fits under the bars (~330 mm at the standard position). Motor-ready fork: 310 A-C, 32 rake, 6 mm dropouts, 10 mm slots, torque arm, 3 cable guides.</entry>
 <entry key="OpenBikeCAD.sheetSize">A3</entry>
 <entry key="OpenBikeCAD.titleBlockColor">#2f6fde</entry>
 <entry key="OpenBikeCAD.showDims">true</entry>
@@ -322,12 +332,4 @@
 <entry key="OpenBikeCAD.dimColor">#c2410c</entry>
 <entry key="OpenBikeCAD.dimSet">stack,reach,ha,sa,htl,cs,bbdrop,bbh,wb,fc,trail,st,tt,dt,standover,fork,rake</entry>
 <entry key="OpenBikeCAD.fingerprint">61604db7</entry>
-<entry key="OpenBikeCAD.carrierBlockPosition">low</entry>
-<entry key="OpenBikeCAD.carrierBlockLowPos">60.0</entry>
-<entry key="OpenBikeCAD.frontBag">true</entry>
-<entry key="OpenBikeCAD.frontBagHeight">450.0</entry>
-<entry key="OpenBikeCAD.frontBagDepth">180.0</entry>
-<entry key="OpenBikeCAD.frontBagWidth">330.0</entry>
-<entry key="OpenBikeCAD.frontBagBelowBlock">60.0</entry>
-<entry key="OpenBikeCAD.blockBatteryLayout">10S2P of 21700 cells (5.0 Ah, 21.7 x 70.8 mm, ~69 g). Cells lie across the bike (axis = y) in a 4 deep x 5 high grid on 22.2 mm holder pitch: core 88.8 deep x 111 high x 74.5 wide incl. holders and nickel. Adds: kapton/fish-paper wrap 1 mm a side; 10S 20 A BMS (~60 x 45 x 8 mm) plus leads on the back face, 12 mm; EVA foam 1.5 mm a side; ABS/alu case wall 2.5 mm a side; slide-in lock and contact block under the cells 18 mm; carry handle and charge port in the top cap 12 mm. Pack 111 deep x 151 high x 85 wide, ~2.2 kg (cells 1.38 kg). Controller is not in the pack.</entry>
 </properties>
