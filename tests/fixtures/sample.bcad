@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>Synthetic test file using BikeCAD key names</comment>
+<entry key="Head angle">72.0</entry>
+<entry key="Seat angle">73.5</entry>
+<entry key="Head tube length textfield">150.0</entry>
+<entry key="FCD textfield">600.0</entry>
+<entry key="BB textfield">70.0</entry>
+<entry key="CS textfield">425.0</entry>
+<entry key="Seat tube length">540.0</entry>
+<entry key="Top tube angle textfield">4.0</entry>
+<entry key="BSD rear">622.0</entry>
+<entry key="BSD front">622.0</entry>
+<entry key="Wheel diameter rear">686</entry>
+<entry key="Wheel diameter front">686</entry>
+<entry key="Fork type">0</entry>
+<entry key="FORK0L">375.0</entry>
+<entry key="FORK0R">45.0</entry>
+<entry key="Upper stack height">15.0</entry>
+<entry key="Lower stack height">12.0</entry>
+<entry key="Stem length">100.0</entry>
+<entry key="Stem angle">-6.0</entry>
+<entry key="Teeth on chainring 0">50</entry>
+<entry key="Teeth on chainring 1">34</entry>
+<entry key="Teeth on cog 0">11</entry>
+<entry key="Teeth on cog 1">28</entry>
+<entry key="Number of cogs">1</entry>
+<entry key="Crank length">172.5</entry>
+<entry key="Some unknown &amp; key">keep &lt;me&gt;</entry>
+<entry key="Display FORK">true</entry>
+</properties>
