@@ -91,12 +91,24 @@ describe('.bcad save keeps BikeCAD values', () => {
     expect(out.get('MODEL_NAME')).toBe('Tourer');
   });
 
-  it('writes a tapered head tube back to the keys it came from', () => {
+  it('reads head tube type 1 as a straight tube of "Head tube diameter" (BikeCAD ignores "Head tube d")', () => {
     const f = importBcad(tapered, 'x.bcad');
-    expect(f.design.htProfile).toBe('tapered');
-    const out = parseProperties(exportBcad({ ...f, design: { ...f.design, htOD: 38 } })).entries;
-    expect(out.get('Head tube diameter')).toBe('45.0');
+    expect(f.design.htProfile).toBe('straight');
+    expect(f.design.htOD).toBe(45);
+    const out = parseProperties(exportBcad({ ...f, design: { ...f.design, htOD: 44 } })).entries;
+    expect(out.get('Head tube diameter')).toBe('44.0');
+    expect(out.get('Head tube d')).toBe('36.0');
+    expect(out.get('Head tube type')).toBe('1');
+  });
+
+  it('reads head tube type 2 at its end diameter, and saves an hourglass as type 2', () => {
+    const f = importBcad(tapered.replace('key="Head tube type">1', 'key="Head tube type">2'), 'x.bcad');
+    expect(f.design.htProfile).toBe('straight');
+    expect(f.design.htOD).toBe(45);
+    const out = parseProperties(exportBcad({ ...f, design: { ...f.design, htProfile: 'hourglass', htOD: 38, htODBottom: 46 } })).entries;
+    expect(out.get('Head tube diameter')).toBe('46.0');
     expect(out.get('Head tube d')).toBe('38.0');
+    expect(out.get('Head tube type')).toBe('2');
   });
 
   it('keeps the default fork rake when a file has no fork keys', () => {
@@ -115,11 +127,23 @@ describe('.bcad measure styles on save', () => {
     expect(parseFloat(out.get('BB textfield')!)).toBeCloseTo(273, 0);
   });
 
-  it('keeps the seat tube length in centre-to-centre form for ST measure style 1', () => {
-    const src = xml.replace('</properties>', '<entry key="ST measure style">1</entry><entry key="Seat tube extension2">20.0</entry></properties>');
+  it('keeps the seat tube length in centre-to-centre form for ST measure style 0', () => {
+    const src = xml.replace('</properties>', '<entry key="ST measure style">0</entry><entry key="Seat tube extension2">20.0</entry></properties>');
     const f = importBcad(src, 'x.bcad');
+    // Style 0: "Seat tube length" (540) is c-c, so the seat tube is 540 + 20 long.
+    expect(f.design.seatTubeLength).toBeCloseTo(560, 6);
     const d = { ...f.design, topTubeMode: 'angle', seatTubeLength: Number(f.design.seatTubeLength) + 20 };
     const out = parseProperties(exportBcad({ ...f, design: d })).entries;
     expect(parseFloat(out.get('Seat tube length')!)).toBeCloseTo(solve(d).dims.stCC, 0);
+  });
+
+  it('keeps the seat tube length in centre-to-top form for ST measure style 1', () => {
+    const src = xml.replace('</properties>', '<entry key="ST measure style">1</entry><entry key="Seat tube extension2">20.0</entry></properties>');
+    const f = importBcad(src, 'x.bcad');
+    expect(f.design.seatTubeLength).toBeCloseTo(540, 6);
+    expect(solve(f.design).dims.stCC).toBeCloseTo(520, 6);
+    const d = { ...f.design, seatTubeLength: 555 };
+    const out = parseProperties(exportBcad({ ...f, design: d })).entries;
+    expect(parseFloat(out.get('Seat tube length')!)).toBeCloseTo(555, 6);
   });
 });

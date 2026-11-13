@@ -9,9 +9,10 @@
  * Parameters that have no BikeCAD equivalent are stored under
  * "OpenBikeCAD.<id>" keys. Other programs ignore unknown keys.
  */
-import { Design, PARAMS, PARAM_BY_ID, ParamValue, defaultDesign } from '../model/schema';
+import { Design, PARAMS, PARAM_BY_ID, ParamValue, defaultDesign, numOf } from '../model/schema';
 import { PropertiesDoc, parseProperties, serializeProperties } from './properties';
-import { solve } from '../geometry/solve';
+import { solve, Geometry } from '../geometry/solve';
+import { Vec, v, add, sub, mul, dot, dist, norm, perp, lineIntersect } from '../geometry/vec';
 
 export const NS = 'OpenBikeCAD.';
 
@@ -63,8 +64,15 @@ function readSpecial(e: Map<string, string>): Partial<Design> {
   const fi = forkIndex(e);
   const forkL = n(`FORK${fi}L`) ?? n('FORK0L');
   const forkR = n(`FORK${fi}R`) ?? n('FORK0R');
+  // A suspension fork (FORK1) is drawn and measured by BikeCAD at sag: its head tube sits
+  // "Fork sag" lower along the steering axis than the full fork length would put it (checked
+  // against BikeCAD's own drawings of four files). Open Bike CAD solves with the fork length as
+  // given, so an imported suspension fork's length is the length at sag; the sag is added back
+  // on save.
+  const sag = forkSagOf(e, fi);
+  if (fi === 1 && n('Fork sag') != null) out.forkSag = n('Fork sag')!;
   if (forkL != null) {
-    out.forkLength = round1(forkAxialIsMeasured(e, fi) ? Math.hypot(forkL, forkR ?? 0) : forkL);
+    out.forkLength = round1(forkAxialIsMeasured(e, fi) ? Math.hypot(forkL - sag, forkR ?? 0) : forkL - sag);
     out.forkRake = forkR ?? 0;
   } else if (forkR != null) out.forkRake = forkR;
   if (e.get('DUAL_CROWN') === 'true') out.forkType = 'dualCrown';
@@ -114,47 +122,52 @@ function readSpecial(e: Map<string, string>): Partial<Design> {
     }
   }
 
-  // Tube junctions: the "…extension2" values are centreline offsets (used this way by
-  // published BikeCAD datasets): top tube below head tube top, down tube above head tube
-  // bottom, seat tube above top tube.
+  // Tube junctions, as centreline offsets: top tube below head tube top, down tube above head
+  // tube bottom, seat tube top above the top tube. BikeCAD stores these as the "…extension2"
+  // keys; when "Display SEATTUBEEXTENSION" is true it positions the tubes from the edge-measured
+  // "…extension" keys instead, which edgeExtensionsToCentreline() converts after the rest of
+  // the design is known. (Checked against BikeCAD's drawings of 19 files and its FrontTriangle code.)
   const htUp = n('Head tube upper extension2');
   if (htUp != null) out.ttHeadOffset = htUp;
   const htLow = n('Head tube lower extension2');
   if (htLow != null) out.dtHeadOffset = htLow;
   const stExt = n('Seat tube extension2');
   if (stExt != null) {
-    // The stored top tube angle is not always consistent with the seat tube length, so
-    // the seat tube extension defines the top tube.
+    // The stored top tube angle is only an input in BikeCAD's effective-top-tube mode, so the
+    // seat tube extension defines the top tube.
     out.topTubeMode = 'extension';
     out.seatTubeExtension = stExt;
-    // ST measure style 1 = seat tube length to the top tube (c-c).
+    // ST measure style: 0 = "Seat tube length" is centre-to-centre (BB to top tube centreline),
+    // 1 = centre-to-top. Our seat tube length is c-t.
     const stl = n('Seat tube length');
-    if (stl != null && n('ST measure style') === 1) out.seatTubeLength = round1(stl + stExt);
+    if (stl != null) out.seatTubeLength = round1(stMeasuredCC(e) ? stl + stExt : stl);
   } else if (e.has('Top tube angle textfield')) out.topTubeMode = 'angle';
 
-  // Tubes
+  // Tubes. "Top tube type" 0 (round) is drawn at "Top tube diameter"; the front/rear diameters
+  // belong to the other types. "Down tube type" 1 (round) is drawn at "Down tube diameter";
+  // type 2 tapers from "Down tube rear diameter" at the BB to "Down tube front diameter" at the
+  // head tube, which we approximate with the front (head tube end) value.
+  const ttType = n('Top tube type') ?? 0;
   const ttR = n('Top tube rear diameter');
   const ttF = n('Top tube front diameter') ?? n('Top tube diameter');
-  const tt = ttR != null && ttF != null ? Math.max(ttR, ttF) : ttR ?? ttF;
+  const tt = ttType === 0 && n('Top tube diameter') != null ? n('Top tube diameter') : ttR != null && ttF != null ? Math.max(ttR, ttF) : ttR ?? ttF;
   if (tt != null && tt > 5) out.ttOD = tt;
-  const dt = n('Down tube front diameter') ?? n('Down tube diameter');
+  const dt = n('Down tube type') === 1 ? n('Down tube diameter') ?? n('Down tube front diameter') : n('Down tube front diameter') ?? n('Down tube diameter');
   if (dt != null && dt > 5) out.dtOD = dt;
   const st = n('Seat tube diameter') ?? n('Seat tube diameter textfield');
   if (st != null && st > 5) {
     out.stOD = st;
     if (!e.has('Seat tube bottom diameter textfield')) out.stODBottom = st;
   }
+  // "Head tube type": 0 = aero, 1 = straight round tube of "Head tube diameter" ("Head tube d"
+  // is ignored), 2 = a shaped tube with "Head tube diameter" at the ends and "Head tube d" at
+  // the waist over lengths "Head tube A…E". Our hourglass doesn't follow that profile (it would
+  // put the top and down tube junctions on too thin a tube), so type 2 is read as a straight
+  // tube of its end diameter, which is what the junctions meet.
   const ht = n('Head tube diameter');
-  const htd = n('Head tube d');
   if (ht != null) {
-    if (n('Head tube type') === 1 && htd != null && htd !== ht) {
-      out.htProfile = 'tapered';
-      out.htOD = Math.min(ht, htd);
-      out.htODBottom = Math.max(ht, htd);
-    } else {
-      out.htProfile = 'straight';
-      out.htOD = ht;
-    }
+    out.htProfile = 'straight';
+    out.htOD = ht;
   }
   const walls: [string, string][] = [
     ['Wall thickness Top tube', 'ttWall'],
@@ -237,6 +250,89 @@ function forkIndex(e: Map<string, string>): number {
 /** BikeCAD's fork length is axial unless ForkLengthMeasurementN says otherwise. */
 function forkAxialIsMeasured(e: Map<string, string>, fi: number): boolean {
   return e.get(`ForkLengthMeasurement${fi}`) !== '0';
+}
+
+/** Suspension fork sag BikeCAD applies to the drawn geometry (FORK1 only). */
+function forkSagOf(e: Map<string, string>, fi: number): number {
+  if (fi !== 1) return 0;
+  const s = numFrom(e.get('Fork sag'));
+  return s != null && s > 0 ? s : 0;
+}
+
+/** "ST measure style" 0 (the default) means "Seat tube length" is centre-to-centre. */
+function stMeasuredCC(e: Map<string, string>): boolean {
+  return numFrom(e.get('ST measure style')) !== 1;
+}
+
+/** Head tube radius at a point on its axis (matches the drawing's straight/tapered/hourglass shapes). */
+function htRadiusAt(d: Design, g: Geometry, p: Vec): number {
+  const top = numOf(d, 'htOD');
+  if (d.htProfile !== 'tapered' && d.htProfile !== 'hourglass') return top / 2;
+  const bot = numOf(d, 'htODBottom');
+  const L = dist(g.htTop, g.htBottom);
+  const t = L > 1e-9 ? Math.max(0, Math.min(1, dot(sub(p, g.htTop), g.steerDir) / L)) : 0;
+  if (d.htProfile === 'tapered') return (top + (bot - top) * t) / 2;
+  const w = t < 0.5 ? t / 0.5 : (1 - t) / 0.5;
+  return (bot + (top - bot) * w) / 2;
+}
+
+/**
+ * How far each centreline junction lies from the edge point BikeCAD's edge-measured extensions
+ * start from, along the tube the extension runs along:
+ *  st:  seat tube; edge point = top tube top edge × seat tube front edge.
+ *  up:  head tube top; edge point = top tube top edge × head tube rear edge.
+ *  low: head tube bottom; edge point = down tube underside × head tube rear edge.
+ * "…extension2" (centreline) = "…extension" (edge) + offset.
+ */
+export function junctionEdgeOffsets(d: Design, g: Geometry): { st: number; up: number; low: number } {
+  const s = g.seatDir;
+  const u = g.steerDir;
+  const back = mul(g.steerNormal, -1);
+  const tt = norm(sub(g.ttFront, g.ttRear));
+  const ttUp = tt.x >= 0 ? perp(tt) : mul(perp(tt), -1);
+  const rT = numOf(d, 'ttOD') / 2;
+  const sFront = v(s.y, -s.x);
+  const P = lineIntersect(add(g.ttRear, mul(ttUp, rT)), tt, add(g.ttRear, mul(sFront, numOf(d, 'stOD') / 2)), s);
+  const Q = lineIntersect(add(g.ttFront, mul(ttUp, rT)), tt, add(g.ttFront, mul(back, htRadiusAt(d, g, g.ttFront))), u);
+  const dtDir = norm(sub(g.dtFront, g.dtRear));
+  const dtDown = dtDir.x >= 0 ? mul(perp(dtDir), -1) : perp(dtDir);
+  const R = lineIntersect(add(g.dtFront, mul(dtDown, numOf(d, 'dtOD') / 2)), dtDir, add(g.dtFront, mul(back, htRadiusAt(d, g, g.dtFront))), u);
+  return {
+    st: P ? dot(sub(P.point, g.ttRear), s) : 0,
+    up: Q ? dot(sub(g.ttFront, Q.point), u) : 0,
+    low: R ? dot(sub(R.point, g.dtFront), u) : 0,
+  };
+}
+
+/**
+ * "Display SEATTUBEEXTENSION" = true: BikeCAD places the junctions from the edge-measured
+ * extensions. Convert them to our centreline offsets; the offsets depend on the top tube angle,
+ * so iterate with the solver (converges in a few passes).
+ */
+function edgeExtensionsToCentreline(d: Design, e: Map<string, string>) {
+  if (e.get('Display SEATTUBEEXTENSION') !== 'true') return;
+  const st1 = numFrom(e.get('Seat tube extension'));
+  const up1 = numFrom(e.get('Head tube upper extension'));
+  const low1 = numFrom(e.get('Head tube lower extension'));
+  const stl = numFrom(e.get('Seat tube length'));
+  const cc = stMeasuredCC(e);
+  const useSt = st1 != null && d.topTubeMode === 'extension';
+  for (let i = 0; i < 30; i++) {
+    const o = junctionEdgeOffsets(d, solve(d));
+    let moved = 0;
+    const set = (id: string, x: number) => {
+      moved = Math.max(moved, Math.abs(x - numOf(d, id)));
+      d[id] = x;
+    };
+    if (useSt) {
+      set('seatTubeExtension', st1! + o.st);
+      if (cc && stl != null) set('seatTubeLength', stl + numOf(d, 'seatTubeExtension'));
+    }
+    if (up1 != null) set('ttHeadOffset', up1 + o.up);
+    if (low1 != null) set('dtHeadOffset', low1 + o.low);
+    if (moved < 1e-7) break;
+  }
+  for (const id of ['seatTubeExtension', 'seatTubeLength', 'ttHeadOffset', 'dtHeadOffset']) d[id] = Math.round(numOf(d, id) * 100) / 100;
 }
 
 /**
@@ -331,6 +427,7 @@ function designFromEntries(e: Map<string, string>): { design: Design; mappedKeys
     const val = coerce(p.kind, raw);
     if (val !== undefined) design[id] = val;
   }
+  if (!untouched) edgeExtensionsToCentreline(design, e);
   return { design, mappedKeys: [...mappedKeys] };
 }
 
@@ -338,6 +435,14 @@ function designFromEntries(e: Map<string, string>): { design: Design; mappedKeys
 const STYLED_KEYS = new Set(['Head tube length textfield', 'Top tube angle textfield', 'BB textfield', 'CS textfield', 'Seat tube length']);
 
 const SPECIAL_KEYS = new Set([
+  'Display SEATTUBEEXTENSION',
+  'Seat tube extension',
+  'Head tube upper extension',
+  'Head tube lower extension',
+  'Fork sag',
+  'Top tube type',
+  'Down tube type',
+  'Head tube type',
   'BSD rear',
   'BSD front',
   'Wheel diameter rear',
@@ -450,13 +555,17 @@ export function exportBcad(file: BikeFile, derived?: Record<string, number>): st
   }
 
   // Fork (BikeCAD measures the length along the steering axis).
-  if (changed('forkLength', 'forkRake')) {
-    const fi = forkIndex(entries);
+  // A suspension fork's length is held at sag (see readSpecial): add the sag back.
+  const fi = forkIndex(entries);
+  const sagged = fi === 1 && (!file.source || forkSagOf(file.source.entries, 1) > 0 || entries.has('Fork sag'));
+  if (changed('forkLength', 'forkRake') || (sagged && changed('forkSag'))) {
     const rake = n('forkRake');
     const L = n('forkLength');
-    setNum(`FORK${fi}L`, round1(forkAxialIsMeasured(entries, fi) ? Math.sqrt(Math.max(0, L * L - rake * rake)) : L));
+    const sag = sagged ? Math.max(0, n('forkSag')) : 0;
+    setNum(`FORK${fi}L`, round1((forkAxialIsMeasured(entries, fi) ? Math.sqrt(Math.max(0, L * L - rake * rake)) : L) + sag));
     setNum(`FORK${fi}R`, rake);
   }
+  if (fi === 1 && changed('forkSag')) setNum('Fork sag', n('forkSag'));
   if (changed('forkType')) {
     setKnownBool('DUAL_CROWN', d.forkType === 'dualCrown');
     setKnownBool('Fork straight blade', d.forkType === 'straight');
@@ -483,45 +592,62 @@ export function exportBcad(file: BikeFile, derived?: Record<string, number>): st
     if (!base || !gBase || Math.abs(c - clearance(base, gBase)) > 1e-6) setNum('CS textfield', round1(c));
   } else if (changed('chainstayLength')) setNum('CS textfield', n('chainstayLength'));
 
-  // Junction offsets and seat tube.
-  if (changed('ttHeadOffset')) setNum('Head tube upper extension2', n('ttHeadOffset'));
-  if (changed('dtHeadOffset')) setNum('Head tube lower extension2', n('dtHeadOffset'));
+  // Junction offsets and seat tube. Both BikeCAD key sets are written whenever a junction moves:
+  // the centreline "…extension2" keys and the edge-measured "…extension" keys (which BikeCAD
+  // uses instead when "Display SEATTUBEEXTENSION" is true), so the file reads the same either way.
+  if (!file.source && !entries.has('ST measure style')) setInt('ST measure style', 1);
+  const stCC = num('ST measure style') !== 1;
   const stExt = n('seatTubeLength') - g.dims.stCC;
   const stExtBase = base && gBase ? Number(base.seatTubeLength) - gBase.dims.stCC : NaN;
+  const off = junctionEdgeOffsets(d, g);
+  const offBase = base && gBase ? junctionEdgeOffsets(base, gBase) : null;
+  const moved = (a: number, b: number | undefined) => b == null || !Number.isFinite(b) || Math.abs(a - b) > 1e-6;
+  const setExt = (key: string, val: number, baseVal: number | undefined) => {
+    if (moved(val, baseVal) && (!file.source || entries.has(key))) setNum(key, round1(val));
+  };
+  if (changed('ttHeadOffset')) setNum('Head tube upper extension2', n('ttHeadOffset'));
+  if (changed('dtHeadOffset')) setNum('Head tube lower extension2', n('dtHeadOffset'));
   if (!base || Math.abs(stExt - stExtBase) > 1e-6) setNum('Seat tube extension2', round1(stExt));
+  setExt('Head tube upper extension', n('ttHeadOffset') - off.up, base && offBase ? Number(base.ttHeadOffset) - offBase.up : undefined);
+  setExt('Head tube lower extension', n('dtHeadOffset') - off.low, base && offBase ? Number(base.dtHeadOffset) - offBase.low : undefined);
+  setExt('Seat tube extension', stExt - off.st, offBase ? stExtBase - offBase.st : undefined);
   if (changed('seatTubeLength') || dimChanged('stCC')) {
-    setNum('Seat tube length', num('ST measure style') === 1 ? round1(g.dims.stCC) : n('seatTubeLength'));
+    // ST measure style 0 = centre-to-centre, 1 = centre-to-top.
+    setNum('Seat tube length', stCC ? round1(g.dims.stCC) : n('seatTubeLength'));
   }
   if (changed('ssSeatOffset')) {
     setNum(entries.has('Seat stay junction') && !entries.has('Seat stay junction0') ? 'Seat stay junction' : 'Seat stay junction0', n('ssSeatOffset'));
   }
 
   // Tubes
+  // Tube diameters go to the key BikeCAD draws for the file's tube type (see readSpecial).
   if (changed('ttOD')) {
-    setKnown('Top tube rear diameter', n('ttOD'));
-    setKnown('Top tube front diameter', n('ttOD'));
-    setKnown('Top tube diameter', n('ttOD'));
+    if ((num('Top tube type') ?? 0) === 0 && (!file.source || entries.has('Top tube diameter'))) setNum('Top tube diameter', n('ttOD'));
+    else {
+      setKnown('Top tube rear diameter', n('ttOD'));
+      setKnown('Top tube front diameter', n('ttOD'));
+      setKnown('Top tube diameter', n('ttOD'));
+    }
   }
   if (changed('dtOD')) {
-    setKnown('Down tube front diameter', n('dtOD'));
-    setKnown('Down tube diameter', n('dtOD'));
+    if (num('Down tube type') === 1) setNum('Down tube diameter', n('dtOD'));
+    else {
+      setKnown('Down tube front diameter', n('dtOD'));
+      setKnown('Down tube diameter', n('dtOD'));
+    }
   }
   if (changed('stOD')) setKnown('Seat tube diameter', n('stOD'));
+  // "Head tube type": 0 = aero, 1 = straight ("Head tube d" unused), 2 = ends at "Head tube
+  // diameter", waist at "Head tube d" (our hourglass). BikeCAD has no plain taper, so a tapered
+  // head tube is saved as a straight tube of its larger (bottom) diameter.
   if (changed('htOD', 'htODBottom', 'htProfile')) {
-    if (d.htProfile === 'tapered') {
-      // Put the top and bottom diameters back in whichever key held each.
-      const a = numFrom(file.source?.entries.get('Head tube diameter'));
-      const b = numFrom(file.source?.entries.get('Head tube d'));
-      const topInD = a != null && b != null && b < a;
-      setNum('Head tube diameter', topInD ? n('htODBottom') : n('htOD'));
-      setNum('Head tube d', topInD ? n('htOD') : n('htODBottom'));
-      setInt('Head tube type', 1);
-    } else if (d.htProfile === 'hourglass') {
-      // BikeCAD has no hourglass head tube; keep its end diameter.
+    if (d.htProfile === 'hourglass') {
       setNum('Head tube diameter', n('htODBottom'));
+      setNum('Head tube d', n('htOD'));
+      if (num('Head tube type') !== 2) setInt('Head tube type', 2);
     } else {
-      setNum('Head tube diameter', n('htOD'));
-      if (num('Head tube type') === 1) setInt('Head tube type', 0);
+      setNum('Head tube diameter', d.htProfile === 'tapered' ? Math.max(n('htOD'), n('htODBottom')) : n('htOD'));
+      if (!file.source || (base?.htProfile === 'hourglass' && num('Head tube type') === 2)) setInt('Head tube type', 1);
     }
   }
   const walls: [string, string][] = [
