@@ -129,7 +129,7 @@ export function tubeCuts(d: Design, g: Geometry): TubeCut[] {
   const stR = numOf(d, 'stOD') / 2;
   const bbR = numOf(d, 'bbShellOD') / 2;
   const frameStyle = String(d.frameStyle);
-  const hasTT = frameStyle !== 'stepThrough';
+  const hasTT = frameStyle !== 'stepThrough' && frameStyle !== 'single';
   const beam = frameStyle === 'beam';
   const { ttPts, dtPts, stPts, csPts, ssPts } = frameTubes(d, g);
   // Beam frame = BikeCAD's discontinuous seat tube: only the sections drawn are cut. A tube

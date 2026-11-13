@@ -161,7 +161,7 @@ export function BikeDrawing({ d, g, ghost, onPick }: Props) {
       {/* Main triangle */}
       <g {...pick('frame')}>
         {P(tubeOutline(dtPts, d.dtProfile === 'round' ? dtR : numOf(d, 'dtODMinor') / 2, d.dtProfile === 'round' ? dtR : numOf(d, 'dtODMinor') / 2), fillMain)}
-        {frameStyle !== 'stepThrough' && P(tubeOutline(ttPts, ttR, ttR), fillMain)}
+        {frameStyle !== 'stepThrough' && frameStyle !== 'single' && P(tubeOutline(ttPts, ttR, ttR), fillMain)}
         {frameStyle === 'stepThrough' && <StepThroughTube g={g} outline={outline} fill={fillMain} sw={sw} r={ttR} />}
         {frameStyle !== 'beam' && P(tubeOutline(stPts, stRb, stR), fillMain)}
         {frameStyle === 'beam' && seatTubeSections(d, stPts).map((sec, i) => <path key={i} d={svgPath(tubeOutline(sec.pts, sec.r0, sec.r1))} fill={fillMain} stroke={outline} strokeWidth={sw} strokeLinejoin="round" />)}
@@ -624,7 +624,7 @@ function Decals({ d, g, dtPts, ttPts }: { d: Design; g: Geometry; dtPts: Vec[]; 
     );
   };
   along(dtPts, String(d.decalText), numOf(d, 'dtOD') * 0.62, 'dt');
-  along(ttPts, String(d.ttDecal), numOf(d, 'ttOD') * 0.55, 'tt');
+  if (d.frameStyle !== 'single') along(ttPts, String(d.ttDecal), numOf(d, 'ttOD') * 0.55, 'tt');
   if (d.headBadge) {
     const mid = lerp(g.htTop, g.htBottom, 0.4);
     items.push(
@@ -752,7 +752,7 @@ function Cockpit({ d, g, outline, fill, sw }: { d: Design; g: Geometry; outline:
   parts.push(<path key="ucup" d={svgPath(rectAlong(g.htTop, upper, htR * 2 + 4))} fill={fill} stroke={outline} strokeWidth={sw * 0.8} />);
   parts.push(<path key="lcup" d={svgPath(orientedRect(g.htBottom, u, lower, htR * 2 + 4))} fill={fill} stroke={outline} strokeWidth={sw * 0.8} />);
   const spStart = add(g.htTop, mul(up, upper));
-  if (d.stemKind !== 'quill' && spacers > 0) {
+  if (d.stemKind !== 'quill' && d.stemKind !== 'handlepost' && spacers > 0) {
     const n5 = Math.max(1, Math.round(spacers / 10));
     for (let i = 0; i < n5; i++) {
       parts.push(<path key={`sp${i}`} d={svgPath(rectAlong(add(spStart, mul(up, (i * spacers) / n5)), spacers / n5, steerR * 2 + 6))} fill="#9aa1ad" stroke={outline} strokeWidth={sw * 0.6} />);
@@ -760,7 +760,15 @@ function Cockpit({ d, g, outline, fill, sw }: { d: Design; g: Geometry; outline:
   }
   const stemDir = norm(sub(g.barClamp, g.stemPivot));
   const barDia = numOf(d, 'barDia');
-  if (d.stemKind === 'quill') {
+  if (d.stemKind === 'handlepost') {
+    // Steerer above the headset (locking collar + slotted top with QR collar), the post, and the head.
+    const postR = numOf(d, 'handlepostOD') / 2;
+    parts.push(<path key="steerext" d={svgPath(rectAlong(spStart, dist(spStart, g.steererTop), steerR * 2))} fill={fill} stroke={outline} strokeWidth={sw * 0.8} />);
+    parts.push(<path key="lock" d={svgPath(rectAlong(spStart, 15, steerR * 2 + 10))} fill="#9aa1ad" stroke={outline} strokeWidth={sw * 0.6} />);
+    parts.push(<path key="qr" d={svgPath(rectAlong(sub(g.steererTop, mul(up, 18)), 18, steerR * 2 + 8))} fill="#2b2f36" stroke={outline} strokeWidth={sw * 0.6} />);
+    parts.push(<path key="post" d={svgPath(rectAlong(g.steererTop, dist(g.steererTop, g.stemPivot) + 10, postR * 2))} fill={fill} stroke={outline} strokeWidth={sw} />);
+    parts.push(<path key="head" d={svgPath(tubeOutline([g.stemPivot, g.barClamp], 12, 12))} fill={fill} stroke={outline} strokeWidth={sw} />);
+  } else if (d.stemKind === 'quill') {
     parts.push(<path key="quill" d={svgPath(orientedRect(spStart, up, dist(spStart, g.stemPivot) + 12, steerR * 1.6))} fill={fill} stroke={outline} strokeWidth={sw} />);
     parts.push(<path key="stem" d={svgPath(orientedRect(g.stemPivot, stemDir, dist(g.stemPivot, g.barClamp), 22))} fill={fill} stroke={outline} strokeWidth={sw} />);
   } else {

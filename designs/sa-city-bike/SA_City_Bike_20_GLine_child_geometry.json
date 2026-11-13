@@ -1,0 +1,1787 @@
+{
+  "format": "open-bike-cad 3D geometry",
+  "version": 4,
+  "name": "SA City Bike 20 family, child setting (~135 cm)",
+  "size": "One frame, riders ~135-190 cm",
+  "material": "Mild / high-tensile ERW steel, fillet brazed (bronze)",
+  "units": "mm",
+  "coordinates": "Origin at BB centre. x forward (towards the front wheel), y to the rider's LEFT (non-drive side), z up. The chain is on the right (negative y). Ground is z = groundZ. Side-view (x, z) pairs are given as [x, z].",
+  "groundZ": -265,
+  "key_dims": {
+    "stack": 474.7,
+    "reach": 417,
+    "headAngle": 70,
+    "seatAngle": 70,
+    "effectiveSeatAngle": 68.5,
+    "headTubeLength": 205,
+    "ett": 589.8,
+    "ttCC": 570.8,
+    "ttAngle": 6.2,
+    "dtCC": 568.9,
+    "stCT": 420,
+    "stCC": 150,
+    "ssCC": 483,
+    "chainstay": 430,
+    "rearCenterHoriz": 429.9,
+    "bbDrop": -8,
+    "bbHeight": 265,
+    "wheelbase": 1056.7,
+    "frontCenter": 626.8,
+    "frontCenterHoriz": 626.7,
+    "trail": 59.5,
+    "mechanicalTrail": 55.9,
+    "flop": 19.1,
+    "standover": 442.4,
+    "forkLength": 310,
+    "forkRake": 32,
+    "toeOverlap": -118.3,
+    "saddleHeight": 546,
+    "saddleSetback": 201.7,
+    "saddleToBarDrop": -80.3,
+    "saddleToBarReach": 382.8,
+    "barReachFromBB": 321.1,
+    "barStackFromBB": 573.4,
+    "stackToTopOfHeadset": 488.8,
+    "reachToTopOfHeadset": 411.9,
+    "seatpostExposed": 66,
+    "seatpostMinLength": 166,
+    "frontWheelDia": 514,
+    "rearWheelDia": 514,
+    "headTubeToDownTubeAngle": 103.1,
+    "headTubeToTopTubeAngle": 76.2,
+    "seatTubeToTopTubeAngle": 76.2,
+    "seatTubeToDownTubeAngle": 76.9,
+    "seatTubeToSeatstayAngle": 57.4,
+    "seatTubeToChainstayAngle": 71.1,
+    "chainstayToSeatstayAngle": 51.6
+  },
+  "clearances": [
+    {
+      "what": "Rear tyre to seatstays",
+      "mm": 30.4,
+      "ok": true
+    },
+    {
+      "what": "Rear tyre to chainstays (with 7 mm dimple)",
+      "mm": 13.2,
+      "ok": true
+    },
+    {
+      "what": "Chainring to drive-side chainstay (with 7 mm dimple)",
+      "mm": 3.5,
+      "ok": true
+    },
+    {
+      "what": "Wishbone yoke to rear fender",
+      "mm": 155.5,
+      "ok": true
+    },
+    {
+      "what": "Rear fender to seatstays",
+      "mm": 26,
+      "ok": true
+    },
+    {
+      "what": "Rear fender front end to seat tube",
+      "mm": 125.5,
+      "ok": true
+    },
+    {
+      "what": "Front fender under fork crown",
+      "mm": 12.1,
+      "ok": true
+    },
+    {
+      "what": "Rack platform front to seat tube centreline",
+      "mm": 183.4,
+      "ok": true
+    },
+    {
+      "what": "Rack platform to rear fender top",
+      "mm": 18,
+      "ok": true
+    },
+    {
+      "what": "Rack platform to tyre top",
+      "mm": 34,
+      "ok": true
+    },
+    {
+      "what": "Chainguard bottom edge to chainstay top",
+      "mm": 17.6,
+      "ok": true
+    },
+    {
+      "what": "Ring lock inside to tyre, rim and fender",
+      "mm": 5.6,
+      "ok": true
+    },
+    {
+      "what": "Ring lock body to seatstays",
+      "mm": 3.9,
+      "ok": true
+    },
+    {
+      "what": "Ring lock to rear rack",
+      "mm": 29.3,
+      "ok": true
+    },
+    {
+      "what": "Ring lock shackle above hub flange",
+      "mm": 113.5,
+      "ok": true
+    },
+    {
+      "what": "Low carrier-block mount: block bottom above head tube bottom",
+      "mm": 40,
+      "ok": true
+    },
+    {
+      "what": "Low carrier-block mount below head tube top",
+      "mm": 125,
+      "ok": true
+    },
+    {
+      "what": "Carrier block to front tyre/fender",
+      "mm": 77.5,
+      "ok": true
+    },
+    {
+      "what": "Carrier block to front tyre/fender at full steering lock",
+      "mm": 76.3,
+      "ok": true
+    },
+    {
+      "what": "Front bag to front tyre/fender at full steering lock",
+      "mm": 32.2,
+      "ok": true
+    },
+    {
+      "what": "Front bag top to handlebar/stem at full steering lock (room for hands)",
+      "mm": 45.4,
+      "ok": true
+    },
+    {
+      "what": "Front V-brake bosses within 8 mm of 80 c-c (now 80; check the brake maker's range)",
+      "mm": 8,
+      "ok": true
+    },
+    {
+      "what": "Front fender to fork blades (sideways, at the crown)",
+      "mm": 3,
+      "ok": true
+    }
+  ],
+  "frame": {
+    "joint_style": "fillet",
+    "tubes": [
+      {
+        "name": "head tube",
+        "od": 38,
+        "wall": 2,
+        "centreline": [
+          [
+            417,
+            0,
+            474.7
+          ],
+          [
+            487.1,
+            0,
+            282.1
+          ]
+        ]
+      },
+      {
+        "name": "down tube",
+        "od": 44.5,
+        "wall": 2,
+        "centreline": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            476.9,
+            0,
+            310.3
+          ]
+        ]
+      },
+      {
+        "name": "seat tube",
+        "od": 35,
+        "wall": 2,
+        "centreline": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            -143.6,
+            0,
+            394.7
+          ]
+        ]
+      },
+      {
+        "name": "chainstay left",
+        "od": 22.2,
+        "wall": 1.6,
+        "centreline": [
+          [
+            -429.9,
+            69,
+            -8
+          ],
+          [
+            0,
+            23,
+            0
+          ]
+        ]
+      },
+      {
+        "name": "chainstay right",
+        "od": 22.2,
+        "wall": 1.6,
+        "centreline": [
+          [
+            -429.9,
+            -69,
+            -8
+          ],
+          [
+            0,
+            -23,
+            0
+          ]
+        ]
+      },
+      {
+        "name": "seatstay left",
+        "od": 19.05,
+        "wall": 1.6,
+        "centreline": [
+          [
+            -429.9,
+            69,
+            -8
+          ],
+          [
+            -164.1,
+            65,
+            340.1
+          ]
+        ]
+      },
+      {
+        "name": "seatstay right",
+        "od": 19.05,
+        "wall": 1.6,
+        "centreline": [
+          [
+            -429.9,
+            -69,
+            -8
+          ],
+          [
+            -164.1,
+            -65,
+            340.1
+          ]
+        ]
+      },
+      {
+        "name": "seatstay mono stay (wishbone)",
+        "od": 25.4,
+        "wall": 1.6,
+        "centreline": [
+          [
+            -164.1,
+            0,
+            340.1
+          ],
+          [
+            -136.8,
+            0,
+            375.9
+          ]
+        ]
+      },
+      {
+        "name": "seatstay yoke (wishbone bridge)",
+        "od": 19.05,
+        "wall": 1.6,
+        "centreline": [
+          [
+            -164.1,
+            65,
+            340.1
+          ],
+          [
+            -164.1,
+            -65,
+            340.1
+          ]
+        ]
+      }
+    ],
+    "bb_shell": {
+      "centre": [
+        0,
+        0,
+        0
+      ],
+      "axis": "y",
+      "od": 40,
+      "width": 68
+    },
+    "rear_dropouts": {
+      "style": "horizontal",
+      "axle": [
+        [
+          -429.9,
+          69,
+          -8
+        ],
+        [
+          -429.9,
+          -69,
+          -8
+        ]
+      ],
+      "plate_thickness": 6,
+      "slot_length": 30,
+      "slot_width": 10
+    },
+    "paint": {
+      "main": "#1f6f5c",
+      "stays": "#1f6f5c",
+      "fork": "#1f6f5c",
+      "head_tube": "#f2b134",
+      "accent": "#f2b134",
+      "decal": "CITY"
+    }
+  },
+  "fork": {
+    "type": "rigid",
+    "steerer": {
+      "od": 28.6,
+      "from": [
+        491.2,
+        0,
+        270.8
+      ],
+      "to": [
+        394.8,
+        0,
+        535.8
+      ]
+    },
+    "crown": {
+      "top": [
+        491.2,
+        0,
+        270.8
+      ],
+      "bottom": [
+        499.8,
+        0,
+        247.3
+      ],
+      "half_width": 46.7
+    },
+    "blade_od": 25.4,
+    "blade_left": [
+      [
+        499.8,
+        46.7,
+        247.3
+      ],
+      [
+        559.1,
+        46.7,
+        84.4
+      ],
+      [
+        561.7,
+        47,
+        77.3
+      ],
+      [
+        564.5,
+        47.3,
+        70.5
+      ],
+      [
+        567.3,
+        47.6,
+        63.9
+      ],
+      [
+        570.2,
+        47.9,
+        57.6
+      ],
+      [
+        573.2,
+        48.2,
+        51.5
+      ],
+      [
+        576.2,
+        48.4,
+        45.7
+      ],
+      [
+        579.3,
+        48.7,
+        40.2
+      ],
+      [
+        582.5,
+        49,
+        34.9
+      ],
+      [
+        585.8,
+        49.3,
+        29.9
+      ],
+      [
+        589.1,
+        49.6,
+        25.1
+      ],
+      [
+        592.6,
+        49.9,
+        20.6
+      ],
+      [
+        596.1,
+        50.2,
+        16.4
+      ],
+      [
+        599.6,
+        50.5,
+        12.5
+      ],
+      [
+        603.3,
+        50.8,
+        8.7
+      ],
+      [
+        607,
+        51.1,
+        5.3
+      ],
+      [
+        610.8,
+        51.3,
+        2.1
+      ],
+      [
+        614.7,
+        51.6,
+        -0.8
+      ],
+      [
+        618.6,
+        51.9,
+        -3.5
+      ],
+      [
+        622.7,
+        52.2,
+        -5.9
+      ],
+      [
+        626.7,
+        52.5,
+        -8
+      ]
+    ],
+    "blade_right": [
+      [
+        499.8,
+        -46.7,
+        247.3
+      ],
+      [
+        559.1,
+        -46.7,
+        84.4
+      ],
+      [
+        561.7,
+        -47,
+        77.3
+      ],
+      [
+        564.5,
+        -47.3,
+        70.5
+      ],
+      [
+        567.3,
+        -47.6,
+        63.9
+      ],
+      [
+        570.2,
+        -47.9,
+        57.6
+      ],
+      [
+        573.2,
+        -48.2,
+        51.5
+      ],
+      [
+        576.2,
+        -48.4,
+        45.7
+      ],
+      [
+        579.3,
+        -48.7,
+        40.2
+      ],
+      [
+        582.5,
+        -49,
+        34.9
+      ],
+      [
+        585.8,
+        -49.3,
+        29.9
+      ],
+      [
+        589.1,
+        -49.6,
+        25.1
+      ],
+      [
+        592.6,
+        -49.9,
+        20.6
+      ],
+      [
+        596.1,
+        -50.2,
+        16.4
+      ],
+      [
+        599.6,
+        -50.5,
+        12.5
+      ],
+      [
+        603.3,
+        -50.8,
+        8.7
+      ],
+      [
+        607,
+        -51,
+        5.3
+      ],
+      [
+        610.8,
+        -51.3,
+        2.1
+      ],
+      [
+        614.7,
+        -51.6,
+        -0.8
+      ],
+      [
+        618.6,
+        -51.9,
+        -3.5
+      ],
+      [
+        622.7,
+        -52.2,
+        -5.9
+      ],
+      [
+        626.7,
+        -52.5,
+        -8
+      ]
+    ],
+    "axle": [
+      626.7,
+      0,
+      -8
+    ],
+    "dropouts": {
+      "plate_thickness": 6,
+      "slot_width": 10,
+      "slot": "vertical, open downward, with lawyer lips",
+      "torque_washer_faces": true,
+      "inner_faces_y": [
+        50,
+        -50
+      ]
+    },
+    "torque_arm": {
+      "side": "right",
+      "from_axle": [
+        626.7,
+        -59,
+        -8
+      ],
+      "to_clamp": [
+        569.5,
+        -56,
+        59.2
+      ],
+      "thickness": 4,
+      "width": 16,
+      "note": "Steel arm keyed to the axle flats, held to the blade with a hose clamp."
+    },
+    "cable_guides": [
+      [
+        573.8,
+        -51.5,
+        18.9
+      ],
+      [
+        535.5,
+        -49.7,
+        100.3
+      ],
+      [
+        504.6,
+        -47.9,
+        185.2
+      ]
+    ],
+    "length_axle_to_crown": 310,
+    "rake": 32
+  },
+  "headset": {
+    "lower_stack": 12,
+    "upper_stack": 15,
+    "steering_axis_down": [
+      0.342,
+      0,
+      -0.9397
+    ],
+    "head_angle": 70
+  },
+  "wheels": [
+    {
+      "which": "rear",
+      "axle": [
+        -429.9,
+        0,
+        -8
+      ],
+      "axis": "y",
+      "rim_bsd": 406,
+      "tyre_width": 54,
+      "outer_diameter": 514,
+      "rim_depth": 20,
+      "spokes": 36,
+      "hub": {
+        "old": 132,
+        "flange_dia": 95
+      }
+    },
+    {
+      "which": "front",
+      "axle": [
+        626.7,
+        0,
+        -8
+      ],
+      "axis": "y",
+      "rim_bsd": 406,
+      "tyre_width": 54,
+      "outer_diameter": 514,
+      "rim_depth": 20,
+      "spokes": 36,
+      "hub": {
+        "old": 100,
+        "flange_dia": 45
+      }
+    }
+  ],
+  "drivetrain": {
+    "crank_length": 152,
+    "chainring_teeth": [
+      42
+    ],
+    "chainring_radius": [
+      85
+    ],
+    "sprocket_teeth": [
+      16
+    ],
+    "sprocket_radius": [
+      32.5
+    ],
+    "chainline": 42,
+    "chain_y": -42
+  },
+  "cockpit": {
+    "spacers": 40,
+    "stem_length": 70,
+    "stem_angle": 30,
+    "stem_pivot": [
+      381.1,
+      0,
+      573.4
+    ],
+    "bar_clamp": [
+      321.1,
+      0,
+      573.4
+    ],
+    "bar": {
+      "type": "sweptBack",
+      "width": 580,
+      "clamp_dia": 31.8
+    },
+    "grips_at": [
+      181.1,
+      0,
+      593.4
+    ],
+    "handlepost": {
+      "steerer_top": [
+        394.8,
+        0,
+        535.8
+      ],
+      "post_top": [
+        381.1,
+        0,
+        573.4
+      ],
+      "post_bottom": [
+        494,
+        0,
+        263.3
+      ],
+      "post_od": 25.4,
+      "steerer_od": 28.6,
+      "head_offset": -60,
+      "extension": 40,
+      "note": "Telescopic handlepost: the 1-1/8 threadless steerer runs up past the headset (locking collar, then a slotted top with a quick-release collar); the post slides inside it along the steering axis. A short horizontal head on the post top carries the bar clamp (head_offset: + forward, - fitted backwards). stem_pivot is the post top."
+    },
+    "bar_centreline": [
+      [
+        181.1,
+        290,
+        593.4
+      ],
+      [
+        321.1,
+        40,
+        573.4
+      ],
+      [
+        321.1,
+        0,
+        573.4
+      ],
+      [
+        321.1,
+        -40,
+        573.4
+      ],
+      [
+        181.1,
+        -290,
+        593.4
+      ]
+    ],
+    "bar_grip_dia": 22.2,
+    "grips": [
+      {
+        "side": "left",
+        "from": [
+          181.1,
+          290,
+          593.4
+        ],
+        "to": [
+          253.9,
+          160,
+          583
+        ],
+        "od": 32
+      },
+      {
+        "side": "right",
+        "from": [
+          181.1,
+          -290,
+          593.4
+        ],
+        "to": [
+          220.3,
+          -220,
+          587.8
+        ],
+        "od": 32
+      }
+    ],
+    "brake_levers": [
+      {
+        "side": "left",
+        "brake": "rear",
+        "clamp_centre": [
+          260.6,
+          148,
+          582
+        ],
+        "clamp_width": 20,
+        "pivot": [
+          288.6,
+          148,
+          578
+        ],
+        "blade_tip": [
+          292.6,
+          265,
+          560
+        ],
+        "note": "Flat-bar V-brake lever (long pull). Blade runs from pivot to blade_tip, in front of the grip."
+      },
+      {
+        "side": "right",
+        "brake": "front",
+        "clamp_centre": [
+          260.6,
+          -148,
+          582
+        ],
+        "clamp_width": 20,
+        "pivot": [
+          288.6,
+          -148,
+          578
+        ],
+        "blade_tip": [
+          292.6,
+          -265,
+          560
+        ],
+        "note": "Flat-bar V-brake lever (long pull). Blade runs from pivot to blade_tip, in front of the grip."
+      }
+    ],
+    "shifter": {
+      "type": "twist grip (e.g. Shimano Revoshift for Nexus)",
+      "side": "right",
+      "from": [
+        220.3,
+        -220,
+        587.8
+      ],
+      "to": [
+        253.9,
+        -160,
+        583
+      ],
+      "od": 36
+    }
+  },
+  "saddle": {
+    "seatpost_dia": 30.9,
+    "seatpost_top": [
+      -166.2,
+      0,
+      456.7
+    ],
+    "saddle_top": [
+      -201.7,
+      0,
+      513.1
+    ],
+    "saddle_length": 260,
+    "saddle_height_bb_to_top": 546
+  },
+  "accessories": {
+    "brakes": {
+      "type": "vbrake",
+      "rear_hub_brake": "roller",
+      "note": "V-brake bosses sit 26 mm inside the bead seat radius (BSD/2) along the blade or stay (Shimano layout rule), about 80 mm apart centre to centre, facing forward on the fork and rearward on the seatstays. Arms pivot on the bosses and rise along the blade; pads meet the rim braking track about 4 mm inside the bead seat. The noodle sits on the left arm; bare cable runs across to the clamp on the right arm. A rear hub brake (roller or coaster) replaces the rear rim brake: no rear bosses.",
+      "v_brakes": [
+        {
+          "which": "front",
+          "boss_radius_from_axle": 177,
+          "track_radius_from_axle": 199,
+          "boss_spacing_cc": 80,
+          "bosses": [
+            {
+              "side": "left",
+              "base": [
+                547.5,
+                40,
+                147.7
+              ],
+              "tip": [
+                568.2,
+                40,
+                155.3
+              ],
+              "od": 16,
+              "length": 22
+            },
+            {
+              "side": "right",
+              "base": [
+                547.5,
+                -40,
+                147.7
+              ],
+              "tip": [
+                568.2,
+                -40,
+                155.3
+              ],
+              "od": 16,
+              "length": 22
+            }
+          ],
+          "arms": [
+            {
+              "side": "left",
+              "pivot": [
+                557.8,
+                46,
+                151.5
+              ],
+              "top": [
+                521.9,
+                44,
+                250.2
+              ],
+              "length": 105
+            },
+            {
+              "side": "right",
+              "pivot": [
+                557.8,
+                -46,
+                151.5
+              ],
+              "top": [
+                521.9,
+                -44,
+                250.2
+              ],
+              "length": 105
+            }
+          ],
+          "pads": [
+            {
+              "side": "left",
+              "centre": [
+                549.2,
+                23,
+                175.3
+              ],
+              "contact": [
+                549.2,
+                14,
+                175.3
+              ],
+              "length": 60,
+              "height": 12
+            },
+            {
+              "side": "right",
+              "centre": [
+                549.2,
+                -23,
+                175.3
+              ],
+              "contact": [
+                549.2,
+                -14,
+                175.3
+              ],
+              "length": 60,
+              "height": 12
+            }
+          ],
+          "noodle": {
+            "from": [
+              509.9,
+              44,
+              283.1
+            ],
+            "to": [
+              520.2,
+              20,
+              254.9
+            ]
+          },
+          "cable_clamp_right_arm": [
+            521.9,
+            -44,
+            250.2
+          ]
+        }
+      ],
+      "hub_brake": {
+        "type": "roller",
+        "unit_centre": [
+          -429.9,
+          49,
+          -8
+        ],
+        "unit_dia": 90,
+        "unit_width": 28,
+        "reaction_arm": {
+          "from": [
+            -429.9,
+            53,
+            -8
+          ],
+          "to": [
+            -309.9,
+            69.3,
+            -5.8
+          ]
+        },
+        "chainstay_clamp": [
+          -309.9,
+          56.2,
+          -5.8
+        ],
+        "note": "Approximate Nexus layout: roller unit on the left end of the hub, reaction arm forward to a band clamp on the left chainstay. Check the Shimano dealer manual for the exact hub and brake unit."
+      }
+    },
+    "fenders": {
+      "clearance": 14,
+      "rear": {
+        "centre_xz": [
+          -429.9,
+          -8
+        ],
+        "axis": "y",
+        "radius_inner": 271,
+        "width": 62,
+        "start_deg": 5,
+        "end_deg": 200,
+        "angle_convention": "degrees around the axle in the side (x-z) plane: 0 = forward (+x), 90 = up (+z), 180 = back",
+        "stays": [
+          {
+            "from": [
+              -446.9,
+              74,
+              -25
+            ],
+            "to": [
+              -684.6,
+              33,
+              84.7
+            ],
+            "od": 5
+          },
+          {
+            "from": [
+              -446.9,
+              -74,
+              -25
+            ],
+            "to": [
+              -684.6,
+              -33,
+              84.7
+            ],
+            "od": 5
+          }
+        ],
+        "mounts": [
+          {
+            "name": "chainstay bridge (fender front end bolt)",
+            "at": [
+              -151,
+              0,
+              -2.8
+            ]
+          },
+          {
+            "name": "seatstay bridge (fender bolt)",
+            "at": [
+              -259.4,
+              0,
+              215.3
+            ]
+          },
+          {
+            "name": "dropout eyelet left (fender stay)",
+            "at": [
+              -446.9,
+              72,
+              -25
+            ]
+          },
+          {
+            "name": "dropout eyelet right (fender stay)",
+            "at": [
+              -446.9,
+              -72,
+              -25
+            ]
+          }
+        ]
+      },
+      "front": {
+        "centre_xz": [
+          626.7,
+          -8
+        ],
+        "axis": "y",
+        "radius_inner": 271,
+        "width": 62,
+        "start_deg": 40,
+        "end_deg": 195,
+        "angle_convention": "degrees around the axle in the side (x-z) plane: 0 = forward (+x), 90 = up (+z), 180 = back",
+        "stays": [
+          {
+            "from": [
+              615.6,
+              57,
+              -18.4
+            ],
+            "to": [
+              392.1,
+              33,
+              127.5
+            ],
+            "od": 5
+          },
+          {
+            "from": [
+              615.6,
+              -57,
+              -18.4
+            ],
+            "to": [
+              392.1,
+              -33,
+              127.5
+            ],
+            "od": 5
+          }
+        ],
+        "mounts": [
+          {
+            "name": "fork crown (fender bolt through crown)",
+            "at": [
+              505.2,
+              0,
+              236.4
+            ]
+          },
+          {
+            "name": "fork eyelet left, rear side of fork end",
+            "at": [
+              615.6,
+              54,
+              -18.4
+            ]
+          },
+          {
+            "name": "fork eyelet right, rear side of fork end",
+            "at": [
+              615.6,
+              -54,
+              -18.4
+            ]
+          }
+        ]
+      }
+    },
+    "rear_rack": {
+      "platform_z": 289,
+      "front_x": -288.6,
+      "back_x": -669.9,
+      "half_width": 83,
+      "tube_od": 12,
+      "load_kg": 25,
+      "tubes": [
+        {
+          "name": "side rail left",
+          "pts": [
+            [
+              -288.6,
+              83,
+              289
+            ],
+            [
+              -669.9,
+              83,
+              289
+            ]
+          ]
+        },
+        {
+          "name": "rear leg left",
+          "pts": [
+            [
+              -455,
+              83,
+              -14.7
+            ],
+            [
+              -649.9,
+              83,
+              289
+            ]
+          ]
+        },
+        {
+          "name": "front leg left",
+          "pts": [
+            [
+              -455,
+              83,
+              -14.7
+            ],
+            [
+              -404.2,
+              83,
+              289
+            ]
+          ]
+        },
+        {
+          "name": "front stay left",
+          "pts": [
+            [
+              -288.6,
+              83,
+              289
+            ],
+            [
+              -244.2,
+              79.7,
+              235.2
+            ]
+          ]
+        },
+        {
+          "name": "side rail right",
+          "pts": [
+            [
+              -288.6,
+              -83,
+              289
+            ],
+            [
+              -669.9,
+              -83,
+              289
+            ]
+          ]
+        },
+        {
+          "name": "rear leg right",
+          "pts": [
+            [
+              -455,
+              -83,
+              -14.7
+            ],
+            [
+              -649.9,
+              -83,
+              289
+            ]
+          ]
+        },
+        {
+          "name": "front leg right",
+          "pts": [
+            [
+              -455,
+              -83,
+              -14.7
+            ],
+            [
+              -404.2,
+              -83,
+              289
+            ]
+          ]
+        },
+        {
+          "name": "front stay right",
+          "pts": [
+            [
+              -288.6,
+              -83,
+              289
+            ],
+            [
+              -244.2,
+              -79.7,
+              235.2
+            ]
+          ]
+        },
+        {
+          "name": "cross bar 1",
+          "pts": [
+            [
+              -288.6,
+              83,
+              289
+            ],
+            [
+              -288.6,
+              -83,
+              289
+            ]
+          ]
+        },
+        {
+          "name": "cross bar 2",
+          "pts": [
+            [
+              -415.7,
+              83,
+              289
+            ],
+            [
+              -415.7,
+              -83,
+              289
+            ]
+          ]
+        },
+        {
+          "name": "cross bar 3",
+          "pts": [
+            [
+              -542.8,
+              83,
+              289
+            ],
+            [
+              -542.8,
+              -83,
+              289
+            ]
+          ]
+        },
+        {
+          "name": "cross bar 4",
+          "pts": [
+            [
+              -669.9,
+              83,
+              289
+            ],
+            [
+              -669.9,
+              -83,
+              289
+            ]
+          ]
+        }
+      ],
+      "mounts": [
+        {
+          "name": "dropout eyelet left (rack legs)",
+          "at": [
+            -455,
+            72,
+            -14.7
+          ]
+        },
+        {
+          "name": "dropout eyelet right (rack legs)",
+          "at": [
+            -455,
+            -72,
+            -14.7
+          ]
+        },
+        {
+          "name": "seatstay boss left (rack front stay)",
+          "at": [
+            -244.2,
+            75.7,
+            235.2
+          ]
+        },
+        {
+          "name": "seatstay boss right (rack front stay)",
+          "at": [
+            -244.2,
+            -75.7,
+            235.2
+          ]
+        }
+      ]
+    },
+    "chainguard": {
+      "outline_xz": [
+        [
+          87.9,
+          -41
+        ],
+        [
+          73.5,
+          -63.2
+        ],
+        [
+          53.7,
+          -80.7
+        ],
+        [
+          29.9,
+          -92.3
+        ],
+        [
+          3.8,
+          -96.9
+        ],
+        [
+          -22.5,
+          -94.3
+        ],
+        [
+          -47.2,
+          -84.7
+        ],
+        [
+          -68.3,
+          -68.8
+        ],
+        [
+          -84.4,
+          -47.8
+        ],
+        [
+          -94.2,
+          -23.2
+        ],
+        [
+          -96.9,
+          3.1
+        ],
+        [
+          -92.5,
+          29.2
+        ],
+        [
+          -81.1,
+          53.1
+        ],
+        [
+          -63.8,
+          73.1
+        ],
+        [
+          -41.6,
+          87.6
+        ],
+        [
+          -16.4,
+          95.6
+        ],
+        [
+          10,
+          96.5
+        ],
+        [
+          -356.2,
+          45.9
+        ],
+        [
+          -358.7,
+          22
+        ],
+        [
+          7.5,
+          72.6
+        ],
+        [
+          6.5,
+          62.6
+        ],
+        [
+          -16.3,
+          60.8
+        ],
+        [
+          -36.9,
+          51
+        ],
+        [
+          -52.7,
+          34.5
+        ],
+        [
+          -61.5,
+          13.4
+        ],
+        [
+          -62.3,
+          -9.4
+        ],
+        [
+          -54.8,
+          -31
+        ],
+        [
+          -40.1,
+          -48.6
+        ],
+        [
+          -20.1,
+          -59.7
+        ],
+        [
+          2.5,
+          -62.9
+        ],
+        [
+          24.8,
+          -57.9
+        ],
+        [
+          43.8,
+          -45.2
+        ],
+        [
+          57.1,
+          -26.6
+        ]
+      ],
+      "plate_y": -56,
+      "plate_thickness": 1.5,
+      "lip_xz": [
+        [
+          95.5,
+          16.8
+        ],
+        [
+          87.3,
+          -42.1
+        ],
+        [
+          46.3,
+          -85.2
+        ],
+        [
+          -12.2,
+          -96.2
+        ],
+        [
+          -66.1,
+          -71
+        ],
+        [
+          -95.1,
+          -19
+        ],
+        [
+          -88.3,
+          40.1
+        ],
+        [
+          -48.2,
+          84.1
+        ],
+        [
+          10,
+          96.5
+        ],
+        [
+          -356.2,
+          45.9
+        ]
+      ],
+      "lip_from_y": -56,
+      "lip_to_y": -34,
+      "note": "Outer plate in the plane y = plate_y, outline given in side view; a top lip runs along lip_xz from the plate inward to lip_to_y, covering the top of the chainring and upper chain run.",
+      "mounts": [
+        {
+          "name": "seat tube tab, drive side",
+          "at": [
+            -23,
+            -17.5,
+            91.9
+          ]
+        },
+        {
+          "name": "chainstay tab, drive side",
+          "at": [
+            -329,
+            -69.3,
+            -6.1
+          ]
+        }
+      ]
+    },
+    "ring_lock": {
+      "centre": [
+        -312.8,
+        0,
+        192.3
+      ],
+      "radial_xz": [
+        0.5,
+        0.9
+      ],
+      "inner_radius": 57,
+      "outer_radius": 71,
+      "tangent_xz": [
+        -0.9,
+        0.5
+      ],
+      "body_arc_deg": 220,
+      "body_length": 30,
+      "note": "A ring in the plane spanned by the lateral axis (y) and radial_xz, centred on 'centre'; tangent_xz is the ring's normal. inner_radius encloses the tyre, rim and fender cross-section with clearance (see clearances), so nothing passes through the ring. The body covers body_arc_deg centred on the outward radial direction; a round shackle (about 10 mm) closes the rest of the circle through the spokes, below the rim. body_length is the body's thickness along tangent_xz. The body sits just behind the seatstays and bolts to the stay bosses with short brackets.",
+      "mounts": [
+        {
+          "name": "seatstay lock boss left lower",
+          "at": [
+            -304.3,
+            76.6,
+            156.5
+          ],
+          "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
+        },
+        {
+          "name": "seatstay lock boss left upper",
+          "at": [
+            -274,
+            76.2,
+            196.3
+          ],
+          "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
+        },
+        {
+          "name": "seatstay lock boss right lower",
+          "at": [
+            -304.3,
+            -76.6,
+            156.5
+          ],
+          "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
+        },
+        {
+          "name": "seatstay lock boss right upper",
+          "at": [
+            -274,
+            -76.2,
+            196.3
+          ],
+          "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
+        }
+      ]
+    },
+    "front_carrier_block": {
+      "forward_xz": [
+        0.9,
+        0.3
+      ],
+      "up_xz": [
+        -0.3,
+        0.9
+      ],
+      "mount_block": {
+        "centre": [
+          488.2,
+          0,
+          346.3
+        ],
+        "alongHT": 40,
+        "width": 24,
+        "depth": 12,
+        "holes": [
+          [
+            489.4,
+            0,
+            360.6
+          ],
+          [
+            498.3,
+            0,
+            336.2
+          ]
+        ],
+        "thread": "M5",
+        "holeSpacing": 26
+      },
+      "carrier_block": {
+        "centre": [
+          524.4,
+          0,
+          359.5
+        ],
+        "depth": 65,
+        "width": 60,
+        "height": 60,
+        "loadKg": 10
+      },
+      "position": "low",
+      "note": "Brompton-style. A steel mounting block is brazed to the front of the head tube with two M5 threaded holes 26 mm apart along the head tube (Brompton fixes its block with 2 x M5x16 socket head screws at 4 Nm, data sheet ds-fcba). The carrier block is a box about 65 deep x 60 wide x 60 high (Brompton ColourLab block listing; units assumed mm) bolted to it, with a latch the luggage frame clips onto. Brompton rate it at 10 kg. Hole spacing comes from a third-party block listing: measure a real block before brazing."
+    },
+    "front_bag": {
+      "centre": [
+        650.6,
+        0,
+        449.5
+      ],
+      "depth": 180,
+      "height": 300,
+      "width": 330,
+      "bottom_below_block": 60,
+      "max_height": 315,
+      "note": "Envelope of a luggage-frame bag on the carrier block: a world-aligned box (x forward, z up), back panel vertical against the receiver on the block. max_height is the tallest bag with the same receiver position that keeps 30 mm hand room under the bar and stem and 20 mm from the front tyre/fender at full steering lock (see clearances)."
+    },
+    "e_assist": null,
+    "kickstand": {
+      "plate": {
+        "centre": [
+          -55,
+          0,
+          -15.1
+        ],
+        "length": 60,
+        "width": 79.96744186046512
+      },
+      "pivot": [
+        -55,
+        0,
+        -40.1
+      ],
+      "feet": [
+        [
+          -25,
+          160,
+          -265
+        ],
+        [
+          -25,
+          -160,
+          -265
+        ]
+      ],
+      "type": "two-leg centre stand"
+    }
+  }
+}

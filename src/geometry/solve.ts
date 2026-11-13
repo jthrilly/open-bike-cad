@@ -177,12 +177,22 @@ function solveWithHtTop(d: Design, T: Vec, htlOverride?: number): Geometry {
   if (d.stemKind === 'quill') {
     stemPivot = sub(htTop, mul(u, upperStack + numOf(d, 'quillHeight')));
     steererTop = sub(htTop, mul(u, upperStack));
+  } else if (d.stemKind === 'handlepost') {
+    steererTop = sub(htTop, mul(u, upperStack + numOf(d, 'handlepostCollar')));
+    stemPivot = sub(steererTop, mul(u, numOf(d, 'handlepostExtension')));
   } else {
     steererTop = sub(htTop, mul(u, upperStack + spacers + clampH));
     stemPivot = sub(htTop, mul(u, upperStack + spacers + clampH / 2));
   }
   const stemDir = rot(n, rad(stemAng));
-  const barClamp = add(stemPivot, mul(stemDir, stemLen));
+  const barClamp = d.stemKind === 'handlepost' ? add(stemPivot, v(numOf(d, 'handlepostHeadOffset'), 0)) : add(stemPivot, mul(stemDir, stemLen));
+  if (d.stemKind === 'handlepost') {
+    const ext = numOf(d, 'handlepostExtension');
+    const inside = numOf(d, 'handlepostLength') - ext;
+    const room = numOf(d, 'handlepostCollar') + upperStack + dist(htTop, htBottom) + lowerStack + numOf(d, 'forkCrownHeight') - 10;
+    if (inside > room) warnings.push(`Handlepost bottom reaches ${(inside - room).toFixed(0)} mm past the fork crown; shorten the post or raise it.`);
+    if (inside < numOf(d, 'handlepostMinInsertion')) warnings.push(`Handlepost is only ${inside.toFixed(0)} mm in the steerer (minimum ${numOf(d, 'handlepostMinInsertion')}).`);
+  }
   const hands = handPosition(d, barClamp);
 
   // Saddle
@@ -220,7 +230,10 @@ function solveWithHtTop(d: Design, T: Vec, htlOverride?: number): Geometry {
   // frameTubes(): centreline(ttRear, ttFront, ttBend).
   const ttLine = centreline(ttRear, ttFront, numOf(d, 'ttBend'));
   const midTT = pointAtX(ttLine, (ttFront.x + ttRear.x) / 2) ?? mul(add(ttFront, ttRear), 0.5);
-  const standover = midTT.y + numOf(d, 'ttOD') / 2 - groundY;
+  // Single main tube (no top tube): over the down tube at its horizontal mid-point instead.
+  const dtLine = centreline(dtRear, dtFront, -numOf(d, 'dtBend'));
+  const midDT = pointAtX(dtLine, (dtFront.x + dtRear.x) / 2) ?? mul(add(dtFront, dtRear), 0.5);
+  const standover = d.frameStyle === 'single' ? midDT.y + numOf(d, 'dtOD') / 2 - groundY : midTT.y + numOf(d, 'ttOD') / 2 - groundY;
 
   const angleAt = (vertex: Vec, a: Vec, b: Vec) => {
     const va = norm(sub(a, vertex));
@@ -407,10 +420,13 @@ export function solve(d: Design): Geometry {
     const h =
       d.stemKind === 'quill'
         ? numOf(d, 'upperStack') + numOf(d, 'quillHeight')
-        : numOf(d, 'upperStack') + numOf(d, 'spacers') + numOf(d, 'stemClampHeight') / 2;
+        : d.stemKind === 'handlepost'
+          ? numOf(d, 'upperStack') + numOf(d, 'handlepostCollar') + numOf(d, 'handlepostExtension')
+          : numOf(d, 'upperStack') + numOf(d, 'spacers') + numOf(d, 'stemClampHeight') / 2;
     const stemDir = rot(n, rad(numOf(d, 'stemAngle')));
     const target = v(numOf(d, 'barReachTarget'), numOf(d, 'barStackTarget'));
-    const T = add(sub(target, mul(stemDir, numOf(d, 'stemLength'))), mul(u, h));
+    const head = d.stemKind === 'handlepost' ? v(numOf(d, 'handlepostHeadOffset'), 0) : mul(stemDir, numOf(d, 'stemLength'));
+    const T = add(sub(target, head), mul(u, h));
     return solveWithHtTop(d, T, htlForStack(d, T.y));
   }
 

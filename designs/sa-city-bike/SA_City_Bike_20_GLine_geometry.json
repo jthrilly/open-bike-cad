@@ -1,64 +1,64 @@
 {
   "format": "open-bike-cad 3D geometry",
   "version": 4,
-  "name": "SA City Bike 20 (G Line wheels)",
-  "size": "One size, riders ~150-190 cm",
+  "name": "SA City Bike 20 family, adult setting (~190 cm)",
+  "size": "One frame, riders ~135-190 cm",
   "material": "Mild / high-tensile ERW steel, fillet brazed (bronze)",
   "units": "mm",
   "coordinates": "Origin at BB centre. x forward (towards the front wheel), y to the rider's LEFT (non-drive side), z up. The chain is on the right (negative y). Ground is z = groundZ. Side-view (x, z) pairs are given as [x, z].",
-  "groundZ": -280,
+  "groundZ": -265,
   "key_dims": {
-    "stack": 633.6,
-    "reach": 370,
+    "stack": 474.7,
+    "reach": 417,
     "headAngle": 70,
     "seatAngle": 70,
-    "effectiveSeatAngle": 68.9,
-    "headTubeLength": 390,
-    "ett": 600.6,
-    "ttCC": 565.1,
-    "ttAngle": 22.9,
-    "dtCC": 574.8,
-    "stCT": 440,
+    "effectiveSeatAngle": 69,
+    "headTubeLength": 205,
+    "ett": 589.8,
+    "ttCC": 570.8,
+    "ttAngle": 6.2,
+    "dtCC": 568.9,
+    "stCT": 420,
     "stCC": 150,
-    "ssCC": 506.1,
+    "ssCC": 483,
     "chainstay": 430,
-    "rearCenterHoriz": 429.4,
-    "bbDrop": -23,
-    "bbHeight": 280,
-    "wheelbase": 1072.4,
-    "frontCenter": 643.4,
-    "frontCenterHoriz": 643,
+    "rearCenterHoriz": 429.9,
+    "bbDrop": -8,
+    "bbHeight": 265,
+    "wheelbase": 1056.7,
+    "frontCenter": 626.8,
+    "frontCenterHoriz": 626.7,
     "trail": 59.5,
     "mechanicalTrail": 55.9,
     "flop": 19.1,
-    "standover": 546.9,
+    "standover": 442.4,
     "forkLength": 310,
     "forkRake": 32,
-    "toeOverlap": -118.2,
-    "saddleHeight": 720,
-    "saddleSetback": 261.3,
-    "saddleToBarDrop": -81.1,
-    "saddleToBarReach": 650.6,
-    "barReachFromBB": 389.3,
-    "barStackFromBB": 757.7,
-    "stackToTopOfHeadset": 647.7,
-    "reachToTopOfHeadset": 364.9,
-    "seatpostExposed": 220,
-    "seatpostMinLength": 320,
+    "toeOverlap": -118.3,
+    "saddleHeight": 768,
+    "saddleSetback": 277.7,
+    "saddleToBarDrop": -50.2,
+    "saddleToBarReach": 513.8,
+    "barReachFromBB": 376.1,
+    "barStackFromBB": 751.9,
+    "stackToTopOfHeadset": 488.8,
+    "reachToTopOfHeadset": 411.9,
+    "seatpostExposed": 288,
+    "seatpostMinLength": 388,
     "frontWheelDia": 514,
     "rearWheelDia": 514,
-    "headTubeToDownTubeAngle": 100.9,
-    "headTubeToTopTubeAngle": 87.1,
-    "seatTubeToTopTubeAngle": 92.9,
-    "seatTubeToDownTubeAngle": 79.1,
-    "seatTubeToSeatstayAngle": 54.4,
-    "seatTubeToChainstayAngle": 73.1,
-    "chainstayToSeatstayAngle": 52.6
+    "headTubeToDownTubeAngle": 103.1,
+    "headTubeToTopTubeAngle": 76.2,
+    "seatTubeToTopTubeAngle": 76.2,
+    "seatTubeToDownTubeAngle": 76.9,
+    "seatTubeToSeatstayAngle": 57.4,
+    "seatTubeToChainstayAngle": 71.1,
+    "chainstayToSeatstayAngle": 51.6
   },
   "clearances": [
     {
       "what": "Rear tyre to seatstays",
-      "mm": 30.5,
+      "mm": 30.4,
       "ok": true
     },
     {
@@ -73,17 +73,17 @@
     },
     {
       "what": "Wishbone yoke to rear fender",
-      "mm": 178.5,
+      "mm": 155.5,
       "ok": true
     },
     {
       "what": "Rear fender to seatstays",
-      "mm": 26.1,
+      "mm": 26,
       "ok": true
     },
     {
       "what": "Rear fender front end to seat tube",
-      "mm": 130.2,
+      "mm": 125.5,
       "ok": true
     },
     {
@@ -93,7 +93,7 @@
     },
     {
       "what": "Rack platform front to seat tube centreline",
-      "mm": 188.3,
+      "mm": 183.4,
       "ok": true
     },
     {
@@ -123,7 +123,7 @@
     },
     {
       "what": "Ring lock to rear rack",
-      "mm": 21.5,
+      "mm": 29.3,
       "ok": true
     },
     {
@@ -138,7 +138,7 @@
     },
     {
       "what": "Low carrier-block mount below head tube top",
-      "mm": 310,
+      "mm": 125,
       "ok": true
     },
     {
@@ -158,7 +158,7 @@
     },
     {
       "what": "Front bag top to handlebar/stem at full steering lock (room for hands)",
-      "mm": 73.9,
+      "mm": 194.3,
       "ok": true
     },
     {
@@ -181,20 +181,20 @@
         "wall": 2,
         "centreline": [
           [
-            370,
+            417,
             0,
-            633.6
+            474.7
           ],
           [
-            503.4,
+            487.1,
             0,
-            267.1
+            282.1
           ]
         ]
       },
       {
         "name": "down tube",
-        "od": 35,
+        "od": 44.5,
         "wall": 2,
         "centreline": [
           [
@@ -203,26 +203,9 @@
             0
           ],
           [
-            493.1,
+            476.9,
             0,
-            295.3
-          ]
-        ]
-      },
-      {
-        "name": "top tube (step tube on step-through designs)",
-        "od": 31.8,
-        "wall": 1.6,
-        "centreline": [
-          [
-            -51.3,
-            0,
-            141
-          ],
-          [
-            469.2,
-            0,
-            361
+            310.3
           ]
         ]
       },
@@ -237,9 +220,9 @@
             0
           ],
           [
-            -150.5,
+            -143.6,
             0,
-            413.5
+            394.7
           ]
         ]
       },
@@ -249,9 +232,9 @@
         "wall": 1.6,
         "centreline": [
           [
-            -429.4,
+            -429.9,
             69,
-            -23
+            -8
           ],
           [
             0,
@@ -266,9 +249,9 @@
         "wall": 1.6,
         "centreline": [
           [
-            -429.4,
+            -429.9,
             -69,
-            -23
+            -8
           ],
           [
             0,
@@ -283,14 +266,14 @@
         "wall": 1.6,
         "centreline": [
           [
-            -429.4,
+            -429.9,
             69,
-            -23
+            -8
           ],
           [
-            -169.1,
+            -164.1,
             65,
-            357.5
+            340.1
           ]
         ]
       },
@@ -300,14 +283,14 @@
         "wall": 1.6,
         "centreline": [
           [
-            -429.4,
+            -429.9,
             -69,
-            -23
+            -8
           ],
           [
-            -169.1,
+            -164.1,
             -65,
-            357.5
+            340.1
           ]
         ]
       },
@@ -317,14 +300,14 @@
         "wall": 1.6,
         "centreline": [
           [
-            -169.1,
+            -164.1,
             0,
-            357.5
+            340.1
           ],
           [
-            -143.6,
+            -136.8,
             0,
-            394.7
+            375.9
           ]
         ]
       },
@@ -334,14 +317,14 @@
         "wall": 1.6,
         "centreline": [
           [
-            -169.1,
+            -164.1,
             65,
-            357.5
+            340.1
           ],
           [
-            -169.1,
+            -164.1,
             -65,
-            357.5
+            340.1
           ]
         ]
       }
@@ -360,14 +343,14 @@
       "style": "horizontal",
       "axle": [
         [
-          -429.4,
+          -429.9,
           69,
-          -23
+          -8
         ],
         [
-          -429.4,
+          -429.9,
           -69,
-          -23
+          -8
         ]
       ],
       "plate_thickness": 6,
@@ -388,258 +371,258 @@
     "steerer": {
       "od": 28.6,
       "from": [
-        507.5,
+        491.2,
         0,
-        255.8
+        270.8
       ],
       "to": [
-        337.5,
+        394.8,
         0,
-        722.8
+        535.8
       ]
     },
     "crown": {
       "top": [
-        507.5,
+        491.2,
         0,
-        255.8
+        270.8
       ],
       "bottom": [
-        516,
+        499.8,
         0,
-        232.3
+        247.3
       ],
       "half_width": 46.7
     },
     "blade_od": 25.4,
     "blade_left": [
       [
-        516,
+        499.8,
         46.7,
-        232.3
+        247.3
       ],
       [
-        575.3,
+        559.1,
         46.7,
-        69.4
+        84.4
       ],
       [
-        578,
+        561.7,
         47,
-        62.3
+        77.3
       ],
       [
-        580.7,
+        564.5,
         47.3,
-        55.5
+        70.5
       ],
       [
-        583.6,
+        567.3,
         47.6,
-        48.9
+        63.9
       ],
       [
-        586.5,
+        570.2,
         47.9,
-        42.6
+        57.6
       ],
       [
-        589.4,
+        573.2,
         48.2,
-        36.5
+        51.5
       ],
       [
-        592.5,
+        576.2,
         48.4,
-        30.7
+        45.7
       ],
       [
-        595.6,
+        579.3,
         48.7,
-        25.2
+        40.2
       ],
       [
-        598.8,
+        582.5,
         49,
-        19.9
+        34.9
       ],
       [
-        602.1,
+        585.8,
         49.3,
-        14.9
+        29.9
       ],
       [
-        605.4,
+        589.1,
         49.6,
-        10.1
+        25.1
       ],
       [
-        608.8,
+        592.6,
         49.9,
-        5.6
+        20.6
       ],
       [
-        612.3,
+        596.1,
         50.2,
-        1.4
+        16.4
       ],
       [
-        615.9,
+        599.6,
         50.5,
-        -2.5
+        12.5
       ],
       [
-        619.6,
+        603.3,
         50.8,
-        -6.3
+        8.7
       ],
       [
-        623.3,
+        607,
         51.1,
-        -9.7
+        5.3
       ],
       [
-        627.1,
+        610.8,
         51.3,
-        -12.9
+        2.1
       ],
       [
-        631,
+        614.7,
         51.6,
-        -15.8
+        -0.8
       ],
       [
-        634.9,
+        618.6,
         51.9,
-        -18.5
+        -3.5
       ],
       [
-        638.9,
+        622.7,
         52.2,
-        -20.9
+        -5.9
       ],
       [
-        643,
+        626.7,
         52.5,
-        -23
+        -8
       ]
     ],
     "blade_right": [
       [
-        516,
+        499.8,
         -46.7,
-        232.3
+        247.3
       ],
       [
-        575.3,
+        559.1,
         -46.7,
-        69.4
+        84.4
       ],
       [
-        578,
+        561.7,
         -47,
-        62.3
+        77.3
       ],
       [
-        580.7,
+        564.5,
         -47.3,
-        55.5
+        70.5
       ],
       [
-        583.6,
+        567.3,
         -47.6,
-        48.9
+        63.9
       ],
       [
-        586.5,
+        570.2,
         -47.9,
-        42.6
+        57.6
       ],
       [
-        589.4,
+        573.2,
         -48.2,
-        36.5
+        51.5
       ],
       [
-        592.5,
+        576.2,
         -48.4,
-        30.7
+        45.7
       ],
       [
-        595.6,
+        579.3,
         -48.7,
-        25.2
+        40.2
       ],
       [
-        598.8,
+        582.5,
         -49,
-        19.9
+        34.9
       ],
       [
-        602.1,
+        585.8,
         -49.3,
-        14.9
+        29.9
       ],
       [
-        605.4,
+        589.1,
         -49.6,
-        10.1
+        25.1
       ],
       [
-        608.8,
+        592.6,
         -49.9,
-        5.6
+        20.6
       ],
       [
-        612.3,
+        596.1,
         -50.2,
-        1.4
+        16.4
       ],
       [
-        615.9,
+        599.6,
         -50.5,
-        -2.5
+        12.5
       ],
       [
-        619.6,
+        603.3,
         -50.8,
-        -6.3
+        8.7
       ],
       [
-        623.3,
+        607,
         -51,
-        -9.7
+        5.3
       ],
       [
-        627.1,
+        610.8,
         -51.3,
-        -12.9
+        2.1
       ],
       [
-        631,
+        614.7,
         -51.6,
-        -15.8
+        -0.8
       ],
       [
-        634.9,
+        618.6,
         -51.9,
-        -18.5
+        -3.5
       ],
       [
-        638.9,
+        622.7,
         -52.2,
-        -20.9
+        -5.9
       ],
       [
-        643,
+        626.7,
         -52.5,
-        -23
+        -8
       ]
     ],
     "axle": [
-      643,
+      626.7,
       0,
-      -23
+      -8
     ],
     "dropouts": {
       "plate_thickness": 6,
@@ -654,14 +637,14 @@
     "torque_arm": {
       "side": "right",
       "from_axle": [
-        643,
+        626.7,
         -59,
-        -23
+        -8
       ],
       "to_clamp": [
-        585.7,
+        569.5,
         -56,
-        44.2
+        59.2
       ],
       "thickness": 4,
       "width": 16,
@@ -669,19 +652,19 @@
     },
     "cable_guides": [
       [
-        590.1,
+        573.8,
         -51.5,
-        3.9
+        18.9
       ],
       [
-        551.8,
+        535.5,
         -49.7,
-        85.3
+        100.3
       ],
       [
-        520.9,
+        504.6,
         -47.9,
-        170.2
+        185.2
       ]
     ],
     "length_axle_to_crown": 310,
@@ -701,9 +684,9 @@
     {
       "which": "rear",
       "axle": [
-        -429.4,
+        -429.9,
         0,
-        -23
+        -8
       ],
       "axis": "y",
       "rim_bsd": 406,
@@ -719,9 +702,9 @@
     {
       "which": "front",
       "axle": [
-        643,
+        626.7,
         0,
-        -23
+        -8
       ],
       "axis": "y",
       "rim_bsd": 406,
@@ -736,7 +719,7 @@
     }
   ],
   "drivetrain": {
-    "crank_length": 170,
+    "crank_length": 152,
     "chainring_teeth": [
       42
     ],
@@ -757,50 +740,72 @@
     "stem_length": 70,
     "stem_angle": 30,
     "stem_pivot": [
-      344.3,
+      316.1,
       0,
-      704
+      751.9
     ],
     "bar_clamp": [
-      389.3,
+      376.1,
       0,
-      757.7
+      751.9
     ],
     "bar": {
-      "type": "flat",
-      "width": 600,
+      "type": "sweptBack",
+      "width": 580,
       "clamp_dia": 31.8
     },
     "grips_at": [
-      389.3,
+      236.1,
       0,
-      757.7
+      771.9
     ],
+    "handlepost": {
+      "steerer_top": [
+        394.8,
+        0,
+        535.8
+      ],
+      "post_top": [
+        316.1,
+        0,
+        751.9
+      ],
+      "post_bottom": [
+        429,
+        0,
+        441.8
+      ],
+      "post_od": 25.4,
+      "steerer_od": 28.6,
+      "head_offset": 60,
+      "extension": 230,
+      "note": "Telescopic handlepost: the 1-1/8 threadless steerer runs up past the headset (locking collar, then a slotted top with a quick-release collar); the post slides inside it along the steering axis. A short horizontal head on the post top carries the bar clamp (head_offset: + forward, - fitted backwards). stem_pivot is the post top."
+    },
     "bar_centreline": [
       [
-        389.3,
-        300,
-        757.7
+        236.1,
+        290,
+        771.9
       ],
       [
-        389.3,
+        376.1,
         40,
-        757.7
+        751.9
       ],
       [
-        389.3,
+        376.1,
         0,
-        757.7
+        751.9
       ],
       [
-        389.3,
+        376.1,
         -40,
-        757.7
+        751.9
       ],
       [
-        389.3,
-        -300,
-        757.7
+        236.1,
+        -290,
+        771.9
       ]
     ],
     "bar_grip_dia": 22.2,
@@ -808,28 +813,28 @@
       {
         "side": "left",
         "from": [
-          389.3,
-          300,
-          757.7
+          236.1,
+          290,
+          771.9
         ],
         "to": [
-          389.3,
-          170,
-          757.7
+          308.9,
+          160,
+          761.5
         ],
         "od": 32
       },
       {
         "side": "right",
         "from": [
-          389.3,
-          -300,
-          757.7
+          236.1,
+          -290,
+          771.9
         ],
         "to": [
-          389.3,
-          -230,
-          757.7
+          275.3,
+          -220,
+          766.3
         ],
         "od": 32
       }
@@ -839,20 +844,20 @@
         "side": "left",
         "brake": "rear",
         "clamp_centre": [
-          389.3,
-          158,
-          757.7
+          315.6,
+          148,
+          760.6
         ],
         "clamp_width": 20,
         "pivot": [
-          417.3,
-          158,
-          753.7
+          343.6,
+          148,
+          756.6
         ],
         "blade_tip": [
-          421.3,
-          275,
-          735.7
+          347.6,
+          265,
+          738.6
         ],
         "note": "Flat-bar V-brake lever (long pull). Blade runs from pivot to blade_tip, in front of the grip."
       },
@@ -860,20 +865,20 @@
         "side": "right",
         "brake": "front",
         "clamp_centre": [
-          389.3,
-          -158,
-          757.7
+          315.6,
+          -148,
+          760.6
         ],
         "clamp_width": 20,
         "pivot": [
-          417.3,
-          -158,
-          753.7
+          343.6,
+          -148,
+          756.6
         ],
         "blade_tip": [
-          421.3,
-          -275,
-          735.7
+          347.6,
+          -265,
+          738.6
         ],
         "note": "Flat-bar V-brake lever (long pull). Blade runs from pivot to blade_tip, in front of the grip."
       }
@@ -882,14 +887,14 @@
       "type": "twist grip (e.g. Shimano Revoshift for Nexus)",
       "side": "right",
       "from": [
-        389.3,
-        -230,
-        757.7
+        275.3,
+        -220,
+        766.3
       ],
       "to": [
-        389.3,
-        -170,
-        757.7
+        308.9,
+        -160,
+        761.5
       ],
       "od": 36
     }
@@ -897,17 +902,17 @@
   "saddle": {
     "seatpost_dia": 30.9,
     "seatpost_top": [
-      -225.7,
+      -242.2,
       0,
-      620.2
+      665.3
     ],
     "saddle_top": [
-      -261.3,
+      -277.7,
       0,
-      676.6
+      721.7
     ],
     "saddle_length": 260,
-    "saddle_height_bb_to_top": 720
+    "saddle_height_bb_to_top": 768
   },
   "accessories": {
     "brakes": {
@@ -924,14 +929,14 @@
             {
               "side": "left",
               "base": [
-                563.8,
+                547.5,
                 40,
-                132.7
+                147.7
               ],
               "tip": [
-                584.4,
+                568.2,
                 40,
-                140.3
+                155.3
               ],
               "od": 16,
               "length": 22
@@ -939,14 +944,14 @@
             {
               "side": "right",
               "base": [
-                563.8,
+                547.5,
                 -40,
-                132.7
+                147.7
               ],
               "tip": [
-                584.4,
+                568.2,
                 -40,
-                140.3
+                155.3
               ],
               "od": 16,
               "length": 22
@@ -956,28 +961,28 @@
             {
               "side": "left",
               "pivot": [
-                574.1,
+                557.8,
                 46,
-                136.5
+                151.5
               ],
               "top": [
-                538.2,
+                521.9,
                 44,
-                235.2
+                250.2
               ],
               "length": 105
             },
             {
               "side": "right",
               "pivot": [
-                574.1,
+                557.8,
                 -46,
-                136.5
+                151.5
               ],
               "top": [
-                538.2,
+                521.9,
                 -44,
-                235.2
+                250.2
               ],
               "length": 105
             }
@@ -986,14 +991,14 @@
             {
               "side": "left",
               "centre": [
-                565.5,
+                549.2,
                 23,
-                160.3
+                175.3
               ],
               "contact": [
-                565.5,
+                549.2,
                 14,
-                160.3
+                175.3
               ],
               "length": 60,
               "height": 12
@@ -1001,14 +1006,14 @@
             {
               "side": "right",
               "centre": [
-                565.5,
+                549.2,
                 -23,
-                160.3
+                175.3
               ],
               "contact": [
-                565.5,
+                549.2,
                 -14,
-                160.3
+                175.3
               ],
               "length": 60,
               "height": 12
@@ -1016,48 +1021,48 @@
           ],
           "noodle": {
             "from": [
-              526.2,
+              509.9,
               44,
-              268.1
+              283.1
             ],
             "to": [
-              536.5,
+              520.2,
               20,
-              239.9
+              254.9
             ]
           },
           "cable_clamp_right_arm": [
-            538.2,
+            521.9,
             -44,
-            235.2
+            250.2
           ]
         }
       ],
       "hub_brake": {
         "type": "roller",
         "unit_centre": [
-          -429.4,
+          -429.9,
           49,
-          -23
+          -8
         ],
         "unit_dia": 90,
         "unit_width": 28,
         "reaction_arm": {
           "from": [
-            -429.4,
+            -429.9,
             53,
-            -23
+            -8
           ],
           "to": [
-            -309.6,
+            -309.9,
             69.3,
-            -16.6
+            -5.8
           ]
         },
         "chainstay_clamp": [
-          -309.6,
+          -309.9,
           56.2,
-          -16.6
+          -5.8
         ],
         "note": "Approximate Nexus layout: roller unit on the left end of the hub, reaction arm forward to a band clamp on the left chainstay. Check the Shimano dealer manual for the exact hub and brake unit."
       }
@@ -1066,8 +1071,8 @@
       "clearance": 14,
       "rear": {
         "centre_xz": [
-          -429.4,
-          -23
+          -429.9,
+          -8
         ],
         "axis": "y",
         "radius_inner": 271,
@@ -1078,27 +1083,27 @@
         "stays": [
           {
             "from": [
-              -446.4,
+              -446.9,
               74,
-              -40
+              -25
             ],
             "to": [
-              -684,
+              -684.6,
               33,
-              69.7
+              84.7
             ],
             "od": 5
           },
           {
             "from": [
-              -446.4,
+              -446.9,
               -74,
-              -40
+              -25
             ],
             "to": [
-              -684,
+              -684.6,
               -33,
-              69.7
+              84.7
             ],
             "od": 5
           }
@@ -1107,41 +1112,41 @@
           {
             "name": "chainstay bridge (fender front end bolt)",
             "at": [
-              -150.8,
+              -151,
               0,
-              -8.1
+              -2.8
             ]
           },
           {
             "name": "seatstay bridge (fender bolt)",
             "at": [
-              -270.7,
+              -259.4,
               0,
-              208.9
+              215.3
             ]
           },
           {
             "name": "dropout eyelet left (fender stay)",
             "at": [
-              -446.4,
+              -446.9,
               72,
-              -40
+              -25
             ]
           },
           {
             "name": "dropout eyelet right (fender stay)",
             "at": [
-              -446.4,
+              -446.9,
               -72,
-              -40
+              -25
             ]
           }
         ]
       },
       "front": {
         "centre_xz": [
-          643,
-          -23
+          626.7,
+          -8
         ],
         "axis": "y",
         "radius_inner": 271,
@@ -1152,27 +1157,27 @@
         "stays": [
           {
             "from": [
-              631.9,
+              615.6,
               57,
-              -33.4
+              -18.4
             ],
             "to": [
-              408.3,
+              392.1,
               33,
-              112.5
+              127.5
             ],
             "od": 5
           },
           {
             "from": [
-              631.9,
+              615.6,
               -57,
-              -33.4
+              -18.4
             ],
             "to": [
-              408.3,
+              392.1,
               -33,
-              112.5
+              127.5
             ],
             "od": 5
           }
@@ -1181,34 +1186,34 @@
           {
             "name": "fork crown (fender bolt through crown)",
             "at": [
-              521.5,
+              505.2,
               0,
-              221.4
+              236.4
             ]
           },
           {
             "name": "fork eyelet left, rear side of fork end",
             "at": [
-              631.9,
+              615.6,
               54,
-              -33.4
+              -18.4
             ]
           },
           {
             "name": "fork eyelet right, rear side of fork end",
             "at": [
-              631.9,
+              615.6,
               -54,
-              -33.4
+              -18.4
             ]
           }
         ]
       }
     },
     "rear_rack": {
-      "platform_z": 274,
-      "front_x": -288,
-      "back_x": -669.4,
+      "platform_z": 289,
+      "front_x": -288.6,
+      "back_x": -669.9,
       "half_width": 83,
       "tube_od": 12,
       "load_kg": 25,
@@ -1217,14 +1222,14 @@
           "name": "side rail left",
           "pts": [
             [
-              -288,
+              -288.6,
               83,
-              274
+              289
             ],
             [
-              -669.4,
+              -669.9,
               83,
-              274
+              289
             ]
           ]
         },
@@ -1232,14 +1237,14 @@
           "name": "rear leg left",
           "pts": [
             [
-              -454.5,
+              -455,
               83,
-              -29.7
+              -14.7
             ],
             [
-              -649.4,
+              -649.9,
               83,
-              274
+              289
             ]
           ]
         },
@@ -1247,14 +1252,14 @@
           "name": "front leg left",
           "pts": [
             [
-              -454.5,
+              -455,
               83,
-              -29.7
+              -14.7
             ],
             [
-              -403.7,
+              -404.2,
               83,
-              274
+              289
             ]
           ]
         },
@@ -1262,14 +1267,14 @@
           "name": "front stay left",
           "pts": [
             [
-              -288,
+              -288.6,
               83,
-              274
+              289
             ],
             [
-              -256.6,
-              79.9,
-              229.6
+              -244.2,
+              79.7,
+              235.2
             ]
           ]
         },
@@ -1277,14 +1282,14 @@
           "name": "side rail right",
           "pts": [
             [
-              -288,
+              -288.6,
               -83,
-              274
+              289
             ],
             [
-              -669.4,
+              -669.9,
               -83,
-              274
+              289
             ]
           ]
         },
@@ -1292,14 +1297,14 @@
           "name": "rear leg right",
           "pts": [
             [
-              -454.5,
+              -455,
               -83,
-              -29.7
+              -14.7
             ],
             [
-              -649.4,
+              -649.9,
               -83,
-              274
+              289
             ]
           ]
         },
@@ -1307,14 +1312,14 @@
           "name": "front leg right",
           "pts": [
             [
-              -454.5,
+              -455,
               -83,
-              -29.7
+              -14.7
             ],
             [
-              -403.7,
+              -404.2,
               -83,
-              274
+              289
             ]
           ]
         },
@@ -1322,14 +1327,14 @@
           "name": "front stay right",
           "pts": [
             [
-              -288,
+              -288.6,
               -83,
-              274
+              289
             ],
             [
-              -256.6,
-              -79.9,
-              229.6
+              -244.2,
+              -79.7,
+              235.2
             ]
           ]
         },
@@ -1337,14 +1342,14 @@
           "name": "cross bar 1",
           "pts": [
             [
-              -288,
+              -288.6,
               83,
-              274
+              289
             ],
             [
-              -288,
+              -288.6,
               -83,
-              274
+              289
             ]
           ]
         },
@@ -1352,14 +1357,14 @@
           "name": "cross bar 2",
           "pts": [
             [
-              -415.2,
+              -415.7,
               83,
-              274
+              289
             ],
             [
-              -415.2,
+              -415.7,
               -83,
-              274
+              289
             ]
           ]
         },
@@ -1367,14 +1372,14 @@
           "name": "cross bar 3",
           "pts": [
             [
-              -542.3,
+              -542.8,
               83,
-              274
+              289
             ],
             [
-              -542.3,
+              -542.8,
               -83,
-              274
+              289
             ]
           ]
         },
@@ -1382,14 +1387,14 @@
           "name": "cross bar 4",
           "pts": [
             [
-              -669.4,
+              -669.9,
               83,
-              274
+              289
             ],
             [
-              -669.4,
+              -669.9,
               -83,
-              274
+              289
             ]
           ]
         }
@@ -1398,33 +1403,33 @@
         {
           "name": "dropout eyelet left (rack legs)",
           "at": [
-            -454.5,
+            -455,
             72,
-            -29.7
+            -14.7
           ]
         },
         {
           "name": "dropout eyelet right (rack legs)",
           "at": [
-            -454.5,
+            -455,
             -72,
-            -29.7
+            -14.7
           ]
         },
         {
           "name": "seatstay boss left (rack front stay)",
           "at": [
-            -256.6,
-            75.9,
-            229.6
+            -244.2,
+            75.7,
+            235.2
           ]
         },
         {
           "name": "seatstay boss right (rack front stay)",
           "at": [
-            -256.6,
-            -75.9,
-            229.6
+            -244.2,
+            -75.7,
+            235.2
           ]
         }
       ]
@@ -1436,128 +1441,128 @@
           -41
         ],
         [
-          73.7,
-          -63.1
+          73.5,
+          -63.2
         ],
         [
-          54.1,
-          -80.5
+          53.7,
+          -80.7
         ],
         [
-          30.5,
-          -92.1
+          29.9,
+          -92.3
         ],
         [
-          4.7,
+          3.8,
           -96.9
         ],
         [
-          -21.5,
-          -94.6
+          -22.5,
+          -94.3
         ],
         [
-          -46,
-          -85.3
+          -47.2,
+          -84.7
         ],
         [
-          -67.3,
-          -69.9
+          -68.3,
+          -68.8
         ],
         [
-          -83.5,
-          -49.3
+          -84.4,
+          -47.8
         ],
         [
-          -93.7,
-          -25.1
+          -94.2,
+          -23.2
         ],
         [
-          -97,
-          1
+          -96.9,
+          3.1
         ],
         [
-          -93.1,
-          27
+          -92.5,
+          29.2
         ],
         [
-          -82.5,
+          -81.1,
+          53.1
+        ],
+        [
+          -63.8,
+          73.1
+        ],
+        [
+          -41.6,
+          87.6
+        ],
+        [
+          -16.4,
+          95.6
+        ],
+        [
+          10,
+          96.5
+        ],
+        [
+          -356.2,
+          45.9
+        ],
+        [
+          -358.7,
+          22
+        ],
+        [
+          7.5,
+          72.6
+        ],
+        [
+          6.5,
+          62.6
+        ],
+        [
+          -16.3,
+          60.8
+        ],
+        [
+          -36.9,
           51
         ],
         [
-          -65.8,
-          71.2
+          -52.7,
+          34.5
         ],
         [
-          -44.3,
-          86.3
+          -61.5,
+          13.4
         ],
         [
-          -19.5,
-          95
+          -62.3,
+          -9.4
         ],
         [
-          6.7,
-          96.7
+          -54.8,
+          -31
         ],
         [
-          -357.6,
-          33.4
+          -40.1,
+          -48.6
         ],
         [
-          -359.2,
-          9.5
+          -20.1,
+          -59.7
         ],
         [
-          5,
-          72.8
-        ],
-        [
-          4.3,
-          62.8
-        ],
-        [
-          -18.2,
-          60.3
-        ],
-        [
-          -38.4,
-          49.9
-        ],
-        [
-          -53.6,
-          33.1
-        ],
-        [
-          -61.8,
-          12
-        ],
-        [
-          -62.1,
-          -10.7
-        ],
-        [
-          -54.2,
-          -32
-        ],
-        [
-          -39.4,
-          -49.1
-        ],
-        [
-          -19.4,
-          -59.9
-        ],
-        [
-          3,
+          2.5,
           -62.9
         ],
         [
-          25.1,
-          -57.7
+          24.8,
+          -57.9
         ],
         [
-          43.9,
-          -45.1
+          43.8,
+          -45.2
         ],
         [
           57.1,
@@ -1572,40 +1577,40 @@
           16.8
         ],
         [
-          87.5,
-          -41.7
+          87.3,
+          -42.1
         ],
         [
-          47,
-          -84.8
+          46.3,
+          -85.2
         ],
         [
-          -10.9,
-          -96.4
+          -12.2,
+          -96.2
         ],
         [
-          -64.8,
-          -72.1
+          -66.1,
+          -71
         ],
         [
-          -94.7,
-          -21.1
+          -95.1,
+          -19
         ],
         [
-          -89.3,
-          37.8
+          -88.3,
+          40.1
         ],
         [
-          -50.7,
-          82.6
+          -48.2,
+          84.1
         ],
         [
-          6.7,
-          96.7
+          10,
+          96.5
         ],
         [
-          -357.6,
-          33.4
+          -356.2,
+          45.9
         ]
       ],
       "lip_from_y": -56,
@@ -1615,26 +1620,26 @@
         {
           "name": "seat tube tab, drive side",
           "at": [
-            -22.9,
+            -23,
             -17.5,
-            91.6
+            91.9
           ]
         },
         {
           "name": "chainstay tab, drive side",
           "at": [
-            -328.6,
+            -329,
             -69.3,
-            -17.6
+            -6.1
           ]
         }
       ]
     },
     "ring_lock": {
       "centre": [
-        -322.9,
+        -312.8,
         0,
-        183.1
+        192.3
       ],
       "radial_xz": [
         0.5,
@@ -1653,36 +1658,36 @@
         {
           "name": "seatstay lock boss left lower",
           "at": [
-            -312.5,
-            76.7,
-            147.8
+            -304.3,
+            76.6,
+            156.5
           ],
           "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
         },
         {
           "name": "seatstay lock boss left upper",
           "at": [
-            -284.3,
-            76.3,
-            189.1
+            -274,
+            76.2,
+            196.3
           ],
           "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
         },
         {
           "name": "seatstay lock boss right lower",
           "at": [
-            -312.5,
-            -76.7,
-            147.8
+            -304.3,
+            -76.6,
+            156.5
           ],
           "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
         },
         {
           "name": "seatstay lock boss right upper",
           "at": [
-            -284.3,
-            -76.3,
-            189.1
+            -274,
+            -76.2,
+            196.3
           ],
           "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
         }
@@ -1699,23 +1704,23 @@
       ],
       "mount_block": {
         "centre": [
-          504.5,
+          488.2,
           0,
-          331.3
+          346.3
         ],
         "alongHT": 40,
         "width": 24,
         "depth": 12,
         "holes": [
           [
-            505.7,
+            489.4,
             0,
-            345.6
+            360.6
           ],
           [
-            514.6,
+            498.3,
             0,
-            321.2
+            336.2
           ]
         ],
         "thread": "M5",
@@ -1723,9 +1728,9 @@
       },
       "carrier_block": {
         "centre": [
-          540.7,
+          524.4,
           0,
-          344.5
+          359.5
         ],
         "depth": 65,
         "width": 60,
@@ -1737,43 +1742,43 @@
     },
     "front_bag": {
       "centre": [
-        666.8,
+        650.6,
         0,
-        509.5
+        449.5
       ],
       "depth": 180,
-      "height": 450,
+      "height": 300,
       "width": 330,
       "bottom_below_block": 60,
-      "max_height": 495,
+      "max_height": 470,
       "note": "Envelope of a luggage-frame bag on the carrier block: a world-aligned box (x forward, z up), back panel vertical against the receiver on the block. max_height is the tallest bag with the same receiver position that keeps 30 mm hand room under the bar and stem and 20 mm from the front tyre/fender at full steering lock (see clearances)."
     },
     "e_assist": null,
     "kickstand": {
       "plate": {
         "centre": [
-          -54.9,
+          -55,
           0,
-          -17
+          -15.1
         ],
         "length": 60,
         "width": 79.96744186046512
       },
       "pivot": [
-        -54.9,
+        -55,
         0,
-        -42
+        -40.1
       ],
       "feet": [
         [
-          -24.9,
+          -25,
           160,
-          -280
+          -265
         ],
         [
-          -24.9,
+          -25,
           -160,
-          -280
+          -265
         ]
       ],
       "type": "two-leg centre stand"

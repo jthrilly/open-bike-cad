@@ -139,7 +139,7 @@ export function geometry3d(d: Design, g: Geometry) {
       tubes: [
         tube('head tube', 'htOD', 'htWall', [p3(g.htTop), p3(g.htBottom)]),
         tube('down tube', 'dtOD', 'dtWall', dtPts.map((p) => p3(p))),
-        tube('top tube (step tube on step-through designs)', 'ttOD', 'ttWall', ttPts.map((p) => p3(p))),
+        ...(d.frameStyle === 'single' ? [] : [tube('top tube (step tube on step-through designs)', 'ttOD', 'ttWall', ttPts.map((p) => p3(p)))]),
         tube('seat tube', 'stOD', 'stWall', stPts.map((p) => p3(p))),
         ...a.stays.chainstays.map((s) => tube(`chainstay ${s.side}`, 'csOD', 'csWall', s.pts)),
         ...a.stays.seatstays.map((s) => tube(`seatstay ${s.side}`, 'ssOD', 'ssWall', s.pts)),
@@ -208,6 +208,19 @@ export function geometry3d(d: Design, g: Geometry) {
       bar_clamp: R3(p3(g.barClamp)),
       bar: { type: String(d.barType), width: numOf(d, 'barWidth'), clamp_dia: numOf(d, 'barDia') },
       grips_at: R3(p3(g.hands)),
+      handlepost:
+        d.stemKind === 'handlepost'
+          ? {
+              steerer_top: R3(p3(g.steererTop)),
+              post_top: R3(p3(g.stemPivot)),
+              post_bottom: R3(p3(add(g.stemPivot, mul(g.steerDir, numOf(d, 'handlepostLength'))))),
+              post_od: numOf(d, 'handlepostOD'),
+              steerer_od: numOf(d, 'steererDia'),
+              head_offset: numOf(d, 'handlepostHeadOffset'),
+              extension: numOf(d, 'handlepostExtension'),
+              note: 'Telescopic handlepost: the 1-1/8 threadless steerer runs up past the headset (locking collar, then a slotted top with a quick-release collar); the post slides inside it along the steering axis. A short horizontal head on the post top carries the bar clamp (head_offset: + forward, - fitted backwards). stem_pivot is the post top.',
+            }
+          : null,
       ...cockpitParts(d, g),
     },
     saddle: {

@@ -161,3 +161,29 @@ describe('low carrier-block mount and front bag', () => {
     expect(geometry3d(low, solve(low)).accessories.front_bag?.max_height).toBe(aLow.frontBag!.maxHeight);
   });
 });
+
+describe('single main tube frame', () => {
+  it('drops the top tube from the cut list and 3D export and measures standover over the down tube', () => {
+    const d = { ...city(), frameStyle: 'diamond' };
+    const s = { ...d, frameStyle: 'single' };
+    const gd = solve(d);
+    const gs = solve(s);
+    expect(tubeCuts(s, gs).some((c) => c.id === 'tt')).toBe(false);
+    expect(tubeCuts(d, gd).some((c) => c.id === 'tt')).toBe(true);
+    expect(geometry3d(s, gs).frame.tubes.some((t: { name: string }) => t.name.startsWith('top tube'))).toBe(false);
+    expect(gs.dims.standover).toBeLessThan(gd.dims.standover);
+  });
+});
+
+describe('telescopic handlepost', () => {
+  it('puts the bar clamp up the steering axis by the extension and offsets it by the head', () => {
+    const base = { ...city(), stemKind: 'handlepost', handlepostCollar: 50, handlepostLength: 330, handlepostExtension: 40, handlepostHeadOffset: -60 };
+    const lo = solve(base);
+    const hi = solve({ ...base, handlepostExtension: 230, handlepostHeadOffset: 60 });
+    expect(hi.stemPivot.y - lo.stemPivot.y).toBeCloseTo(190 * Math.sin((70 * Math.PI) / 180), 0);
+    expect(lo.barClamp.x - lo.stemPivot.x).toBeCloseTo(-60, 5);
+    expect(hi.barClamp.x - hi.stemPivot.x).toBeCloseTo(60, 5);
+    expect(solve({ ...base, handlepostExtension: 250 }).warnings.some((w) => w.includes('only'))).toBe(true);
+    expect(geometry3d(base, lo).cockpit.handlepost?.extension).toBe(40);
+  });
+});

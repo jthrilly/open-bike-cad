@@ -262,7 +262,7 @@ def build(g):
         sweep(part(key, mat), t["centreline"], t["od"] / 2, segs=32)
     # fillet joints: small spheres approximating the bronze fillets where tubes meet
     fillet = part("frame_main", M["main"])
-    upper = tubes.get("top tube") or tubes["step tube"]
+    upper = tubes.get("top tube") or tubes.get("step tube") or tubes["down tube"]  # single-tube frames: cables follow the down tube
     joints = [upper["centreline"][0], upper["centreline"][1], tubes["down tube"]["centreline"][1]]
     for j in joints:
         bmesh.ops.create_uvsphere(fillet.bm, u_segments=24, v_segments=12, radius=18, matrix=Matrix.Translation(j))
@@ -322,13 +322,24 @@ def build(g):
     steer_dir = (Vector(st["to"]) - Vector(st["from"])).normalized()
     pivot, clamp = Vector(ck["stem_pivot"]), Vector(ck["bar_clamp"])
     hs_top = ht[0] + ht_dir * hs["upper_stack"]
-    stem_clamp_h = 40
-    stem_bottom = pivot - steer_dir * stem_clamp_h / 2
-    if (stem_bottom - hs_top).dot(steer_dir) > 1:
-        lathe(part("spacers", M["black"]), disc_profile(14.3, 17.5, (stem_bottom - hs_top).length), (hs_top + stem_bottom) / 2, steer_dir, 32)
-    lathe(part("stem", M["alu"]), disc_profile(14.3, 19, stem_clamp_h), pivot, steer_dir, 32)
-    lathe(part("stem", M["alu"]), [(0, -2), (19, -2), (19, 0), (0, 0)], pivot + steer_dir * (stem_clamp_h / 2 + 2), steer_dir, 32, closed=True)
-    sweep(part("stem", M["alu"]), [pivot, clamp], 15, segs=24)
+    hp = ck.get("handlepost")
+    if isinstance(hp, dict):
+        # telescopic handlepost: steerer extension with locking collar and QR collar, post, short head
+        s_top = Vector(hp["steerer_top"])
+        s_r = hp["steerer_od"] / 2
+        # (the steerer itself is drawn with the fork, up to steerer_top)
+        lathe(part("spacers", M["black"]), disc_profile(s_r, s_r + 5, 15), hs_top + steer_dir * 7.5, steer_dir, 32)
+        lathe(part("spacers", M["black"]), disc_profile(s_r, s_r + 4, 18), s_top - steer_dir * 9, steer_dir, 32)
+        sweep(part("stem", M["steel"]), [s_top, pivot + steer_dir * 6], hp["post_od"] / 2, segs=32)
+        sweep(part("stem", M["steel"]), [pivot, clamp], 12, segs=24)
+    else:
+        stem_clamp_h = 40
+        stem_bottom = pivot - steer_dir * stem_clamp_h / 2
+        if (stem_bottom - hs_top).dot(steer_dir) > 1:
+            lathe(part("spacers", M["black"]), disc_profile(14.3, 17.5, (stem_bottom - hs_top).length), (hs_top + stem_bottom) / 2, steer_dir, 32)
+        lathe(part("stem", M["alu"]), disc_profile(14.3, 19, stem_clamp_h), pivot, steer_dir, 32)
+        lathe(part("stem", M["alu"]), [(0, -2), (19, -2), (19, 0), (0, 0)], pivot + steer_dir * (stem_clamp_h / 2 + 2), steer_dir, 32, closed=True)
+        sweep(part("stem", M["alu"]), [pivot, clamp], 15, segs=24)
     lathe(part("stem", M["alu"]), disc_profile(16, 21, 44), clamp, Y, 32)
     controls = cockpit_controls(part, M, ck, clamp)
 
@@ -908,7 +919,7 @@ def cables(part, M, g, tubes, controls, wheels):
     hb = br.get("hub_brake") if isinstance(br, dict) else None
     housing = part("cables", M["black"])
     r = 2.6
-    upper = tubes.get("top tube") or tubes["step tube"]
+    upper = tubes.get("top tube") or tubes.get("step tube") or tubes["down tube"]  # single-tube frames: cables follow the down tube
     ua, ub = (Vector(p) for p in upper["centreline"])  # rear end, front end
     top_off = Vector((0, 0, upper["od"] / 2 + r + 0.5))
     ht_r = tubes["head tube"]["od"] / 2

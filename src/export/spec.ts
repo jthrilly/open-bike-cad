@@ -23,8 +23,12 @@ export function specRows(d: Design, g: Geometry): SpecRow[] {
     { section: 'Geometry', label: 'Effective seat angle (to saddle)', value: f(D.effectiveSeatAngle), unit: '°' },
     { section: 'Geometry', label: 'Head tube length', value: f(D.headTubeLength), unit: 'mm', dim: 'htl' },
     { section: 'Geometry', label: 'Effective top tube', value: f(D.ett), unit: 'mm', dim: 'ett' },
-    { section: 'Geometry', label: 'Top tube c-c', value: f(D.ttCC), unit: 'mm', dim: 'tt' },
-    { section: 'Geometry', label: 'Top tube angle', value: f(D.ttAngle), unit: '°', dim: 'tta' },
+    ...(d.frameStyle === 'single'
+      ? []
+      : [
+          { section: 'Geometry', label: 'Top tube c-c', value: f(D.ttCC), unit: 'mm', dim: 'tt' },
+          { section: 'Geometry', label: 'Top tube angle', value: f(D.ttAngle), unit: '°', dim: 'tta' },
+        ]),
     { section: 'Geometry', label: 'Seat tube c-t', value: f(D.stCT), unit: 'mm', dim: 'st' },
     { section: 'Geometry', label: 'Seat tube c-c', value: f(D.stCC), unit: 'mm', dim: 'stcc' },
     { section: 'Geometry', label: 'Down tube c-c', value: f(D.dtCC), unit: 'mm', dim: 'dt' },
@@ -50,7 +54,7 @@ export function specRows(d: Design, g: Geometry): SpecRow[] {
     { section: 'Fit', label: 'Bar clamp from BB (y)', value: f(D.barStackFromBB), unit: 'mm', dim: 'barpos' },
     { section: 'Fit', label: 'Minimum seatpost length', value: f(D.seatpostMinLength), unit: 'mm' },
     { section: 'Tubes', label: 'Head tube', value: `${f(numOf(d, 'htOD'), 1)} × ${f(numOf(d, 'htWall'), 2)}`, unit: 'mm' },
-    { section: 'Tubes', label: 'Top tube', value: `${f(numOf(d, 'ttOD'), 1)} × ${f(numOf(d, 'ttWall'), 2)}`, unit: 'mm' },
+    ...(d.frameStyle === 'single' ? [] : [{ section: 'Tubes', label: 'Top tube', value: `${f(numOf(d, 'ttOD'), 1)} × ${f(numOf(d, 'ttWall'), 2)}`, unit: 'mm' }]),
     { section: 'Tubes', label: 'Down tube', value: `${f(numOf(d, 'dtOD'), 1)} × ${f(numOf(d, 'dtWall'), 2)}`, unit: 'mm' },
     { section: 'Tubes', label: 'Seat tube', value: `${f(numOf(d, 'stOD'), 1)} × ${f(numOf(d, 'stWall'), 2)}`, unit: 'mm' },
     { section: 'Tubes', label: 'Chainstays', value: `${f(numOf(d, 'csOD'), 1)}→${f(numOf(d, 'csODTip'), 1)} × ${f(numOf(d, 'csWall'), 2)}`, unit: 'mm' },
@@ -63,8 +67,19 @@ export function specRows(d: Design, g: Geometry): SpecRow[] {
     { section: 'Components', label: 'Cranks', value: f(numOf(d, 'crankLength'), 1), unit: 'mm' },
     { section: 'Components', label: 'Chainrings', value: parseTeeth(d.chainrings).join('/'), unit: 'T' },
     { section: 'Components', label: 'Cassette', value: (() => { const c = parseTeeth(d.cogs); return c.length ? `${Math.min(...c)}–${Math.max(...c)} (${c.length})` : '—'; })(), unit: 'T' },
-    { section: 'Components', label: 'Stem', value: `${f(numOf(d, 'stemLength'), 0)} × ${f(numOf(d, 'stemAngle'), 0)}°`, unit: '' },
-    { section: 'Components', label: 'Spacers', value: f(numOf(d, 'spacers'), 0), unit: 'mm' },
+    ...(d.stemKind === 'handlepost'
+      ? [
+          {
+            section: 'Components',
+            label: 'Handlepost',
+            value: `${f(numOf(d, 'handlepostOD'), 1)} × ${f(numOf(d, 'handlepostLength'), 0)}, ${f(numOf(d, 'handlepostExtension'), 0)} out, head ${numOf(d, 'handlepostHeadOffset') > 0 ? '+' : ''}${f(numOf(d, 'handlepostHeadOffset'), 0)}`,
+            unit: 'mm',
+          },
+        ]
+      : [
+          { section: 'Components', label: 'Stem', value: `${f(numOf(d, 'stemLength'), 0)} × ${f(numOf(d, 'stemAngle'), 0)}°`, unit: '' },
+          { section: 'Components', label: 'Spacers', value: f(numOf(d, 'spacers'), 0), unit: 'mm' },
+        ]),
     { section: 'Components', label: 'Handlebar', value: `${String(d.barType)} ${f(numOf(d, 'barWidth'), 0)}`, unit: 'mm' },
     ...(d.forkType === 'rigid' || d.forkType === 'straight'
       ? [

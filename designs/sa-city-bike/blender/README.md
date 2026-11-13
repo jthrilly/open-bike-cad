@@ -4,7 +4,7 @@
 so it can be re-run whenever the geometry changes. From `designs/sa-city-bike`:
 
 ```bash
-/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P blender/build_bike.py -- OUT_DIR SA_City_Bike_700C_adult_geometry.json SA_City_Bike_24_kids_geometry.json SA_City_Bike_700C_eassist_geometry.json SA_City_Bike_20_GLine_geometry.json
+/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P blender/build_bike.py -- OUT_DIR SA_City_Bike_700C_adult_geometry.json SA_City_Bike_24_kids_geometry.json SA_City_Bike_700C_eassist_geometry.json SA_City_Bike_20_GLine_geometry.json SA_City_Bike_20_GLine_child_geometry.json
 ```
 
 For each bike it writes `<name>.blend`, `<name>.glb` (in metres, without the ground plane)
