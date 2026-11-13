@@ -5,6 +5,8 @@ import { fitAdvice, fitMetrics, estimateBodyFromHeight, gearTable } from '../fit
 import { tubeCuts, fixtureTable, cutListWarnings } from '../export/mitre';
 import { specRows } from '../export/spec';
 import { LibraryItem } from './state';
+import { AlertDialog } from '@base-ui/react/alert-dialog';
+import { Button, Check, Tip } from './kit';
 
 const f = (n: number, p = 1) => (Number.isFinite(n) ? n.toFixed(p) : '—');
 
@@ -35,9 +37,11 @@ export function SpecPanel({ d, g, onToggleDim }: { d: Design; g: Geometry; onTog
               <tr key={i}>
                 <td>
                   {r.dim ? (
-                    <label className="dimtoggle" title="Show on drawing">
-                      <input type="checkbox" checked={shown.has(r.dim)} onChange={() => onToggleDim(r.dim!)} /> {r.label}
-                    </label>
+                    <Tip text="Show on drawing">
+                      <label className="dimtoggle">
+                        <Check checked={shown.has(r.dim)} onChange={() => onToggleDim(r.dim!)} /> {r.label}
+                      </label>
+                    </Tip>
                   ) : (
                     <span className="nodim">{r.label}</span>
                   )}
@@ -59,12 +63,12 @@ export function FitPanel({ d, g, onChange }: { d: Design; g: Geometry; onChange:
   return (
     <div className="panel fit">
       <div className="row-actions">
-        <label>
-          <input type="checkbox" checked={d.showRider === true} onChange={(e) => onChange({ showRider: e.target.checked }, false)} /> Show rider
+        <label className="checklabel">
+          <Check checked={d.showRider === true} onChange={(v) => onChange({ showRider: v }, false)} /> Show rider
         </label>
-        <button type="button" onClick={() => onChange(estimateBodyFromHeight(numOf(d, 'riderHeight')), false)} title="Fill inseam, torso, arm and foot from the rider's height">
-          Estimate body from height
-        </button>
+        <Tip text="Fill inseam, torso, arm and foot from the rider's height">
+          <Button onClick={() => onChange(estimateBodyFromHeight(numOf(d, 'riderHeight')), false)}>Estimate body from height</Button>
+        </Tip>
       </div>
       <h4>Fit advisor ({String(d.fitScheme)})</h4>
       <table>
@@ -81,8 +85,12 @@ export function FitPanel({ d, g, onChange }: { d: Design; g: Geometry; onChange:
             const diff = a.current - a.recommended;
             const bad = Math.abs(diff) > (a.unit === '°' ? 5 : 15);
             return (
-              <tr key={i} className={bad ? 'off' : ''} title={a.note}>
-                <td>{a.label}</td>
+              <tr key={i} className={bad ? 'off' : ''}>
+                <td>
+                  <Tip text={a.note}>
+                    <span>{a.label}</span>
+                  </Tip>
+                </td>
                 <td className="num">
                   {f(a.recommended)} {a.unit}
                 </td>
@@ -91,9 +99,9 @@ export function FitPanel({ d, g, onChange }: { d: Design; g: Geometry; onChange:
                 </td>
                 <td>
                   {a.param && (
-                    <button type="button" className="small" onClick={() => onChange({ [a.param!]: Math.round(a.recommended * 2) / 2 }, false)}>
+                    <Button size="small" onClick={() => onChange({ [a.param!]: Math.round(a.recommended * 2) / 2 }, false)}>
                       Apply
-                    </button>
+                    </Button>
                   )}
                 </td>
               </tr>
@@ -274,9 +282,9 @@ export function LibraryPanel({
 }) {
   return (
     <div className="panel library">
-      <button type="button" className="primary" onClick={onSaveCurrent}>
+      <Button variant="primary" onClick={onSaveCurrent}>
         Save current design to library
-      </button>
+      </Button>
       <p className="hint">The library lives in this browser. Use Save .bcad to keep a file you can back up or share.</p>
       {items.length === 0 && <p className="empty">No saved designs yet.</p>}
       <ul>
@@ -286,15 +294,28 @@ export function LibraryPanel({
             <div className="meta">{new Date(it.savedAt).toLocaleString()}</div>
             {it.notes && <div className="meta">{it.notes}</div>}
             <div className="actions">
-              <button type="button" className="small" onClick={() => onOpen(it)}>
+              <Button size="small" onClick={() => onOpen(it)}>
                 Open
-              </button>
-              <button type="button" className="small" onClick={() => onCompare(it)}>
+              </Button>
+              <Button size="small" onClick={() => onCompare(it)}>
                 Compare
-              </button>
-              <button type="button" className="small danger" onClick={() => onDelete(it.id)}>
-                Delete
-              </button>
+              </Button>
+              <AlertDialog.Root>
+                <AlertDialog.Trigger render={<Button size="small" variant="danger" />}>Delete</AlertDialog.Trigger>
+                <AlertDialog.Portal>
+                  <AlertDialog.Backdrop className="dialog-backdrop" />
+                  <AlertDialog.Popup className="dialog">
+                    <AlertDialog.Title className="dialog-title">Delete “{it.name}”?</AlertDialog.Title>
+                    <AlertDialog.Description className="hint">This removes it from the library in this browser. It can't be undone.</AlertDialog.Description>
+                    <div className="dialog-actions">
+                      <AlertDialog.Close render={<Button />}>Cancel</AlertDialog.Close>
+                      <AlertDialog.Close render={<Button variant="danger" />} onClick={() => onDelete(it.id)}>
+                        Delete
+                      </AlertDialog.Close>
+                    </div>
+                  </AlertDialog.Popup>
+                </AlertDialog.Portal>
+              </AlertDialog.Root>
             </div>
           </li>
         ))}

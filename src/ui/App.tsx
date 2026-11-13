@@ -10,6 +10,13 @@ import { Sheet } from './Sheet';
 import { useAutosave, useBikeHistory, useLibrary, loadAutosave, upgradeDesign, LibraryItem } from './state';
 import { SHEETS, baseName, compareCsv, download, frameDxf, mitreDxf, mitrePdf, sideViewSvgString, specCsv, svgFileName, svgToPdf, svgToString } from '../export/exporters';
 import { PRESETS } from '../model/presets';
+import { Menu as BaseMenu } from '@base-ui/react/menu';
+import { Menubar } from '@base-ui/react/menubar';
+import { Tabs } from '@base-ui/react/tabs';
+import { ToggleGroup } from '@base-ui/react/toggle-group';
+import { Toggle } from '@base-ui/react/toggle';
+import { Slider } from '@base-ui/react/slider';
+import { Button, TextInput, Tip, Toasts, useToastManager } from './kit';
 
 type RightTab = 'spec' | 'fit' | 'gears' | 'mitres' | 'library' | 'compare';
 type View = 'design' | 'sheet';
@@ -27,20 +34,28 @@ function isEditable(t: EventTarget | null): boolean {
   return false;
 }
 
-function Menu({ id, label, menu, setMenu, children }: { id: string; label: string; menu: string | null; setMenu: (m: string | null) => void; children: React.ReactNode }) {
+function Menu({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="menu" onMouseLeave={() => menu === id && setMenu(null)}>
-      <button type="button" className={menu === id ? 'open' : ''} onClick={() => setMenu(menu === id ? null : id)}>
-        {label} ▾
-      </button>
-      {menu === id && (
-        <div className="menu-items" onClick={() => setMenu(null)}>
-          {children}
-        </div>
-      )}
-    </div>
+    <BaseMenu.Root>
+      <BaseMenu.Trigger className="btn menu-trigger">{label} ▾</BaseMenu.Trigger>
+      <BaseMenu.Portal>
+        <BaseMenu.Positioner className="menu-positioner" sideOffset={2} align="start">
+          <BaseMenu.Popup className="popup menu-items">{children}</BaseMenu.Popup>
+        </BaseMenu.Positioner>
+      </BaseMenu.Portal>
+    </BaseMenu.Root>
   );
 }
+
+function Item({ onClick, children }: { onClick: () => unknown; children: React.ReactNode }) {
+  return (
+    <BaseMenu.Item className="popup-item" onClick={() => void onClick()}>
+      {children}
+    </BaseMenu.Item>
+  );
+}
+
+const MenuSep = () => <BaseMenu.Separator className="menu-sep" />;
 
 function initialFile(): BikeFile {
   const saved = loadAutosave();
@@ -74,8 +89,6 @@ export function App() {
   const [rightTab, setRightTab] = useState<RightTab>('spec');
   const [view, setView] = useState<View>('design');
   const [photo, setPhoto] = useState<Photo | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
-  const [menu, setMenu] = useState<string | null>(null);
   const canvasRef = useRef<CanvasHandle>(null);
   const sheetRef = useRef<SVGSVGElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -102,13 +115,8 @@ export function App() {
   const serializeSource = useCallback(() => (file.source ? exportBcad(file, derivedFor(file)) : undefined), [file]);
   useAutosave(file, serializeSource);
 
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const flash = useCallback((msg: string) => {
-    setToast(msg);
-    clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(null), 3500);
-  }, []);
-  useEffect(() => () => clearTimeout(toastTimer.current), []);
+  const { add: addToast } = useToastManager();
+  const flash = useCallback((msg: string) => void addToast({ description: msg }), [addToast]);
 
   // ------------------------------------------------------------ file ops
   const openText = useCallback(
@@ -281,50 +289,50 @@ export function App() {
           </svg>
           <span>Open Bike CAD</span>
         </div>
-        <Menu id="file" label="File" menu={menu} setMenu={setMenu}>
+        <Menubar className="menubar">
+        <Menu label="File">
           {PRESETS.map((p) => (
-            <button type="button" key={p.id} onClick={() => newDesign(p.make)}>
+            <Item key={p.id} onClick={() => newDesign(p.make)}>
               New {p.label}
-            </button>
+            </Item>
           ))}
-          <button type="button" onClick={() => newDesign(defaultDesign)}>
+          <Item onClick={() => newDesign(defaultDesign)}>
             New blank
-          </button>
-          <hr />
-          <button type="button" onClick={() => fileInput.current?.click()}>
+          </Item>
+          <MenuSep />
+          <Item onClick={() => fileInput.current?.click()}>
             Open .bcad… <kbd>Ctrl O</kbd>
-          </button>
-          <button type="button" onClick={saveBcad}>
+          </Item>
+          <Item onClick={saveBcad}>
             Save .bcad <kbd>Ctrl S</kbd>
-          </button>
-          <button type="button" onClick={saveToLibrary}>
+          </Item>
+          <Item onClick={saveToLibrary}>
             Save to library
-          </button>
+          </Item>
         </Menu>
-        <Menu id="export" label="Export" menu={menu} setMenu={setMenu}>
-          <button type="button" onClick={exportPdf}>
+        <Menu label="Export">
+          <Item onClick={exportPdf}>
             Drawing sheet (PDF)
-          </button>
-          <button type="button" onClick={exportSvg}>
+          </Item>
+          <Item onClick={exportSvg}>
             {view === 'sheet' ? 'Drawing sheet' : 'Side view'} (SVG)
-          </button>
-          <button type="button" onClick={() => runExport('DXF', () => download(`${baseName(file.design)}_frame.dxf`, frameDxf(file.design, gReal), 'application/dxf'))}>
+          </Item>
+          <Item onClick={() => runExport('DXF', () => download(`${baseName(file.design)}_frame.dxf`, frameDxf(file.design, gReal), 'application/dxf'))}>
             Frame outline (DXF)
-          </button>
-          <hr />
-          <button type="button" onClick={() => runExport('Mitre PDF', () => mitrePdf(file.design, gReal))}>
+          </Item>
+          <MenuSep />
+          <Item onClick={() => runExport('Mitre PDF', () => mitrePdf(file.design, gReal))}>
             Mitre templates (PDF, 1:1)
-          </button>
-          <button type="button" onClick={() => runExport('DXF', () => download(`${baseName(file.design)}_mitres.dxf`, mitreDxf(file.design, gReal), 'application/dxf'))}>
+          </Item>
+          <Item onClick={() => runExport('DXF', () => download(`${baseName(file.design)}_mitres.dxf`, mitreDxf(file.design, gReal), 'application/dxf'))}>
             Mitre templates (DXF)
-          </button>
-          <hr />
-          <button type="button" onClick={() => runExport('CSV', () => download(`${baseName(file.design)}_spec.csv`, specCsv(file.design, gReal), 'text/csv'))}>
+          </Item>
+          <MenuSep />
+          <Item onClick={() => runExport('CSV', () => download(`${baseName(file.design)}_spec.csv`, specCsv(file.design, gReal), 'text/csv'))}>
             Spec, cut list & parameters (CSV)
-          </button>
+          </Item>
           {compare && (
-            <button
-              type="button"
+            <Item
               onClick={() =>
                 download(
                   'comparison.csv',
@@ -337,33 +345,38 @@ export function App() {
               }
             >
               Comparison table (CSV)
-            </button>
+            </Item>
           )}
         </Menu>
+        </Menubar>
         <div className="sep" />
-        <button type="button" onClick={undo} disabled={!canUndo} title="Undo (Ctrl Z)">
-          ↶ Undo
-        </button>
-        <button type="button" onClick={redo} disabled={!canRedo} title="Redo (Ctrl Shift Z)">
-          ↷ Redo
-        </button>
+        <Tip text="Undo (Ctrl Z)">
+          <Button onClick={undo} disabled={!canUndo}>
+            ↶ Undo
+          </Button>
+        </Tip>
+        <Tip text="Redo (Ctrl Shift Z)">
+          <Button onClick={redo} disabled={!canRedo}>
+            ↷ Redo
+          </Button>
+        </Tip>
         <div className="sep" />
-        <div className="seg">
-          <button type="button" className={view === 'design' ? 'on' : ''} onClick={() => setView('design')}>
+        <ToggleGroup className="seg" value={[view]} onValueChange={(v) => v[0] && setView(v[0] as View)} aria-label="View">
+          <Toggle value="design" className="btn">
             Design
-          </button>
-          <button type="button" className={view === 'sheet' ? 'on' : ''} onClick={() => setView('sheet')}>
+          </Toggle>
+          <Toggle value="sheet" className="btn">
             Drawing sheet
-          </button>
-        </div>
+          </Toggle>
+        </ToggleGroup>
         {view === 'design' && (
-          <button type="button" onClick={() => canvasRef.current?.fit()} title="Zoom to fit">
-            ⤢ Fit
-          </button>
+          <Tip text="Zoom to fit">
+            <Button onClick={() => canvasRef.current?.fit()}>⤢ Fit</Button>
+          </Tip>
         )}
         <div className="grow" />
         <div className="title-edit">
-          <input value={String(file.design.title)} onChange={(e) => update({ title: e.target.value })} aria-label="Design name" />
+          <TextInput value={String(file.design.title)} onChange={(e) => update({ title: e.target.value })} aria-label="Design name" />
         </div>
         <input ref={fileInput} type="file" accept=".bcad,.xml,application/xml,text/xml" hidden onChange={(e) => (openFiles(e.target.files), (e.target.value = ''))} />
         <input
@@ -423,8 +436,8 @@ export function App() {
           </div>
         </section>
 
-        <aside className="right">
-          <nav className="tabs">
+        <Tabs.Root render={<aside className="right" />} value={rightTab} onValueChange={(v) => setRightTab(v as RightTab)}>
+          <Tabs.List className="tabs">
             {(
               [
                 ['spec', 'Spec'],
@@ -435,16 +448,16 @@ export function App() {
                 ['library', 'Library'],
               ] as [RightTab, string][]
             ).map(([id, label]) => (
-              <button type="button" key={id} className={rightTab === id ? 'on' : ''} onClick={() => setRightTab(id)}>
+              <Tabs.Tab key={id} value={id} className="btn tab">
                 {label}
-              </button>
+              </Tabs.Tab>
             ))}
-          </nav>
-          {rightTab === 'spec' && <SpecPanel d={file.design} g={gReal} onToggleDim={toggleDim} />}
-          {rightTab === 'fit' && <FitPanel d={file.design} g={gReal} onChange={update} />}
-          {rightTab === 'gears' && <GearPanel d={file.design} g={gReal} />}
-          {rightTab === 'mitres' && <MitrePanel d={file.design} g={gReal} />}
-          {rightTab === 'library' && (
+          </Tabs.List>
+          <Tabs.Panel value="spec"><SpecPanel d={file.design} g={gReal} onToggleDim={toggleDim} /></Tabs.Panel>
+          <Tabs.Panel value="fit"><FitPanel d={file.design} g={gReal} onChange={update} /></Tabs.Panel>
+          <Tabs.Panel value="gears"><GearPanel d={file.design} g={gReal} /></Tabs.Panel>
+          <Tabs.Panel value="mitres"><MitrePanel d={file.design} g={gReal} /></Tabs.Panel>
+          <Tabs.Panel value="library">
             <LibraryPanel
               items={library.items}
               onOpen={openFromLibrary}
@@ -460,8 +473,8 @@ export function App() {
                 setRightTab('compare');
               }}
             />
-          )}
-          {rightTab === 'compare' && (
+          </Tabs.Panel>
+          <Tabs.Panel value="compare">
             <ComparePanel
               current={file.design}
               compare={compare}
@@ -479,10 +492,10 @@ export function App() {
               setPhoto={setPhoto}
               onPhoto={() => photoInput.current?.click()}
             />
-          )}
-        </aside>
+          </Tabs.Panel>
+        </Tabs.Root>
       </main>
-      {toast && <div className="toast">{toast}</div>}
+      <Toasts />
     </div>
   );
 }
@@ -546,27 +559,28 @@ function ComparePanel({
   return (
     <div className="panel compare">
       <div className="row-actions">
-        <button type="button" onClick={onLoad}>
-          Open .bcad to compare…
-        </button>
+        <Button onClick={onLoad}>Open .bcad to compare…</Button>
         {compare && (
           <>
-            <button type="button" onClick={onSwap}>
-              Swap
-            </button>
-            <button type="button" onClick={onClear}>
-              Clear
-            </button>
+            <Button onClick={onSwap}>Swap</Button>
+            <Button onClick={onClear}>Clear</Button>
           </>
         )}
       </div>
       {!compare && <p className="hint">Overlay another design in grey to compare geometry, or morph between the two.</p>}
       {compare && gb && (
         <>
-          <label className="morph">
-            Morph to “{compare.name}”: {(morph * 100).toFixed(0)}%
-            <input type="range" min={0} max={1} step={0.01} value={morph} onChange={(e) => setMorph(Number(e.target.value))} />
-          </label>
+          <Slider.Root className="morph" min={0} max={1} step={0.01} value={morph} onValueChange={(v) => setMorph(Number(v))}>
+            <Slider.Label>
+              Morph to “{compare.name}”: {(morph * 100).toFixed(0)}%
+            </Slider.Label>
+            <Slider.Control className="slider-control">
+              <Slider.Track className="slider-track">
+                <Slider.Indicator className="slider-indicator" />
+                <Slider.Thumb className="slider-thumb" aria-label="Morph amount" />
+              </Slider.Track>
+            </Slider.Control>
+          </Slider.Root>
           <table>
             <thead>
               <tr>
@@ -595,13 +609,9 @@ function ComparePanel({
       )}
       <h4>Trace a photo</h4>
       <div className="row-actions">
-        <button type="button" onClick={onPhoto}>
-          Import photo…
-        </button>
+        <Button onClick={onPhoto}>Import photo…</Button>
         {photo && (
-          <button type="button" onClick={() => setPhoto(null)}>
-            Remove
-          </button>
+          <Button onClick={() => setPhoto(null)}>Remove</Button>
         )}
       </div>
       {photo && (

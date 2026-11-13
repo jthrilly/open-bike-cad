@@ -3,6 +3,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Design, GROUPS, GroupId, PARAMS, ParamDef, ParamValue } from '../model/schema';
 import { switchFrontEndMode, switchTopTubeMode } from '../geometry/solve';
 import { DIM_OPTIONS } from '../render/DimensionLayer';
+import { Accordion } from '@base-ui/react/accordion';
+import { Field as BaseField } from '@base-ui/react/field';
+import { ToggleGroup } from '@base-ui/react/toggle-group';
+import { Toggle } from '@base-ui/react/toggle';
+import { Check, Select, TextInput, Tip } from './kit';
 
 interface Props {
   d: Design;
@@ -15,7 +20,7 @@ interface Props {
 export function ParamPanel({ d, onChange, openGroup, setOpenGroup, sections }: Props) {
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
-  const groupRefs = useRef<Record<string, HTMLDetailsElement | null>>({});
+  const groupRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
     if (openGroup) groupRefs.current[openGroup]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -37,65 +42,70 @@ export function ParamPanel({ d, onChange, openGroup, setOpenGroup, sections }: P
     onChange({ [p.id]: value });
   };
 
+  const visible = groups.filter((g) => g.id === 'display' || PARAMS.some((p) => p.group === g.id && (!p.showIf || p.showIf(d)) && matches(p, q)));
+  // While searching every matching group is forced open.
+  const value = q ? visible.map((g) => g.id) : openGroup ? [openGroup] : [];
+
   return (
     <div className="panel params">
-      <input className="search" placeholder="Find a setting…" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Find a setting" />
-      {groups.map((g) => {
-        const params = PARAMS.filter((p) => p.group === g.id && (!p.showIf || p.showIf(d)) && (!q || p.label.toLowerCase().includes(q) || (p.help ?? '').toLowerCase().includes(q)));
-        if (!params.length && g.id !== 'display') return null;
-        const header = g.section !== lastSection ? <div className="section-title">{g.section}</div> : null;
-        lastSection = g.section;
-        const open = q ? true : openGroup === g.id;
-        return (
-          <div key={g.id}>
-            {header}
-            <details
-              ref={(el) => {
-                groupRefs.current[g.id] = el;
-              }}
-              open={open}
-              onToggle={(e) => {
-                // While searching every group is forced open; toggles that just
-                // reflect what we rendered are not user choices either.
-                if (q) return;
-                const isOpen = (e.currentTarget as HTMLDetailsElement).open;
-                if (isOpen === open) return;
-                if (isOpen && openGroup !== g.id) setOpenGroup(g.id);
-                if (!isOpen && openGroup === g.id) setOpenGroup(null);
-              }}
-            >
-              <summary>{g.label}</summary>
-              <div className="fields">
-                {params.map((p) => (
-                  <Field key={p.id} p={p} value={d[p.id]} onChange={(v) => setValue(p, v)} />
-                ))}
-                {g.id === 'display' && <DimPicker d={d} onChange={onChange} />}
-              </div>
-            </details>
-          </div>
-        );
-      })}
+      <TextInput className="search" placeholder="Find a setting…" value={query} onValueChange={(v) => setQuery(v)} aria-label="Find a setting" />
+      <Accordion.Root
+        className="accordion"
+        multiple={!!q}
+        value={value}
+        onValueChange={(next) => {
+          // Toggles while searching just reflect the forced-open state.
+          if (q) return;
+          const opened = (next as GroupId[]).find((id) => id !== openGroup);
+          setOpenGroup(opened ?? ((next as GroupId[]).includes(openGroup as GroupId) ? openGroup : null));
+        }}
+      >
+        {visible.map((g) => {
+          const params = PARAMS.filter((p) => p.group === g.id && (!p.showIf || p.showIf(d)) && matches(p, q));
+          const header = g.section !== lastSection ? <div className="section-title">{g.section}</div> : null;
+          lastSection = g.section;
+          return (
+            <div key={g.id}>
+              {header}
+              <Accordion.Item
+                value={g.id}
+                className="group"
+                ref={(el: HTMLDivElement | null) => {
+                  groupRefs.current[g.id] = el;
+                }}
+              >
+                <Accordion.Header className="group-header">
+                  <Accordion.Trigger className="group-trigger">{g.label}</Accordion.Trigger>
+                </Accordion.Header>
+                <Accordion.Panel className="fields">
+                  {params.map((p) => (
+                    <Field key={p.id} p={p} value={d[p.id]} onChange={(v) => setValue(p, v)} />
+                  ))}
+                  {g.id === 'display' && <DimPicker d={d} onChange={onChange} />}
+                </Accordion.Panel>
+              </Accordion.Item>
+            </div>
+          );
+        })}
+      </Accordion.Root>
     </div>
   );
 }
 
+const matches = (p: ParamDef, q: string) => !q || p.label.toLowerCase().includes(q) || (p.help ?? '').toLowerCase().includes(q);
+
 function DimPicker({ d, onChange }: { d: Design; onChange: Props['onChange'] }) {
   const set = new Set(String(d.dimSet).split(',').map((s) => s.trim()).filter(Boolean));
-  const toggle = (id: string) => {
-    if (set.has(id)) set.delete(id);
-    else set.add(id);
-    onChange({ dimSet: [...set].join(',') }, false);
-  };
   return (
     <div className="dim-picker">
       <div className="label">Dimensions shown</div>
-      <div className="chips">
+      <ToggleGroup className="chips" multiple value={[...set]} onValueChange={(v) => onChange({ dimSet: v.join(',') }, false)}>
         {DIM_OPTIONS.map((o) => (
-          <button key={o.id} className={set.has(o.id) ? 'chip on' : 'chip'} onClick={() => toggle(o.id)} type="button">
+          <Toggle key={o.id} value={o.id} className="chip">
             {o.label}
-          </button>
+          </Toggle>
         ))}
-      </div>
+      </ToggleGroup>
     </div>
   );
 }
@@ -110,35 +120,31 @@ export function Field({ p, value, onChange }: { p: ParamDef; value: ParamValue; 
       break;
     case 'enum':
       input = (
-        <select id={id} value={String(value)} onChange={(e) => onChange(e.target.value)}>
-          {p.options!.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+<Select id={id} value={String(value)} options={p.options!} onChange={onChange} />
       );
       break;
     case 'bool':
-      input = <input id={id} type="checkbox" checked={value === true} onChange={(e) => onChange(e.target.checked)} />;
+      input = <Check id={id} checked={value === true} onChange={onChange} />;
       break;
     case 'color':
-      input = <input id={id} type="color" value={String(value)} onChange={(e) => onChange(e.target.value)} />;
+      input = <TextInput id={id} type="color" value={String(value)} onChange={(e) => onChange(e.target.value)} />;
       break;
     case 'longtext':
-      input = <textarea id={id} rows={4} value={String(value)} onChange={(e) => onChange(e.target.value)} />;
+      input = <BaseField.Control id={id} render={<textarea rows={4} />} value={String(value)} onValueChange={(v) => onChange(String(v))} />;
       break;
     default:
-      input = <input id={id} type="text" value={String(value)} onChange={(e) => onChange(e.target.value)} />;
+      input = <TextInput id={id} type="text" value={String(value)} onChange={(e) => onChange(e.target.value)} />;
   }
   return (
-    <div className={`field kind-${p.kind}`} title={p.help}>
-      <label htmlFor={id}>{p.label}</label>
+    <BaseField.Root className={`field kind-${p.kind}`}>
+      <Tip text={p.help}>
+        <BaseField.Label htmlFor={id}>{p.label}</BaseField.Label>
+      </Tip>
       <div className="control">
         {input}
         {p.unit && p.kind === 'num' && <span className="unit">{p.unit}</span>}
       </div>
-    </div>
+    </BaseField.Root>
   );
 }
 
@@ -170,7 +176,7 @@ export function NumberInput({ id, value, step, min, max, onChange }: { id?: stri
     }
   };
   return (
-    <input
+    <TextInput
       id={id}
       type="text"
       inputMode="decimal"
