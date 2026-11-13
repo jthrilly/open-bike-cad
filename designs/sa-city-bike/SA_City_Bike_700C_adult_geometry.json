@@ -597,7 +597,127 @@
   "fenders": {
    "clearance": 14
   },
-  "rear_rack": true,
+  "rear_rack": {
+   "note": "Separate brazed rack. Platform is entirely BEHIND the seatpost: its front end is 88.3 mm behind the seat tube centreline at platform height. x decreases towards the rear.",
+   "load_rating_kg": 100,
+   "tube_od": 14,
+   "tube_note": "solid rod or 16 x 1.5 tube",
+   "platform": {
+    "z": 479,
+    "front_x": -262.6,
+    "back_x": -585.6,
+    "width": 160,
+    "rails": [
+     [
+      [
+       -262.6,
+       80,
+       479
+      ],
+      [
+       -585.6,
+       80,
+       479
+      ]
+     ],
+     [
+      [
+       -262.6,
+       -80,
+       479
+      ],
+      [
+       -585.6,
+       -80,
+       479
+      ]
+     ]
+    ],
+    "cross_bars_x": [
+     -262.6,
+     -424.1,
+     -585.6
+    ]
+   },
+   "legs": [
+    [
+     [
+      -494.5,
+      80,
+      479
+     ],
+     [
+      -489.5,
+      80,
+      57
+     ]
+    ],
+    [
+     [
+      -494.5,
+      -80,
+      479
+     ],
+     [
+      -489.5,
+      -80,
+      57
+     ]
+    ]
+   ],
+   "front_stays": [
+    [
+     [
+      -262.6,
+      80,
+      479
+     ],
+     [
+      -231.5,
+      41,
+      274.8
+     ]
+    ],
+    [
+     [
+      -262.6,
+      -80,
+      479
+     ],
+     [
+      -231.5,
+      -40.9,
+      274.8
+     ]
+    ]
+   ],
+   "frame_mounts": {
+    "dropout_eyelets": [
+     [
+      -489.5,
+      69,
+      57
+     ],
+     [
+      -489.5,
+      -69,
+      57
+     ]
+    ],
+    "seatstay_bosses": [
+     [
+      -231.5,
+      33,
+      274.8
+     ],
+     [
+      -231.5,
+      -32.9,
+      274.8
+     ]
+    ]
+   }
+  },
   "kickstand": "two-leg, plate between chainstays behind BB",
   "brakes": "V-brakes front and rear (posts on fork blades and seatstays at rim radius 311 mm)",
   "front_carrier_block": {
