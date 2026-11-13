@@ -139,6 +139,8 @@
 <entry key="OpenBikeCAD.forkStanchionDia">34.0</entry>
 <entry key="OpenBikeCAD.forkTravel">100.0</entry>
 <entry key="OpenBikeCAD.forkSag">20.0</entry>
+<entry key="OpenBikeCAD.rearHubBrake">roller</entry>
+<entry key="OpenBikeCAD.fenderWidthExtra">8.0</entry>
 <entry key="OpenBikeCAD.forkDropoutPlate">6.0</entry>
 <entry key="OpenBikeCAD.forkDropoutSlotWidth">10.0</entry>
 <entry key="OpenBikeCAD.forkTorqueArm">true</entry>

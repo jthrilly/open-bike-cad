@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
-<comment>Created by Open Bike CAD on Fri Nov 13 2026 17:10:07 GMT+0000 (Coordinated Universal Time)</comment>
+<comment>Created by Open Bike CAD on Fri Nov 13 2026 17:33:42 GMT+0000 (Coordinated Universal Time)</comment>
 <entry key="Head angle">69.0</entry>
 <entry key="Seat angle">71.0</entry>
 <entry key="DISCONTINUOUS">false</entry>
@@ -238,6 +238,8 @@
 <entry key="OpenBikeCAD.stBossFromBB">160.0</entry>
 <entry key="OpenBikeCAD.bossSpacing">64.0</entry>
 <entry key="OpenBikeCAD.fenders">true</entry>
+<entry key="OpenBikeCAD.fenderWidthExtra">8.0</entry>
+<entry key="OpenBikeCAD.rearHubBrake">roller</entry>
 <entry key="OpenBikeCAD.fenderClearance">14.0</entry>
 <entry key="OpenBikeCAD.fenderRearStart">5.0</entry>
 <entry key="OpenBikeCAD.fenderRearEnd">200.0</entry>
@@ -251,13 +253,21 @@
 <entry key="OpenBikeCAD.rackRearOverhang">160.0</entry>
 <entry key="OpenBikeCAD.ringLock">true</entry>
 <entry key="OpenBikeCAD.carrierBlock">true</entry>
+<entry key="OpenBikeCAD.carrierBlockPosition">standard</entry>
+<entry key="OpenBikeCAD.carrierBlockLowPos">60.0</entry>
+<entry key="OpenBikeCAD.frontBag">false</entry>
+<entry key="OpenBikeCAD.frontBagHeight">300.0</entry>
+<entry key="OpenBikeCAD.frontBagDepth">180.0</entry>
+<entry key="OpenBikeCAD.frontBagWidth">330.0</entry>
+<entry key="OpenBikeCAD.frontBagBelowBlock">60.0</entry>
 <entry key="OpenBikeCAD.blockBattery">false</entry>
-<entry key="OpenBikeCAD.blockBatteryHeight">200.0</entry>
-<entry key="OpenBikeCAD.blockBatteryDepth">85.0</entry>
-<entry key="OpenBikeCAD.blockBatteryWidth">110.0</entry>
+<entry key="OpenBikeCAD.blockBatteryHeight">151.0</entry>
+<entry key="OpenBikeCAD.blockBatteryDepth">111.0</entry>
+<entry key="OpenBikeCAD.blockBatteryWidth">85.0</entry>
 <entry key="OpenBikeCAD.blockBatteryLift">30.0</entry>
 <entry key="OpenBikeCAD.blockBatteryWh">360.0</entry>
-<entry key="OpenBikeCAD.blockBatteryKg">2.3</entry>
+<entry key="OpenBikeCAD.blockBatteryKg">2.2</entry>
+<entry key="OpenBikeCAD.blockBatteryLayout">10S2P of 21700 cells (5.0 Ah, 21.7 x 70.8 mm, ~69 g). Cells lie across the bike (axis = y) in a 4 deep x 5 high grid on 22.2 mm holder pitch: core 88.8 deep x 111 high x 74.5 wide incl. holders and nickel. Adds: kapton/fish-paper wrap 1 mm a side; 10S 20 A BMS (~60 x 45 x 8 mm) plus leads on the back face, 12 mm; EVA foam 1.5 mm a side; ABS/alu case wall 2.5 mm a side; slide-in lock and contact block under the cells 18 mm; carry handle and charge port in the top cap 12 mm. Pack 111 deep x 151 high x 85 wide, ~2.2 kg (cells 1.38 kg). Controller is not in the pack.</entry>
 <entry key="OpenBikeCAD.frontHubMotor">false</entry>
 <entry key="OpenBikeCAD.motorShellDia">130.0</entry>
 <entry key="OpenBikeCAD.motorShellWidth">80.0</entry>

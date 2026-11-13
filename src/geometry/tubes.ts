@@ -38,3 +38,19 @@ export function forkBladePts(d: Design, g: Geometry): Vec[] {
   }
   return pts;
 }
+
+/**
+ * Fork blade lateral layout: half-spacing of the blade centrelines at the crown
+ * and at the dropout. The blades clear the fender (or the tyre, with no fender)
+ * by 3 mm at the crown and taper linearly to the dropouts.
+ */
+export function forkLateral(d: Design) {
+  const tyre = numOf(d, 'frontTyre');
+  const bladeR = numOf(d, 'forkBladeDia') / 2;
+  const fenderHalf = d.fenders === true ? (tyre + numOf(d, 'fenderWidthExtra')) / 2 + 3 : 0;
+  const crownHalf = Math.max(tyre / 2 + 6, fenderHalf) + bladeR;
+  const tipY = numOf(d, 'frontSpacing') / 2 + 2.5;
+  /** Blade centreline half-spacing at fraction t of the way from crown (0) to dropout (1). */
+  const at = (t: number) => crownHalf + (tipY - crownHalf) * t;
+  return { crownHalf, tipY, at };
+}

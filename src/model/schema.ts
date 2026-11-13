@@ -463,6 +463,12 @@ export const PARAMS: ParamDef[] = [
   num('stBossFromBB', 'Seat tube lower boss from BB', 'accessories', 160),
   num('bossSpacing', 'Boss spacing', 'accessories', 64),
   bool('fenders', 'Fenders', 'accessories', false),
+  num('fenderWidthExtra', 'Fender width over tyre width', 'accessories', 18, { help: 'Fender width minus tyre width. About 8-12 mm keeps the fork blades close enough for V-brakes on wide tyres.', showIf: (d) => d.fenders === true }),
+  en('rearHubBrake', 'Rear hub brake', 'accessories', 'none', [
+    ['none', 'None (rim/disc brake as set above)'],
+    ['roller', 'Roller brake (e.g. Shimano Nexus)'],
+    ['coaster', 'Coaster (back-pedal)'],
+  ], { help: 'A hub brake replaces the rear rim brake: no rear bosses; a reaction arm clamps to the left chainstay.' }),
   num('fenderClearance', 'Fender clearance', 'accessories', 12, { showIf: (d) => d.fenders === true }),
   ang('fenderRearStart', 'Rear fender front end', 'accessories', 5, { help: 'Angle around the rear axle where the fender starts, in degrees: 0 = straight forward, 90 = straight up, 180 = straight back.', showIf: (d) => d.fenders === true }),
   ang('fenderRearEnd', 'Rear fender back end', 'accessories', 200, { help: 'Angle around the rear axle where the fender ends (0 forward, 90 up, 180 back).', showIf: (d) => d.fenders === true }),

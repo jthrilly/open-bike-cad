@@ -1,6 +1,6 @@
 {
  "format": "open-bike-cad 3D geometry",
- "version": 3,
+ "version": 4,
  "name": "SA City Bike 24\" (kids)",
  "size": "Riders ~125-150 cm",
  "material": "Mild / high-tensile ERW steel, fillet brazed (bronze)",
@@ -78,7 +78,7 @@
   },
   {
    "what": "Rear fender to seatstays",
-   "mm": 18.6,
+   "mm": 23.6,
    "ok": true
   },
   {
@@ -113,7 +113,7 @@
   },
   {
    "what": "Ring lock inside to tyre, rim and fender",
-   "mm": 5.4,
+   "mm": 6,
    "ok": true
   },
   {
@@ -123,17 +123,32 @@
   },
   {
    "what": "Ring lock to rear rack",
-   "mm": 13.6,
+   "mm": 15.7,
    "ok": true
   },
   {
    "what": "Ring lock shackle above hub flange",
-   "mm": 164.5,
+   "mm": 163.5,
    "ok": true
   },
   {
    "what": "Carrier block to front tyre/fender",
    "mm": 91.4,
+   "ok": true
+  },
+  {
+   "what": "Carrier block to front tyre/fender at full steering lock",
+   "mm": 91.1,
+   "ok": true
+  },
+  {
+   "what": "Front V-brake bosses within 8 mm of 80 c-c (now 80; check the brake maker's range)",
+   "mm": 8,
+   "ok": true
+  },
+  {
+   "what": "Front fender to fork blades (sideways, at the crown)",
+   "mm": 3,
    "ok": true
   }
  ],
@@ -374,113 +389,113 @@
     0,
     324.6
    ],
-   "half_width": 50.1
+   "half_width": 43.1
   },
   "blade_od": 22.2,
   "blade_left": [
    [
     387,
-    50.1,
+    43.1,
     324.6
    ],
    [
     463,
-    50.1,
+    43.1,
     126.6
    ],
    [
     465.8,
-    50.2,
+    43.6,
     119.5
    ],
    [
     468.8,
-    50.3,
+    44,
     112.8
    ],
    [
     471.9,
-    50.5,
+    44.5,
     106.3
    ],
    [
     475.1,
-    50.6,
+    45,
     100.1
    ],
    [
     478.5,
-    50.7,
+    45.5,
     94.2
    ],
    [
     481.9,
-    50.8,
+    45.9,
     88.6
    ],
    [
     485.6,
-    50.9,
+    46.4,
     83.3
    ],
    [
     489.3,
-    51.1,
+    46.9,
     78.2
    ],
    [
     493.2,
-    51.2,
+    47.3,
     73.5
    ],
    [
     497.2,
-    51.3,
+    47.8,
     69
    ],
    [
     501.3,
-    51.4,
+    48.3,
     64.8
    ],
    [
     505.6,
-    51.5,
+    48.7,
     60.9
    ],
    [
     510,
-    51.7,
+    49.2,
     57.3
    ],
    [
     514.5,
-    51.8,
+    49.7,
     54
    ],
    [
     519.2,
-    51.9,
+    50.2,
     50.9
    ],
    [
     524,
-    52,
+    50.6,
     48.2
    ],
    [
     528.9,
-    52.1,
+    51.1,
     45.7
    ],
    [
     533.9,
-    52.3,
+    51.6,
     43.5
    ],
    [
     539.1,
-    52.4,
+    52,
     41.6
    ],
    [
@@ -492,107 +507,107 @@
   "blade_right": [
    [
     387,
-    -50.1,
+    -43.1,
     324.6
    ],
    [
     463,
-    -50.1,
+    -43.1,
     126.6
    ],
    [
     465.8,
-    -50.2,
+    -43.6,
     119.5
    ],
    [
     468.8,
-    -50.3,
+    -44,
     112.8
    ],
    [
     471.9,
-    -50.5,
+    -44.5,
     106.3
    ],
    [
     475.1,
-    -50.6,
+    -45,
     100.1
    ],
    [
     478.5,
-    -50.7,
+    -45.4,
     94.2
    ],
    [
     481.9,
-    -50.8,
+    -45.9,
     88.6
    ],
    [
     485.6,
-    -50.9,
+    -46.4,
     83.3
    ],
    [
     489.3,
-    -51.1,
+    -46.9,
     78.2
    ],
    [
     493.2,
-    -51.2,
+    -47.3,
     73.5
    ],
    [
     497.2,
-    -51.3,
+    -47.8,
     69
    ],
    [
     501.3,
-    -51.4,
+    -48.3,
     64.8
    ],
    [
     505.6,
-    -51.5,
+    -48.7,
     60.9
    ],
    [
     510,
-    -51.7,
+    -49.2,
     57.3
    ],
    [
     514.5,
-    -51.8,
+    -49.7,
     54
    ],
    [
     519.2,
-    -51.9,
+    -50.1,
     50.9
    ],
    [
     524,
-    -52,
+    -50.6,
     48.2
    ],
    [
     528.9,
-    -52.1,
+    -51.1,
     45.7
    ],
    [
     533.9,
-    -52.3,
+    -51.6,
     43.5
    ],
    [
     539.1,
-    -52.4,
+    -52,
     41.6
    ],
    [
@@ -844,7 +859,158 @@
   "saddle_height_bb_to_top": 560
  },
  "accessories": {
-  "brakes": "vbrake",
+  "brakes": {
+   "type": "vbrake",
+   "rear_hub_brake": "roller",
+   "note": "V-brake bosses sit 26 mm inside the bead seat radius (BSD/2) along the blade or stay (Shimano layout rule), about 80 mm apart centre to centre, facing forward on the fork and rearward on the seatstays. Arms pivot on the bosses and rise along the blade; pads meet the rim braking track about 4 mm inside the bead seat. The noodle sits on the left arm; bare cable runs across to the clamp on the right arm. A rear hub brake (roller or coaster) replaces the rear rim brake: no rear bosses.",
+   "v_brakes": [
+    {
+     "which": "front",
+     "boss_radius_from_axle": 227.5,
+     "track_radius_from_axle": 249.5,
+     "boss_spacing_cc": 80,
+     "bosses": [
+      {
+       "side": "left",
+       "base": [
+        433,
+        40,
+        234.6
+       ],
+       "tip": [
+        453.5,
+        40,
+        242.5
+       ],
+       "od": 16,
+       "length": 22
+      },
+      {
+       "side": "right",
+       "base": [
+        433,
+        -40,
+        234.6
+       ],
+       "tip": [
+        453.5,
+        -40,
+        242.5
+       ],
+       "od": 16,
+       "length": 22
+      }
+     ],
+     "arms": [
+      {
+       "side": "left",
+       "pivot": [
+        443.2,
+        46,
+        238.6
+       ],
+       "top": [
+        405.6,
+        44,
+        336.6
+       ],
+       "length": 105
+      },
+      {
+       "side": "right",
+       "pivot": [
+        443.2,
+        -46,
+        238.6
+       ],
+       "top": [
+        405.6,
+        -44,
+        336.6
+       ],
+       "length": 105
+      }
+     ],
+     "pads": [
+      {
+       "side": "left",
+       "centre": [
+        433.6,
+        23,
+        263.5
+       ],
+       "contact": [
+        433.6,
+        14,
+        263.5
+       ],
+       "length": 60,
+       "height": 12
+      },
+      {
+       "side": "right",
+       "centre": [
+        433.6,
+        -23,
+        263.5
+       ],
+       "contact": [
+        433.6,
+        -14,
+        263.5
+       ],
+       "length": 60,
+       "height": 12
+      }
+     ],
+     "noodle": {
+      "from": [
+       393.1,
+       44,
+       369.3
+      ],
+      "to": [
+       403.8,
+       20,
+       341.3
+      ]
+     },
+     "cable_clamp_right_arm": [
+      405.6,
+      -44,
+      336.6
+     ]
+    }
+   ],
+   "hub_brake": {
+    "type": "roller",
+    "unit_centre": [
+     -398,
+     49,
+     40
+    ],
+    "unit_dia": 90,
+    "unit_width": 28,
+    "reaction_arm": {
+     "from": [
+      -398,
+      53,
+      40
+     ],
+     "to": [
+      -278.6,
+      67.3,
+      28
+     ]
+    },
+    "chainstay_clamp": [
+     -278.6,
+     55.8,
+     28
+    ],
+    "note": "Approximate Nexus layout: roller unit on the left end of the hub, reaction arm forward to a band clamp on the left chainstay. Check the Shimano dealer manual for the exact hub and brake unit."
+   }
+  },
   "fenders": {
    "clearance": 14,
    "rear": {
@@ -854,7 +1020,7 @@
     ],
     "axis": "y",
     "radius_inner": 317.5,
-    "width": 68,
+    "width": 58,
     "start_deg": 5,
     "end_deg": 200,
     "angle_convention": "degrees around the axle in the side (x-z) plane: 0 = forward (+x), 90 = up (+z), 180 = back",
@@ -867,7 +1033,7 @@
       ],
       "to": [
        -696.3,
-       36,
+       31,
        148.6
       ],
       "od": 5
@@ -880,7 +1046,7 @@
       ],
       "to": [
        -696.3,
-       -36,
+       -31,
        148.6
       ],
       "od": 5
@@ -928,7 +1094,7 @@
     ],
     "axis": "y",
     "radius_inner": 317.5,
-    "width": 68,
+    "width": 58,
     "start_deg": 40,
     "end_deg": 195,
     "angle_convention": "degrees around the axle in the side (x-z) plane: 0 = forward (+x), 90 = up (+z), 180 = back",
@@ -941,7 +1107,7 @@
       ],
       "to": [
        269.5,
-       36,
+       31,
        198.8
       ],
       "od": 5
@@ -954,7 +1120,7 @@
       ],
       "to": [
        269.5,
-       -36,
+       -31,
        198.8
       ],
       "od": 5
@@ -1415,16 +1581,16 @@
   },
   "ring_lock": {
    "centre": [
-    -192.2,
+    -193.8,
     0,
-    232.8
+    231.6
    ],
    "radial_xz": [
     0.7,
     0.7
    ],
-   "inner_radius": 56,
-   "outer_radius": 70,
+   "inner_radius": 55,
+   "outer_radius": 69,
    "tangent_xz": [
     -0.7,
     0.7
@@ -1436,36 +1602,36 @@
     {
      "name": "seatstay lock boss left lower",
      "at": [
-      -194.5,
+      -196.1,
       70.3,
-      197
+      195.8
      ],
      "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
     },
     {
      "name": "seatstay lock boss left upper",
      "at": [
-      -154.9,
+      -156.5,
       69,
-      227.5
+      226.3
      ],
      "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
     },
     {
      "name": "seatstay lock boss right lower",
      "at": [
-      -194.5,
+      -196.1,
       -70.3,
-      197
+      195.8
      ],
      "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
     },
     {
      "name": "seatstay lock boss right upper",
      "at": [
-      -154.9,
+      -156.5,
       -69,
-      227.5
+      226.3
      ],
      "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
     }
@@ -1515,8 +1681,10 @@
     "height": 60,
     "loadKg": 10
    },
+   "position": "standard",
    "note": "Brompton-style. A steel mounting block is brazed to the front of the head tube with two M5 threaded holes 26 mm apart along the head tube (Brompton fixes its block with 2 x M5x16 socket head screws at 4 Nm, data sheet ds-fcba). The carrier block is a box about 65 deep x 60 wide x 60 high (Brompton ColourLab block listing; units assumed mm) bolted to it, with a latch the luggage frame clips onto. Brompton rate it at 10 kg. Hole spacing comes from a third-party block listing: measure a real block before brazing."
   },
+  "front_bag": null,
   "e_assist": null,
   "kickstand": {
    "plate": {

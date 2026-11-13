@@ -7,7 +7,7 @@ import { Design, numOf, parseTeeth } from '../model/schema';
 import { Geometry } from '../geometry/solve';
 import { Vec, add, mul } from '../geometry/vec';
 import { pointAlong, polyLength } from '../geometry/shapes';
-import { frameTubes, forkBladePts } from '../geometry/tubes';
+import { frameTubes, forkBladePts, forkLateral } from '../geometry/tubes';
 import { buildAssembly, chainringRadius, P3, p3 } from '../geometry/assembly';
 
 const r1 = (n: number) => Math.round(n * 10) / 10;
@@ -15,7 +15,7 @@ const R3 = (p: P3): P3 => [r1(p[0]), r1(p[1]), r1(p[2])];
 const R3s = (ps: P3[]) => ps.map(R3);
 const V = (p: Vec) => [r1(p.x), r1(p.y)];
 
-export const GEOMETRY_3D_VERSION = 3;
+export const GEOMETRY_3D_VERSION = 4;
 
 /**
  * Bar, grips, brake levers and shifter as explicit 3D parts (flat-type bars).
@@ -104,9 +104,7 @@ export function geometry3d(d: Design, g: Geometry) {
   const u = g.steerDir;
   const fs = numOf(d, 'frontSpacing');
   const blade = forkBladePts(d, g);
-  const tyreF = numOf(d, 'frontTyre');
-  const crownHalf = tyreF / 2 + (d.fenders === true ? numOf(d, 'fenderClearance') : 6) + numOf(d, 'forkBladeDia') / 2;
-  const tipY = fs / 2 + 2.5;
+  const { crownHalf, tipY } = forkLateral(d);
   const bladeSide = (sg: number) =>
     blade.map((p, i) => p3(p, sg * (i === 0 ? crownHalf : crownHalf + (tipY - crownHalf) * ((i - 1) / (blade.length - 2)))));
   const tube = (name: string, odKey: string, wallKey: string, pts: P3[], extra: object = {}) => ({ name, od: numOf(d, odKey), wall: numOf(d, wallKey), centreline: R3s(pts), ...extra });
@@ -220,7 +218,33 @@ export function geometry3d(d: Design, g: Geometry) {
       saddle_height_bb_to_top: numOf(d, 'saddleHeight'),
     },
     accessories: {
-      brakes: String(d.brakeType),
+      brakes: {
+        type: String(d.brakeType),
+        rear_hub_brake: String(d.rearHubBrake ?? 'none'),
+        note: "V-brake bosses sit 26 mm inside the bead seat radius (BSD/2) along the blade or stay (Shimano layout rule), about 80 mm apart centre to centre, facing forward on the fork and rearward on the seatstays. Arms pivot on the bosses and rise along the blade; pads meet the rim braking track about 4 mm inside the bead seat. The noodle sits on the left arm; bare cable runs across to the clamp on the right arm. A rear hub brake (roller or coaster) replaces the rear rim brake: no rear bosses.",
+        v_brakes: a.vbrakes.map((b) => ({
+          which: b.which,
+          boss_radius_from_axle: b.bossRadius,
+          track_radius_from_axle: b.trackRadius,
+          boss_spacing_cc: r1(b.bossSpacing),
+          bosses: b.bosses.map((x) => ({ ...x, base: R3(x.base), tip: R3(x.tip) })),
+          arms: b.arms.map((x) => ({ ...x, pivot: R3(x.pivot), top: R3(x.top) })),
+          pads: b.pads.map((x) => ({ ...x, centre: R3(x.centre), contact: R3(x.contact) })),
+          noodle: { from: R3(b.noodle.from), to: R3(b.noodle.to) },
+          cable_clamp_right_arm: R3(b.cableClamp),
+        })),
+        hub_brake: a.hubBrake
+          ? {
+              type: a.hubBrake.type,
+              unit_centre: R3(a.hubBrake.unitCentre),
+              unit_dia: a.hubBrake.unitDia,
+              unit_width: a.hubBrake.unitWidth,
+              reaction_arm: { from: R3(a.hubBrake.reactionArm.from), to: R3(a.hubBrake.reactionArm.to) },
+              chainstay_clamp: R3(a.hubBrake.clamp),
+              note: 'Approximate Nexus layout: roller unit on the left end of the hub, reaction arm forward to a band clamp on the left chainstay. Check the Shimano dealer manual for the exact hub and brake unit.',
+            }
+          : null,
+      },
       fenders: a.fenders.rear || a.fenders.front ? { clearance: numOf(d, 'fenderClearance'), rear: a.fenders.rear && fender(a.fenders.rear), front: a.fenders.front && fender(a.fenders.front) } : null,
       rear_rack: a.rack
         ? {

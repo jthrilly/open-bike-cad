@@ -65,6 +65,24 @@ describe('accessory assembly', () => {
     expect(f.cable_guides[2][2]).toBeGreaterThan(f.cable_guides[0][2]);
     for (const p of f.cable_guides) expect(p[1]).toBeLessThan(0);
   });
+  it('places front V-brake bosses 26 mm inside the bead seat, about 80 mm apart, and uses a hub brake at the rear', () => {
+    const d = { ...city(), brakeType: 'vbrake', forkType: 'rigid', frontTyre: 56, rearTyre: 56, fenderWidthExtra: 8, rearHubBrake: 'roller' };
+    const g = solve(d);
+    const a = buildAssembly(d, g);
+    expect(a.vbrakes.map((b) => b.which)).toEqual(['front']);
+    const f = a.vbrakes[0];
+    expect(f.bossRadius).toBe(Number(d.frontBSD) / 2 - 26);
+    expect(Math.abs(f.bossSpacing - 80)).toBeLessThanOrEqual(8);
+    // Boss faces forward on the fork, pads touch the rim inside the bead seat.
+    expect(f.bosses[0].tip[0]).toBeGreaterThan(f.bosses[0].base[0]);
+    const r = Math.hypot(f.pads[0].contact[0] - g.frontAxle.x, f.pads[0].contact[2] - g.frontAxle.y);
+    expect(r).toBeCloseTo(Number(d.frontBSD) / 2 - 4, 1);
+    expect(a.hubBrake?.type).toBe('roller');
+    expect(a.hubBrake!.clamp[0]).toBeGreaterThan(g.rearAxle.x);
+    const j = geometry3d(d, g).accessories.brakes as any;
+    expect(j.v_brakes).toHaveLength(1);
+    expect(j.hub_brake.type).toBe('roller');
+  });
   it('builds a chainguard on the drive side, above the upper chain run', () => {
     const d = city();
     const g = solve(d);

@@ -9,7 +9,7 @@
 import { Design, numOf, parseTeeth } from '../model/schema';
 import { Geometry } from './solve';
 import { Vec, v, add, sub, mul, norm, len, dist, rad, deg, lerp, dot } from './vec';
-import { frameTubes, forkBladePts } from './tubes';
+import { frameTubes, forkBladePts, forkLateral } from './tubes';
 import { pointAlong, polyLength, arcPts } from './shapes';
 
 export type P3 = [number, number, number];
@@ -145,6 +145,33 @@ export interface Clearance {
   mm: number;
   ok: boolean;
 }
+
+/** A V-brake (direct-pull) on one wheel: bosses, arms, pads and the noodle, all explicit. */
+export interface VBrake {
+  which: 'front' | 'rear';
+  /** Distance from the axle to the boss pivot centre (BSD/2 - 26, the Shimano layout rule). */
+  bossRadius: number;
+  /** Radius from the axle to the pad centre on the rim's braking track. */
+  trackRadius: number;
+  /** Boss pivot centre-to-centre spacing (target about 80). */
+  bossSpacing: number;
+  bosses: { side: 'left' | 'right'; base: P3; tip: P3; od: number; length: number }[];
+  arms: { side: 'left' | 'right'; pivot: P3; top: P3; length: number }[];
+  pads: { side: 'left' | 'right'; centre: P3; contact: P3; length: number; height: number }[];
+  /** 90-degree noodle on the left arm: housing enters at 'from'; bare cable leaves at 'to' across to the right arm's clamp. */
+  noodle: { from: P3; to: P3 };
+  cableClamp: P3;
+}
+/** A brake inside the rear hub (roller or coaster): no bosses; its reaction arm clamps to the left chainstay. */
+export interface HubBrake {
+  type: 'roller' | 'coaster';
+  unitCentre: P3;
+  unitDia: number;
+  unitWidth: number;
+  reactionArm: { from: P3; to: P3 };
+  clamp: P3;
+}
+
 export interface Assembly {
   stays: StayLayout;
   fenders: { rear?: Fender; front?: Fender };
@@ -155,6 +182,8 @@ export interface Assembly {
   frontBag?: FrontBag;
   eAssist?: EAssist;
   kickstand?: Kickstand;
+  vbrakes: VBrake[];
+  hubBrake?: HubBrake;
   clearances: Clearance[];
 }
 
@@ -275,7 +304,7 @@ export function buildAssembly(d: Design, g: Geometry): Assembly {
     // Rear
     {
       const R = rearR + fClr;
-      const width = tyreW + 18;
+      const width = tyreW + numOf(d, 'fenderWidthExtra');
       const c = g.rearAxle;
       const a0 = numOf(d, 'fenderRearStart');
       const a1 = numOf(d, 'fenderRearEnd');
@@ -314,7 +343,7 @@ export function buildAssembly(d: Design, g: Geometry): Assembly {
     // Front
     {
       const R = g.frontWheelR + fClr;
-      const width = numOf(d, 'frontTyre') + 18;
+      const width = numOf(d, 'frontTyre') + numOf(d, 'fenderWidthExtra');
       const c = g.frontAxle;
       const u = g.steerDir;
       const n = g.steerNormal;
@@ -474,7 +503,7 @@ export function buildAssembly(d: Design, g: Geometry): Assembly {
     for (const sg of [1, -1]) {
       sect.push([sg * rimHalfW, rimR - rimDepth], [sg * rimHalfW, rimR]);
       if (d.fenders === true) {
-        const fw = (tyreW + 18) / 2;
+        const fw = (tyreW + numOf(d, 'fenderWidthExtra')) / 2;
         sect.push([sg * fw, rearR + fClr], [sg * fw, rearR + fClr + 2]);
       }
     }
@@ -687,8 +716,7 @@ export function buildAssembly(d: Design, g: Geometry): Assembly {
       };
       // Motor cable: out of the axle on the left, up the back of the left blade, then a steering loop to the controller.
       const blade = forkBladePts(d, g);
-      const tipY = fs / 2 + 2.5;
-      const crownHalf = numOf(d, 'frontTyre') / 2 + (d.fenders === true ? numOf(d, 'fenderClearance') : 6) + numOf(d, 'forkBladeDia') / 2;
+      const { tipY, crownHalf } = forkLateral(d);
       const bladeOff = numOf(d, 'forkBladeDia') / 2 + 4;
       const run: P3[] = [p3(add(g.frontAxle, v(-12, 8)), -(tipY + 6))];
       const bl = [...blade].reverse();
@@ -745,7 +773,103 @@ export function buildAssembly(d: Design, g: Geometry): Assembly {
     };
   }
 
-  return { stays, fenders, rack, chainguard, ringLock, carrierBlock, frontBag, eAssist, kickstand, clearances };
+
+  // ------------------------------------------------------------- brakes
+  // V-brake layout rule (Shimano dealer literature, as quoted by Sheldon Brown): the boss pivot sits
+  // 26 mm inside the bead seat radius (BSD/2) along the blade or stay. Bosses are brazed on the
+  // inner quadrant of the tube, facing forward on the fork and rearward on the seatstays, about
+  // 80 mm apart centre to centre. Pads meet the rim's braking track about 4 mm inside the bead seat.
+  const vbrakes: VBrake[] = [];
+  const rimHalfW = 14;
+  const vbrake = (which: 'front' | 'rear', axle: Vec, bsd: number, pts: Vec[], latAt: (k: number) => number, tubeR: number, fwd: boolean) => {
+    // pts run from the axle outward; latAt(k) gives the lateral half-spacing at point k (fractional).
+    const bossRadius = bsd / 2 - 26;
+    const trackRadius = bsd / 2 - 4;
+    let k = -1;
+    for (let i = 1; i < pts.length; i++) if (dist(pts[i - 1], axle) <= bossRadius && dist(pts[i], axle) >= bossRadius) { k = i; break; }
+    if (k < 0) return;
+    const a0 = dist(pts[k - 1], axle);
+    const a1 = dist(pts[k], axle);
+    const f = (bossRadius - a0) / (a1 - a0 || 1);
+    const B = lerp(pts[k - 1], pts[k], f);
+    const t = norm(sub(pts[k], pts[k - 1]));
+    let nrm = v(-t.y, t.x);
+    if ((nrm.x > 0) !== fwd) nrm = mul(nrm, -1);
+    const lat = latAt(k - 1 + f);
+    // Put the boss where it lands 40 mm off centre (80 c-c) if the tube's face allows it,
+    // anywhere from the tube's front (or back) face to its inner side.
+    const bossY = Math.min(lat, Math.max(40, lat - tubeR * 0.9));
+    const dy = lat - bossY;
+    const len = 22;
+    const base = add(B, mul(nrm, Math.sqrt(Math.max(0, tubeR * tubeR - dy * dy))));
+    const pivot = add(base, mul(nrm, len / 2));
+    const armLen = 105;
+    const top = add(pivot, mul(t, armLen));
+    const padArm = add(pivot, mul(t, trackRadius - bossRadius + 4));
+    const padDir = norm(sub(padArm, axle));
+    const contact = add(axle, mul(padDir, trackRadius));
+    const sides = [1, -1] as const;
+    const nm = (sg: number) => (sg > 0 ? 'left' : 'right') as 'left' | 'right';
+    vbrakes.push({
+      which,
+      bossRadius,
+      trackRadius,
+      bossSpacing: 2 * bossY,
+      bosses: sides.map((sg) => ({ side: nm(sg), base: p3(base, sg * bossY), tip: p3(add(base, mul(nrm, len)), sg * bossY), od: 16, length: len })),
+      arms: sides.map((sg) => ({ side: nm(sg), pivot: p3(pivot, sg * (bossY + 6)), top: p3(top, sg * (bossY + 4)), length: armLen })),
+      pads: sides.map((sg) => ({ side: nm(sg), centre: p3(contact, sg * (rimHalfW + 9)), contact: p3(contact, sg * rimHalfW), length: 60, height: 12 })),
+      noodle: { from: p3(add(top, mul(t, 35)), bossY + 4), to: p3(add(top, mul(t, 5)), bossY - 20) },
+      cableClamp: p3(top, -(bossY + 4)),
+    });
+    check(`${which === 'front' ? 'Front' : 'Rear'} V-brake bosses within 8 mm of 80 c-c (now ${Math.round(2 * bossY)}; check the brake maker's range)`, 8 - Math.abs(2 * bossY - 80), 0);
+  };
+  if (d.brakeType === 'vbrake') {
+    // Front: blade points from the axle up to the crown.
+    const bl = [...forkBladePts(d, g)].reverse();
+    const fl = forkLateral(d);
+    const n = bl.length;
+    // forkBladePts index i (crown=0) maps to lateral fl.at((i-1)/(n-2)); reversed index j = n-1-i.
+    const latF = (j: number) => {
+      const i = n - 1 - j;
+      return i <= 1 ? fl.at(0) : fl.at((i - 1) / (n - 2));
+    };
+    if (d.forkType === 'rigid' || d.forkType === 'straight') vbrake('front', g.frontAxle, numOf(d, 'frontBSD'), bl, latF, numOf(d, 'forkBladeDia') / 2, true);
+    if (d.rearHubBrake === 'none' || d.rearHubBrake === undefined) {
+      // Rear: twin seatstays, from the axle upward.
+      let acc = 0;
+      const sAt = ssTwin.map((p, i) => (i ? (acc += dist(ssTwin[i - 1], p)) : 0));
+      const latR = (k: number) => {
+        const i = Math.floor(k);
+        const s0 = sAt[Math.min(i, sAt.length - 1)];
+        const s1 = sAt[Math.min(i + 1, sAt.length - 1)];
+        return ssYAt(s0 + (s1 - s0) * (k - i));
+      };
+      vbrake('rear', g.rearAxle, numOf(d, 'rearBSD'), ssTwin, latR, ssR, false);
+    }
+  }
+  if (d.fenders === true && fenders.front) {
+    const fl = forkLateral(d);
+    check('Front fender to fork blades (sideways, at the crown)', fl.crownHalf - numOf(d, 'forkBladeDia') / 2 - fenders.front.width / 2, 2);
+  }
+  let hubBrake: HubBrake | undefined;
+  if (d.rearHubBrake === 'roller' || d.rearHubBrake === 'coaster') {
+    // Approximate Nexus figures: roller unit about 90 mm across on the left of the hub; reaction arm
+    // runs forward to a band clamp on the left chainstay. Check the Shimano dealer manual.
+    const roller = d.rearHubBrake === 'roller';
+    const unitY = dropY - 6 - (roller ? 14 : 4);
+    const clampS = 120;
+    const clamp = pointAlong(csPts, clampS).p;
+    hubBrake = {
+      type: roller ? 'roller' : 'coaster',
+      unitCentre: p3(g.rearAxle, unitY),
+      unitDia: roller ? 90 : 0,
+      unitWidth: roller ? 28 : 0,
+      reactionArm: { from: p3(g.rearAxle, unitY + 4), to: p3(clamp, csYAt(clampS) + csR + 2) },
+      clamp: p3(clamp, csYAt(clampS)),
+    };
+  }
+
+  return { stays, fenders, rack, chainguard, ringLock, carrierBlock, frontBag, eAssist, kickstand, vbrakes, hubBrake, clearances };
 }
 
 /** Distance from a box (aligned with side-view unit vectors fwd/up and the lateral y axis) to the nearest of pts. */
@@ -774,7 +898,7 @@ function steerSweep(d: Design, g: Geometry) {
     return [steerAxisPt.x + vv[0] * c + cr[0] * sn + k[0] * kd * (1 - c), vv[1] * c + cr[1] * sn + k[1] * kd * (1 - c), steerAxisPt.y + vv[2] * c + cr[2] * sn + k[2] * kd * (1 - c)];
   };
   const frontR = g.frontWheelR + (d.fenders === true ? numOf(d, 'fenderClearance') + 3 : 0);
-  const halfW = (d.fenders === true ? numOf(d, 'frontTyre') + 18 : numOf(d, 'frontTyre')) / 2;
+  const halfW = (d.fenders === true ? numOf(d, 'frontTyre') + numOf(d, 'fenderWidthExtra') : numOf(d, 'frontTyre')) / 2;
   const wheelPts: P3[] = [];
   for (let a = 20; a <= 200; a += 2)
     for (let yy = -halfW; yy <= halfW + 0.01; yy += halfW / 4) wheelPts.push([g.frontAxle.x + frontR * Math.cos(rad(a)), yy, g.frontAxle.y + frontR * Math.sin(rad(a))]);

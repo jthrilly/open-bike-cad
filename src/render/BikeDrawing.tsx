@@ -155,6 +155,7 @@ export function BikeDrawing({ d, g, ghost, onPick }: Props) {
         <StayBridges d={d} g={g} csPts={csPts} ssPts={ssPts} outline={outline} fill={fillStays} sw={sw} />
       </g>
       {showComp && asm.ringLock && <RingLockSide asm={asm} outline={outline} sw={sw} />}
+      {showComp && <BrakesSide asm={asm} g={g} outline={outline} sw={sw} />}
       {showComp && asm.kickstand && <KickstandSide asm={asm} outline={outline} sw={sw} />}
 
       {/* Main triangle */}
@@ -317,6 +318,30 @@ function RingLockSide({ asm, outline, sw }: { asm: Assembly; outline: string; sw
       <path d={svgPath(pts)} fill="#2b2f36" stroke={outline} strokeWidth={sw} />
     </g>
   );
+}
+
+function BrakesSide({ asm, g, outline, sw }: { asm: Assembly; g: Geometry; outline: string; sw: number }) {
+  const parts: React.ReactNode[] = [];
+  asm.vbrakes.forEach((b, i) => {
+    const boss = b.bosses[0];
+    const arm = b.arms[0];
+    const pad = b.pads[0];
+    const axle = b.which === 'front' ? g.frontAxle : g.rearAxle;
+    const pc = side(pad.contact);
+    const tang = norm(perp(sub(pc, axle)));
+    parts.push(<path key={`bs${i}`} d={svgPath([side(boss.base), side(boss.tip)], false)} stroke="#c9ccd1" strokeWidth={10} strokeLinecap="round" fill="none" />);
+    parts.push(<path key={`ar${i}`} d={svgPath([side(arm.pivot), side(arm.top)], false)} stroke="#2b2f36" strokeWidth={9} strokeLinecap="round" fill="none" />);
+    parts.push(<path key={`pd${i}`} d={svgPath(orientedRect(add(pc, mul(tang, -pad.length / 2)), tang, pad.length, pad.height))} fill="#2b2f36" stroke={outline} strokeWidth={sw * 0.6} />);
+    parts.push(<path key={`nd${i}`} d={svgPath([side(b.noodle.from), side(b.noodle.to)], false)} stroke="#8a9099" strokeWidth={4} strokeLinecap="round" fill="none" />);
+    parts.push(<circle key={`pv${i}`} cx={sx(side(arm.pivot))} cy={sy(side(arm.pivot))} r={4} fill="#8a9099" />);
+  });
+  const h = asm.hubBrake;
+  if (h && h.type === 'roller') {
+    const c = side(h.unitCentre);
+    parts.push(<circle key="rb" cx={sx(c)} cy={sy(c)} r={h.unitDia / 2} fill="#2b2f36" fillOpacity={0.85} stroke={outline} strokeWidth={sw} />);
+  }
+  if (h) parts.push(<path key="ra" d={svgPath([side(h.reactionArm.from), side(h.reactionArm.to)], false)} stroke="#2b2f36" strokeWidth={10} strokeLinecap="round" fill="none" />);
+  return <g>{parts}</g>;
 }
 
 function KickstandSide({ asm, outline, sw }: { asm: Assembly; outline: string; sw: number }) {
