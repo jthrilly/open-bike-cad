@@ -626,6 +626,49 @@
    0,
    72
   ],
+  "dropouts": {
+   "plate_thickness": 6,
+   "slot_width": 10,
+   "slot": "vertical, open downward, with lawyer lips",
+   "torque_washer_faces": true,
+   "inner_faces_y": [
+    50,
+    -50
+   ]
+  },
+  "torque_arm": {
+   "side": "right",
+   "from_axle": [
+    659.5,
+    -59,
+    72
+   ],
+   "to_clamp": [
+    585.2,
+    -56,
+    119.7
+   ],
+   "thickness": 4,
+   "width": 16,
+   "note": "Steel arm keyed to the axle flats, held to the blade with a hose clamp."
+  },
+  "cable_guides": [
+   [
+    598.5,
+    -52.8,
+    86.3
+   ],
+   [
+    522.3,
+    -53.6,
+    209.8
+   ],
+   [
+    469.4,
+    -54.4,
+    347.5
+   ]
+  ],
   "length_axle_to_crown": 415,
   "rake": 62
  },

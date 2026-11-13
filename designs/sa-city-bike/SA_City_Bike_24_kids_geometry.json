@@ -606,6 +606,18 @@
    0,
    40
   ],
+  "dropouts": {
+   "plate_thickness": 5,
+   "slot_width": 9.5,
+   "slot": "vertical, open downward, with lawyer lips",
+   "torque_washer_faces": false,
+   "inner_faces_y": [
+    50,
+    -50
+   ]
+  },
+  "torque_arm": null,
+  "cable_guides": [],
   "length_axle_to_crown": 350,
   "rake": 45
  },

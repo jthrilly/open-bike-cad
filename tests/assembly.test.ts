@@ -53,6 +53,18 @@ describe('accessory assembly', () => {
     expect(ck.shifter.side).toBe('right');
     expect(ck.shifter.from[1]).toBeLessThan(0);
   });
+  it('exports motor-ready fork dropouts, torque arm and blade cable guides', () => {
+    const d = { ...city(), forkType: 'rigid', forkDropoutPlate: 6, forkDropoutSlotWidth: 10, forkTorqueArm: true, forkCableGuides: 3 };
+    const g = solve(d);
+    const f = geometry3d(d, g).fork as any;
+    expect(f.dropouts.slot_width).toBe(10);
+    expect(f.torque_arm.side).toBe('right');
+    expect(f.torque_arm.from_axle[1]).toBeLessThan(0);
+    expect(f.cable_guides).toHaveLength(3);
+    // Guides run up the blade from near the dropout towards the crown, all on the right.
+    expect(f.cable_guides[2][2]).toBeGreaterThan(f.cable_guides[0][2]);
+    for (const p of f.cable_guides) expect(p[1]).toBeLessThan(0);
+  });
   it('builds a chainguard on the drive side, above the upper chain run', () => {
     const d = city();
     const g = solve(d);

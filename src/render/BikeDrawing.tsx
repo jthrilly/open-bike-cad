@@ -678,6 +678,21 @@ function Fork({ d, g, outline, fill, sw }: { d: Design; g: Geometry; outline: st
   }
   // Fork tip
   parts.push(<circle key="tip" cx={sx(axle)} cy={sy(axle)} r={11} fill={fill} stroke={outline} strokeWidth={sw} />);
+  if (type === 'rigid' || type === 'straight') {
+    const bl = type === 'rigid' ? [...forkBladePts(d, g)].reverse() : [axle, crownBot];
+    const L = polyLength(bl);
+    if (d.forkTorqueArm === true) {
+      const top = pointAlong(bl, 90).p;
+      parts.push(<path key="tarm" d={svgPath([axle, top], false)} stroke="#2b2f36" strokeWidth={8} strokeLinecap="round" fill="none" />);
+      parts.push(<path key="tclamp" d={svgPath(orientedRect(sub(top, mul(norm(sub(top, axle)), 6)), norm(sub(top, axle)), 12, bladeR * 2 + 6))} fill="#8a9099" stroke={outline} strokeWidth={sw * 0.6} />);
+    }
+    const nG = Math.round(numOf(d, 'forkCableGuides'));
+    for (let i = 0; i < nG; i++) {
+      const s = 50 + ((L - 110) * i) / Math.max(1, nG - 1);
+      const p = add(pointAlong(bl, s).p, mul(n, -(bladeR * 0.8 + 2)));
+      parts.push(<circle key={`cg${i}`} cx={sx(p)} cy={sy(p)} r={3} fill="#2b2f36" />);
+    }
+  }
   return (
     <g>
       {parts}

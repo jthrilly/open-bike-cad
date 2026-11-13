@@ -139,6 +139,10 @@
 <entry key="OpenBikeCAD.forkStanchionDia">34.0</entry>
 <entry key="OpenBikeCAD.forkTravel">100.0</entry>
 <entry key="OpenBikeCAD.forkSag">20.0</entry>
+<entry key="OpenBikeCAD.forkDropoutPlate">6.0</entry>
+<entry key="OpenBikeCAD.forkDropoutSlotWidth">10.0</entry>
+<entry key="OpenBikeCAD.forkTorqueArm">true</entry>
+<entry key="OpenBikeCAD.forkCableGuides">3.0</entry>
 <entry key="OpenBikeCAD.lowerStack">12.0</entry>
 <entry key="OpenBikeCAD.upperStack">15.0</entry>
 <entry key="OpenBikeCAD.steererDia">28.6</entry>

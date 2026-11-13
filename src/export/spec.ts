@@ -66,6 +66,16 @@ export function specRows(d: Design, g: Geometry): SpecRow[] {
     { section: 'Components', label: 'Stem', value: `${f(numOf(d, 'stemLength'), 0)} × ${f(numOf(d, 'stemAngle'), 0)}°`, unit: '' },
     { section: 'Components', label: 'Spacers', value: f(numOf(d, 'spacers'), 0), unit: 'mm' },
     { section: 'Components', label: 'Handlebar', value: `${String(d.barType)} ${f(numOf(d, 'barWidth'), 0)}`, unit: 'mm' },
+    ...(d.forkType === 'rigid' || d.forkType === 'straight'
+      ? [
+          {
+            section: 'Components',
+            label: 'Fork dropouts',
+            value: `${f(numOf(d, 'forkDropoutPlate'), 1)} plate, ${f(numOf(d, 'forkDropoutSlotWidth'), 1)} slot${d.forkTorqueArm === true ? ', torque-washer faces + right torque arm' : ''}${numOf(d, 'forkCableGuides') > 0 ? `, ${f(numOf(d, 'forkCableGuides'), 0)} cable guides (right blade)` : ''}`,
+            unit: 'mm',
+          },
+        ]
+      : []),
     { section: 'Components', label: 'Brakes', value: String(d.brakeType), unit: '' },
   ];
   return rows;

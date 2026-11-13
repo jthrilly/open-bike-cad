@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
-<comment>Created by Open Bike CAD on Fri Nov 13 2026 17:05:23 GMT+0000 (Coordinated Universal Time)</comment>
+<comment>Created by Open Bike CAD on Fri Nov 13 2026 17:10:07 GMT+0000 (Coordinated Universal Time)</comment>
 <entry key="Head angle">69.0</entry>
 <entry key="Seat angle">71.0</entry>
 <entry key="DISCONTINUOUS">false</entry>
@@ -139,6 +139,10 @@
 <entry key="OpenBikeCAD.forkStanchionDia">34.0</entry>
 <entry key="OpenBikeCAD.forkTravel">100.0</entry>
 <entry key="OpenBikeCAD.forkSag">20.0</entry>
+<entry key="OpenBikeCAD.forkDropoutPlate">5.0</entry>
+<entry key="OpenBikeCAD.forkDropoutSlotWidth">9.5</entry>
+<entry key="OpenBikeCAD.forkTorqueArm">false</entry>
+<entry key="OpenBikeCAD.forkCableGuides">0.0</entry>
 <entry key="OpenBikeCAD.lowerStack">12.0</entry>
 <entry key="OpenBikeCAD.upperStack">15.0</entry>
 <entry key="OpenBikeCAD.steererDia">28.6</entry>

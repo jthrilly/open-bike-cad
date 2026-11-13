@@ -6,6 +6,7 @@
 import { Design, numOf, parseTeeth } from '../model/schema';
 import { Geometry } from '../geometry/solve';
 import { Vec, add, mul } from '../geometry/vec';
+import { pointAlong, polyLength } from '../geometry/shapes';
 import { frameTubes, forkBladePts } from '../geometry/tubes';
 import { buildAssembly, chainringRadius, P3, p3 } from '../geometry/assembly';
 
@@ -69,6 +70,33 @@ function cockpitParts(d: Design, g: Geometry) {
           : null,
   };
 }
+
+/** Clamp-on torque arm on the right (drive-side) fork end: from the axle up the blade to a hose clamp. */
+function forkTorqueArm(d: Design, g: Geometry, blade: Vec[], fs: number) {
+  if (d.forkTorqueArm !== true) return null;
+  const y = -(fs / 2 + numOf(d, 'forkDropoutPlate') + 3);
+  const clampAt = pointAlongFromEnd(blade, 90);
+  return { side: 'right', from_axle: R3(p3(g.frontAxle, y)), to_clamp: R3(p3(clampAt, y + 3)), thickness: 4, width: 16, note: 'Steel arm keyed to the axle flats, held to the blade with a hose clamp.' };
+}
+
+/** Cable guides on the back of the right blade, evenly spaced from just above the dropout to just below the crown. */
+function forkCableGuides(d: Design, g: Geometry, blade: Vec[], fs: number, crownHalf: number) {
+  const n = Math.round(numOf(d, 'forkCableGuides'));
+  if (n <= 0) return [];
+  const L = polyLength(blade);
+  const r = numOf(d, 'forkBladeDia') / 2;
+  const out: P3[] = [];
+  for (let i = 0; i < n; i++) {
+    const s = 50 + ((L - 50 - 60) * i) / Math.max(1, n - 1); // distance from the axle end
+    const p = pointAlongFromEnd(blade, s);
+    const back = add(p, mul(g.steerNormal, -(r + 4)));
+    const tipY = fs / 2 + 2.5;
+    out.push(R3(p3(back, -(tipY + (crownHalf - tipY) * (s / L))))); // the blade tapers from the dropout to the crown
+  }
+  return out;
+}
+
+const pointAlongFromEnd = (pts: Vec[], s: number) => pointAlong([...pts].reverse(), s).p;
 
 export function geometry3d(d: Design, g: Geometry) {
   const a = buildAssembly(d, g);
@@ -138,6 +166,15 @@ export function geometry3d(d: Design, g: Geometry) {
       blade_left: R3s(bladeSide(1)),
       blade_right: R3s(bladeSide(-1)),
       axle: R3(p3(g.frontAxle)),
+      dropouts: {
+        plate_thickness: numOf(d, 'forkDropoutPlate'),
+        slot_width: numOf(d, 'forkDropoutSlotWidth'),
+        slot: 'vertical, open downward, with lawyer lips',
+        torque_washer_faces: d.forkTorqueArm === true,
+        inner_faces_y: [r1(fs / 2), r1(-fs / 2)],
+      },
+      torque_arm: forkTorqueArm(d, g, blade, fs),
+      cable_guides: forkCableGuides(d, g, blade, fs, crownHalf),
       length_axle_to_crown: numOf(d, 'forkLength'),
       rake: numOf(d, 'forkRake'),
     },

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
-<comment>Created by Open Bike CAD on Fri Nov 13 2026 17:05:23 GMT+0000 (Coordinated Universal Time)</comment>
+<comment>Created by Open Bike CAD on Fri Nov 13 2026 17:10:07 GMT+0000 (Coordinated Universal Time)</comment>
 <entry key="Head angle">69.0</entry>
 <entry key="Seat angle">70.0</entry>
 <entry key="DISCONTINUOUS">false</entry>
@@ -139,6 +139,10 @@
 <entry key="OpenBikeCAD.forkStanchionDia">34.0</entry>
 <entry key="OpenBikeCAD.forkTravel">100.0</entry>
 <entry key="OpenBikeCAD.forkSag">20.0</entry>
+<entry key="OpenBikeCAD.forkDropoutPlate">6.0</entry>
+<entry key="OpenBikeCAD.forkDropoutSlotWidth">10.0</entry>
+<entry key="OpenBikeCAD.forkTorqueArm">true</entry>
+<entry key="OpenBikeCAD.forkCableGuides">3.0</entry>
 <entry key="OpenBikeCAD.lowerStack">12.0</entry>
 <entry key="OpenBikeCAD.upperStack">15.0</entry>
 <entry key="OpenBikeCAD.steererDia">28.6</entry>
@@ -302,7 +306,7 @@
 <entry key="OpenBikeCAD.size">One size, riders ~155-190 cm</entry>
 <entry key="OpenBikeCAD.material">Mild / high-tensile ERW steel, fillet brazed (bronze)</entry>
 <entry key="OpenBikeCAD.drawingDate"></entry>
-<entry key="OpenBikeCAD.notes">Twin straight-tube step-through. Second (upper) tube meets the seat tube 150 mm above BB centre. Wishbone seatstays (2 x 19.05 stays to a 130 mm yoke, 25.4 mono stay) clear the 56 mm tyre, fender and ring lock; chainstays dimpled 7 mm at tyre and chainring. Rear: horizontal forward-facing dropouts, 132 mm OLD for Shimano Nexus 7/8 (with non-turn washers). Braze-ons: V-brake posts front+rear, fender eyelets, rear rack mounts rated for an adult passenger (~100 kg), chainguard tabs, two-leg kickstand plate behind BB, ring-lock bosses on seatstays, 1 bottle mount, front carrier-block bosses on head tube.</entry>
+<entry key="OpenBikeCAD.notes">Twin straight-tube step-through. Second (upper) tube meets the seat tube 150 mm above BB centre. Wishbone seatstays (2 x 19.05 stays to a 130 mm yoke, 25.4 mono stay) clear the 56 mm tyre, fender and ring lock; chainstays dimpled 7 mm at tyre and chainring. Rear: horizontal forward-facing dropouts, 132 mm OLD for Shimano Nexus 7/8 (with non-turn washers). Braze-ons: V-brake posts front+rear, fender eyelets, rear rack mounts rated for an adult passenger (~100 kg), chainguard tabs, two-leg kickstand plate behind BB, ring-lock bosses on seatstays, 1 bottle mount, front carrier-block bosses on head tube. Fork (motor-ready as standard): 6 mm plate dropouts, 10 mm slot with lawyer lips (takes a hub motor axle with 10 mm flats or a 9 mm hub), flat faces for torque washers both sides, clamp-on torque arm right, 3 cable guides on the back of the right blade (motor or dynamo cable).</entry>
 <entry key="OpenBikeCAD.sheetSize">A3</entry>
 <entry key="OpenBikeCAD.titleBlockColor">#2f6fde</entry>
 <entry key="OpenBikeCAD.showDims">true</entry>
