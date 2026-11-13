@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { parseProperties, serializeProperties } from '../src/bcad/properties';
-import { exportBcad, importBcad, formatJavaNumber } from '../src/bcad/io';
+import { exportBcad, importBcad, formatJavaNumber, chainstayXFromClearance, tyreToSeatTubeClearance } from '../src/bcad/io';
 import { solve } from '../src/geometry/solve';
 
 const xml = readFileSync(new URL('./fixtures/sample.bcad', import.meta.url), 'utf8');
@@ -99,5 +99,32 @@ describe('.bcad import/export', () => {
     const out = parseProperties(exportBcad(f));
     expect(out.entries.has('Wall thickness Head tube')).toBe(false);
     expect(out.entries.has('Top tube rear diameter')).toBe(false);
+  });
+});
+
+describe('chainstay measure style 1 (tyre to seat tube clearance)', () => {
+  it('places the rear axle where BikeCAD does', () => {
+    // BikeCAD drew this case (611 mm wheel, 26 mm seat tube, 72.5°, no drop, 5 mm gap)
+    // with the rear axle about 339.4 mm behind the BB.
+    expect(chainstayXFromClearance(5, 305.5, 26, 72.5, 0)).toBeCloseTo(-339.2, 0);
+    // 486 mm wheel, 31.8 mm seat tube, 71.5°, BB 7 mm below the axle line, 28 mm gap: ~300.4 mm.
+    expect(chainstayXFromClearance(28, 243, 31.8, 71.5, -7)).toBeCloseTo(-300.2, 0);
+  });
+
+  it('is its own inverse', () => {
+    const x = chainstayXFromClearance(12, 340, 28.6, 73, 65, 3);
+    expect(tyreToSeatTubeClearance({ x, y: 65 }, 340, 28.6, 73, 3)).toBeCloseTo(12, 6);
+  });
+
+  it('imports and writes back a clearance file', () => {
+    const src = xml
+      .replace(/<entry key="CS measure style">[^<]*<\/entry>/, '')
+      .replace(/<entry key="CS textfield">[^<]*<\/entry>/, '')
+      .replace('</properties>', '<entry key="CS measure style">1</entry>\n<entry key="CS textfield">10.0</entry>\n</properties>');
+    const f = importBcad(src);
+    const g = solve(f.design);
+    expect(g.dims.chainstay).toBeGreaterThan(300);
+    const out = parseProperties(exportBcad(f));
+    expect(parseFloat(out.entries.get('CS textfield')!)).toBeCloseTo(10, 0);
   });
 });
