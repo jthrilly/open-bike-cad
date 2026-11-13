@@ -98,11 +98,18 @@ function readSpecial(e: Map<string, string>): Partial<Design> {
     const wd = n('Wheel diameter rear');
     if (wd != null) out.bbDrop = round1(wd / 2 - bbv);
   }
-  // Chainstay: style 0 = centre-to-centre, 1 = horizontal.
+  // Chainstay: style 0 = centre-to-centre; style 1 = clearance between the rear tyre and
+  // the seat tube, measured square to the seat tube. Verified by exporting real files
+  // through BikeCAD and measuring where it puts the rear axle.
   const csv = n('CS textfield');
   if (csv != null && n('CS measure style') === 1) {
     const drop = typeof out.bbDrop === 'number' ? out.bbDrop : bbv ?? 0;
-    out.chainstayLength = round1(Math.hypot(csv, drop));
+    const wd = n('Wheel diameter rear');
+    const sa = n('Seat angle');
+    if (wd != null && sa != null) {
+      const x = chainstayXFromClearance(csv, wd / 2, n('Seat tube diameter textfield') ?? 28.6, sa, drop, typeof out.bbOffset === 'number' ? out.bbOffset : 0);
+      out.chainstayLength = round1(Math.hypot(x, drop));
+    }
   }
 
   // Tube junctions: the "…extension2" values are centreline offsets (used this way by
@@ -392,7 +399,12 @@ export function exportBcad(file: BikeFile, derived?: Record<string, number>): st
 
   // BB and chainstay in the file's measure styles.
   setNum('BB textfield', num('BB measure style') === 1 ? round1(g.dims.bbHeight) : n('bbDrop'));
-  setNum('CS textfield', num('CS measure style') === 1 ? round1(g.dims.rearCenterHoriz) : n('chainstayLength'));
+  setNum(
+    'CS textfield',
+    num('CS measure style') === 1
+      ? round1(tyreToSeatTubeClearance(g.rearAxle, g.rearWheelR, n('stOD'), n('seatAngle'), n('bbOffset')))
+      : n('chainstayLength'),
+  );
 
   // Junction offsets and seat tube.
   setNum('Head tube upper extension2', n('ttHeadOffset'));
@@ -441,4 +453,20 @@ export function exportBcad(file: BikeFile, derived?: Record<string, number>): st
 
 export function newBikeFile(design?: Design): BikeFile {
   return { design: design ?? defaultDesign(), source: null, fileName: 'untitled.bcad', mappedKeys: [] };
+}
+
+/**
+ * CS measure style 1: the gap between the rear tyre and the seat tube surface, measured
+ * square to the seat tube centreline (which passes through (bbOffset, 0) at the seat angle).
+ */
+export function tyreToSeatTubeClearance(axle: { x: number; y: number }, tyreR: number, stOD: number, seatAngle: number, bbOffset = 0): number {
+  const a = (seatAngle * Math.PI) / 180;
+  const lineX = bbOffset - axle.y / Math.tan(a);
+  return Math.sin(a) * (lineX - axle.x) - tyreR - stOD / 2;
+}
+
+/** Inverse of tyreToSeatTubeClearance: the rear axle's x (behind the BB, so negative) for a given drop. */
+export function chainstayXFromClearance(clearance: number, tyreR: number, stOD: number, seatAngle: number, drop: number, bbOffset = 0): number {
+  const a = (seatAngle * Math.PI) / 180;
+  return bbOffset - drop / Math.tan(a) - (clearance + tyreR + stOD / 2) / Math.sin(a);
 }

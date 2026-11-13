@@ -42,5 +42,8 @@ describe.skipIf(!files.length)('real .bcad files', () => {
     expect(again.dims.reach).toBeCloseTo(g.dims.reach, 0);
     expect(again.dims.headTubeLength).toBeCloseTo(g.dims.headTubeLength, 0);
     expect(again.dims.stCC).toBeCloseTo(g.dims.stCC, 0);
+    expect(again.dims.chainstay).toBeCloseTo(g.dims.chainstay, 0);
+    // A real bike's rear axle is well behind the BB (catches misread measure styles).
+    expect(g.dims.chainstay).toBeGreaterThan(250);
   });
 });
