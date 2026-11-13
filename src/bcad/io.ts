@@ -12,6 +12,7 @@
 import { Design, PARAMS, PARAM_BY_ID, ParamValue, defaultDesign, numOf } from '../model/schema';
 import { PropertiesDoc, parseProperties, serializeProperties } from './properties';
 import { solve, Geometry } from '../geometry/solve';
+import { LEGACY_PARAMS, migrateDesign } from '../model/migrate';
 import { Vec, v, add, sub, mul, dot, dist, norm, perp, lineIntersect } from '../geometry/vec';
 
 export const NS = 'OpenBikeCAD.';
@@ -389,7 +390,7 @@ function fingerprint(e: Map<string, string>): string {
   return h.toString(16).padStart(8, '0');
 }
 
-function designFromEntries(e: Map<string, string>): { design: Design; mappedKeys: string[] } {
+function designFromEntries(e: Map<string, string>, upgrade = true): { design: Design; mappedKeys: string[] } {
   const design = defaultDesign();
   const mappedKeys = new Set<string>();
   /** Parameters whose value came from a BikeCAD key. */
@@ -422,12 +423,27 @@ function designFromEntries(e: Map<string, string>): { design: Design; mappedKeys
     if (!k.startsWith(NS)) continue;
     const id = k.slice(NS.length);
     const p = PARAM_BY_ID[id];
-    if (!p) continue;
+    if (!p) {
+      // Saved by an older version: upgraded by migrateDesign below.
+      if (LEGACY_PARAMS.includes(id)) design[id] = numFrom(raw) ?? 0;
+      continue;
+    }
     if (!untouched && fromBikeCad.has(id)) continue;
     const val = coerce(p.kind, raw);
     if (val !== undefined) design[id] = val;
   }
   if (!untouched) edgeExtensionsToCentreline(design, e);
+  // Legacy parameters of ours only count while the file is as we saved it; once BikeCAD has
+  // saved it, BikeCAD's values (which never had them) are the design. `base` designs for the
+  // edit-aware export skip the upgrade, so its changes are written to the BikeCAD keys.
+  if (!untouched || !upgrade) for (const id of LEGACY_PARAMS) delete design[id];
+  const upgraded = migrateDesign(design);
+  for (const k of Object.keys(design)) if (!(k in upgraded)) delete design[k];
+  Object.assign(design, upgraded);
+  // BikeCAD's only beam-like style is the discontinuous seat tube. A file BikeCAD has saved
+  // since, with the seat tube continuous again, is no longer a beam frame. (Mixte and
+  // step-through are ours alone: BikeCAD cannot express them, so our saved style stands.)
+  if (!untouched && e.get('DISCONTINUOUS') === 'false' && design.frameStyle === 'beam') design.frameStyle = 'diamond';
   return { design, mappedKeys: [...mappedKeys] };
 }
 
@@ -435,6 +451,7 @@ function designFromEntries(e: Map<string, string>): { design: Design; mappedKeys
 const STYLED_KEYS = new Set(['Head tube length textfield', 'Top tube angle textfield', 'BB textfield', 'CS textfield', 'Seat tube length']);
 
 const SPECIAL_KEYS = new Set([
+  'DISCONTINUOUS',
   'Display SEATTUBEEXTENSION',
   'Seat tube extension',
   'Head tube upper extension',
@@ -506,7 +523,7 @@ export function exportBcad(file: BikeFile, derived?: Record<string, number>): st
   const entries = new Map<string, string>(file.source?.entries ?? []);
   const d = file.design;
   // The design exactly as it was read from the source, to tell which values were edited.
-  const base = file.source ? designFromEntries(file.source.entries).design : null;
+  const base = file.source ? designFromEntries(file.source.entries, false).design : null;
   if (base) titleFromFileName(base, file.fileName);
   const changed = (...ids: string[]) => !base || ids.some((id) => !sameValue(d[id], base[id]));
   const g = solve(d);
@@ -569,6 +586,14 @@ export function exportBcad(file: BikeFile, derived?: Record<string, number>): st
   if (changed('forkType')) {
     setKnownBool('DUAL_CROWN', d.forkType === 'dualCrown');
     setKnownBool('Fork straight blade', d.forkType === 'straight');
+  }
+
+  // Beam frame = BikeCAD's discontinuous seat tube (BikeCAD 13+). The generic loop above only
+  // updates these keys when the file has them; a file from an older BikeCAD gets them added.
+  if (changed('frameStyle') && d.frameStyle === 'beam' && !entries.has('DISCONTINUOUS')) {
+    setBool('DISCONTINUOUS', true);
+    setNum('ST_TOP_LENGTH', n('stTopSection'));
+    setNum('ST_BOTTOM_LENGTH', n('stBottomSection'));
   }
 
   // Front end: keep the file's measure style, writing the value it expects.
@@ -706,6 +731,7 @@ export function exportBcad(file: BikeFile, derived?: Record<string, number>): st
   }
 
   // Our own copy of every parameter, plus a fingerprint of the BikeCAD values as written.
+  for (const id of LEGACY_PARAMS) entries.delete(NS + id);
   for (const p of PARAMS) {
     const v = d[p.id];
     entries.set(NS + p.id, typeof v === 'number' ? formatJavaNumber(v) : String(v));

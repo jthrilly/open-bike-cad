@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { migrateDesign } from '../model/migrate';
 import { BikeFile, newBikeFile } from '../bcad/io';
 import { Design, PARAMS } from '../model/schema';
 
@@ -30,7 +31,7 @@ export function safeSet(key: string, val: string): boolean {
 
 /** Fill in parameters added since a design was stored. */
 export function upgradeDesign(d: Design): Design {
-  const out = { ...d };
+  const out = migrateDesign({ ...d });
   for (const p of PARAMS) if (!(p.id in out)) out[p.id] = p.default;
   return out;
 }

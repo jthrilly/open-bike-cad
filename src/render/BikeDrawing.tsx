@@ -6,7 +6,7 @@ import React from 'react';
 import { Design, numOf, parseTeeth } from '../model/schema';
 import { Geometry } from '../geometry/solve';
 import { Vec, v, add, sub, mul, norm, perp, len, dist, rad, dirDeg, angleOf, lerp, rot } from '../geometry/vec';
-import { centreline, tubeOutline, svgPath, sx, sy, arcPts, pointAlong, orientedRect } from '../geometry/shapes';
+import { centreline, tubeOutline, svgPath, sx, sy, arcPts, pointAlong, orientedRect, polyLength, subPolyline } from '../geometry/shapes';
 import { poseRider } from '../fit/rider';
 import { DimensionLayer } from './DimensionLayer';
 
@@ -36,6 +36,32 @@ export function frameTubes(d: Design, g: Geometry) {
   return { ttPts, dtPts, stPts, csPts, ssPts };
 }
 
+/**
+ * Beam frame = BikeCAD's discontinuous seat tube: only a section J (stTopSection) below the top
+ * of the seat tube and a section K (stBottomSection) above the BB shell are kept. K starts where
+ * the seat tube's edge meets the shell, √(R² − r²) from the BB centre along the tube (BikeCAD's
+ * stChopBottom()). The bottom section is drawn from the BB centre; the shell is drawn over it.
+ * Sections that meet or overlap give the whole tube. Radii follow the seat tube's taper.
+ */
+export function seatTubeSections(d: Design, stPts: Vec[]): { id: 'top' | 'bottom'; pts: Vec[]; r0: number; r1: number; from: number; to: number }[] {
+  const L = polyLength(stPts);
+  const rb = numOf(d, 'stODBottom') / 2;
+  const rt = numOf(d, 'stOD') / 2;
+  const R = numOf(d, 'bbShellOD') / 2;
+  const shell = Math.sqrt(Math.max(0, R * R - rb * rb));
+  const J = Math.max(0, numOf(d, 'stTopSection'));
+  const K = Math.max(0, numOf(d, 'stBottomSection'));
+  const rAt = (s: number) => rb + ((rt - rb) * s) / (L || 1);
+  const sec = (id: 'top' | 'bottom', a: number, b: number) => ({ id, pts: subPolyline(stPts, a, b), r0: rAt(a), r1: rAt(b), from: a, to: b });
+  const botEnd = K > 0 ? Math.min(L, shell + K) : 0;
+  const topStart = J > 0 ? Math.max(0, L - J) : L;
+  if (K > 0 && J > 0 && botEnd >= topStart) return [sec('bottom', 0, L)];
+  const out: ReturnType<typeof sec>[] = [];
+  if (K > 0) out.push(sec('bottom', 0, botEnd));
+  if (J > 0) out.push(sec('top', topStart, L));
+  return out;
+}
+
 export function BikeDrawing({ d, g, ghost, onPick }: Props) {
   const paint = d.showPaint !== false && !ghost;
   const sw = numOf(d, 'outlineThickness');
@@ -58,17 +84,18 @@ export function BikeDrawing({ d, g, ghost, onPick }: Props) {
 
   const htOD = numOf(d, 'htOD');
   const htODb = d.htProfile === 'straight' ? htOD : numOf(d, 'htODBottom');
-  const htTopExt = sub(g.htTop, mul(g.steerDir, numOf(d, 'htExtTop')));
-  const htBotExt = add(g.htBottom, mul(g.steerDir, numOf(d, 'htExtBottom')));
+  // The head tube is the whole tube between the headset cups (as in BikeCAD).
+  const htA = g.htTop;
+  const htB = g.htBottom;
   let htOutline: Vec[];
   if (d.htProfile === 'hourglass') {
-    const mid = lerp(htTopExt, htBotExt, 0.5);
-    htOutline = tubeOutline([htTopExt, mid, htBotExt], htODb / 2, htODb / 2);
+    const mid = lerp(htA, htB, 0.5);
+    htOutline = tubeOutline([htA, mid, htB], htODb / 2, htODb / 2);
     // narrower waist
-    const waist = tubeOutline([htTopExt, mid, htBotExt], htOD / 2, htOD / 2);
+    const waist = tubeOutline([htA, mid, htB], htOD / 2, htOD / 2);
     htOutline = [htOutline[0], waist[1], htOutline[2], htOutline[3], waist[4], htOutline[5]];
   } else {
-    htOutline = tubeOutline([htTopExt, htBotExt], htOD / 2, htODb / 2);
+    htOutline = tubeOutline([htA, htB], htOD / 2, htODb / 2);
   }
 
   const ttR = (d.ttProfile === 'round' ? numOf(d, 'ttOD') : numOf(d, 'ttODMinor')) / 2;
@@ -132,6 +159,7 @@ export function BikeDrawing({ d, g, ghost, onPick }: Props) {
         {frameStyle !== 'stepThrough' && P(tubeOutline(ttPts, ttR, ttR), fillMain)}
         {frameStyle === 'stepThrough' && <StepThroughTube g={g} outline={outline} fill={fillMain} sw={sw} r={ttR} />}
         {frameStyle !== 'beam' && P(tubeOutline(stPts, stRb, stR), fillMain)}
+        {frameStyle === 'beam' && seatTubeSections(d, stPts).map((sec, i) => <path key={i} d={svgPath(tubeOutline(sec.pts, sec.r0, sec.r1))} fill={fillMain} stroke={outline} strokeWidth={sw} strokeLinejoin="round" />)}
         {P(htOutline, fillHT, pick('frontEnd') as never)}
         <circle cx={0} cy={0} r={numOf(d, 'bbShellOD') / 2} fill={fillAccent} stroke={outline} strokeWidth={sw} />
         {d.jointStyle === 'lugged' && <Lugs d={d} g={g} outline={outline} fill={fillAccent} sw={sw} ttPts={ttPts} dtPts={dtPts} stPts={stPts} />}

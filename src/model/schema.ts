@@ -160,6 +160,7 @@ export const PARAMS: ParamDef[] = [
   num('barStackTarget', 'Bar height above BB', 'frontEnd', 620, { showIf: isMode('bars') }),
   ang('headAngle', 'Head angle', 'frontEnd', 72.5, { min: 45, max: 89, bcad: ['Head angle'] }),
   num('headTubeLength', 'Head tube length', 'frontEnd', 150, {
+    help: 'The whole head tube, end to end. As in BikeCAD, the headset cups sit at its ends, so the fork, stack and stem all follow it. Where the top and down tubes join is set by the head tube extensions.',
     min: 40,
     max: 400,
     showIf: notMode('stackReach'),
@@ -201,23 +202,38 @@ export const PARAMS: ParamDef[] = [
     help: 'Top of seat tube above the top tube centreline intersection.',
     showIf: (d) => d.topTubeMode === 'extension',
   }),
-  num('ttHeadOffset', 'Top tube junction below HT top', 'frame', 20, {
-    help: 'Distance along the head tube from its top to the top tube centreline.',
+  num('ttHeadOffset', 'Head tube extension above top tube', 'frame', 20, {
+    help: 'How far the head tube extends above the top tube: along the head tube, from its top to the top tube centreline (BikeCAD "Head tube upper extension", centreline measure). It moves only the top tube junction; the head tube length and headset stay put.',
   }),
-  num('dtHeadOffset', 'Down tube junction above HT bottom', 'frame', 25, {
-    help: 'Distance along the head tube from its bottom to the down tube centreline.',
+  num('dtHeadOffset', 'Head tube extension below down tube', 'frame', 25, {
+    help: 'How far the head tube extends below the down tube: along the head tube, from its bottom to the down tube centreline (BikeCAD "Head tube lower extension", centreline measure). It moves only the down tube junction.',
   }),
   num('bbOffset', 'BB offset (seat tube forward of BB)', 'frame', 0, {
     help: 'Moves the seat tube axis forward (+) or back (−) of the BB centre.',
   }),
-  num('htExtTop', 'Head tube extension above lug', 'frame', 0),
-  num('htExtBottom', 'Head tube extension below lug', 'frame', 0),
   en('frameStyle', 'Frame style', 'frame', 'diamond', [
     ['diamond', 'Diamond'],
     ['mixte', 'Mixte'],
     ['stepThrough', 'Step-through'],
-    ['beam', 'Beam (no seat tube)'],
-  ]),
+    ['beam', 'Beam (discontinuous seat tube)'],
+  ], {
+    help: 'Beam is BikeCAD\'s "Discontinuous" seat tube: only a section J at the top of the seat tube and a section K at the BB are kept, with a gap between. With both at 0 there is no seat tube at all. Mixte and step-through are this app\'s own styles (BikeCAD builds them from removed and extra tubes).',
+    bcad: ['DISCONTINUOUS'],
+    fromBcad: (raw) => (raw === 'true' ? 'beam' : undefined),
+    toBcad: (v) => (v === 'beam' ? 'true' : 'false'),
+  }),
+  num('stTopSection', 'Seat tube section at top (J)', 'frame', 0, {
+    help: 'Beam frames: length of seat tube kept below the top of the seat tube, along the seat tube (BikeCAD "J"). 0 leaves none.',
+    min: 0,
+    showIf: (d) => d.frameStyle === 'beam',
+    bcad: ['ST_TOP_LENGTH'],
+  }),
+  num('stBottomSection', 'Seat tube section at BB (K)', 'frame', 0, {
+    help: 'Beam frames: length of seat tube kept above the BB shell, from where its edge meets the shell, along the seat tube (BikeCAD "K"). 0 leaves none.',
+    min: 0,
+    showIf: (d) => d.frameStyle === 'beam',
+    bcad: ['ST_BOTTOM_LENGTH'],
+  }),
   num('mixteRearOffset', 'Mixte stay length past seat tube', 'frame', 0, { showIf: (d) => d.frameStyle === 'mixte' }),
 
   // ------------------------------------------------------------- rear end

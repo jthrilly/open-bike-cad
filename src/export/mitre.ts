@@ -21,8 +21,8 @@
  */
 import { Design, numOf } from '../model/schema';
 import { Geometry } from '../geometry/solve';
-import { angleBetween, sub, dot, dist, mul, add, Vec } from '../geometry/vec';
-import { frameTubes } from '../render/BikeDrawing';
+import { angleBetween, sub, dot, dist, mul, Vec } from '../geometry/vec';
+import { frameTubes, seatTubeSections } from '../render/BikeDrawing';
 import { polyLength, endTangent } from '../geometry/shapes';
 
 export interface MitreEnd {
@@ -107,14 +107,15 @@ function ang(a: Vec, b: Vec) {
 /**
  * Head tube radius at a point on its axis, interpolated as the drawing does:
  * straight; tapered linearly htOD (top) → htODBottom (bottom); hourglass
- * htODBottom at both ends, htOD at mid-length. Ends include the extensions.
+ * htODBottom at both ends, htOD at mid-length. The head tube runs from htTop to htBottom
+ * (its full length: the headset cups sit at its ends, as in BikeCAD).
  */
 export function headTubeRadiusAt(d: Design, g: Geometry, p: Vec): number {
   const top = numOf(d, 'htOD');
   if (d.htProfile !== 'tapered' && d.htProfile !== 'hourglass') return top / 2;
   const bot = numOf(d, 'htODBottom');
-  const a = sub(g.htTop, mul(g.steerDir, numOf(d, 'htExtTop')));
-  const b = add(g.htBottom, mul(g.steerDir, numOf(d, 'htExtBottom')));
+  const a = g.htTop;
+  const b = g.htBottom;
   const L = dist(a, b);
   const t = L > 1e-9 ? Math.max(0, Math.min(1, dot(sub(p, a), g.steerDir) / L)) : 0;
   if (d.htProfile === 'tapered') return (top + (bot - top) * t) / 2;
@@ -129,8 +130,19 @@ export function tubeCuts(d: Design, g: Geometry): TubeCut[] {
   const bbR = numOf(d, 'bbShellOD') / 2;
   const frameStyle = String(d.frameStyle);
   const hasTT = frameStyle !== 'stepThrough';
-  const hasST = frameStyle !== 'beam';
+  const beam = frameStyle === 'beam';
   const { ttPts, dtPts, stPts, csPts, ssPts } = frameTubes(d, g);
+  // Beam frame = BikeCAD's discontinuous seat tube: only the sections drawn are cut. A tube
+  // joining the seat tube mitres into it only where a section is there to receive it.
+  const stSections = beam ? seatTubeSections(d, stPts) : [];
+  const stLen = polyLength(stPts);
+  const seatTubeAt = (p: Vec) => {
+    if (!beam) return true;
+    const s = dot(sub(p, g.stBottom), g.seatDir);
+    return stSections.some((sec) => s >= sec.from - 1e-6 && s <= sec.to + 1e-6);
+  };
+  const hasTTJoint = seatTubeAt(g.ttRear);
+  const hasSSJoint = seatTubeAt(g.ssTop);
   const tubes: TubeCut[] = [];
 
   /** `trim`: length removed from the c-c at square-cut (dropout) ends. */
@@ -163,8 +175,8 @@ export function tubeCuts(d: Design, g: Geometry): TubeCut[] {
     const tFront = endTangent(ttPts, true); // forward along TT at the head tube
     const ends: MitreEnd[] = [];
     const extra: string[] = [];
-    if (hasST) ends.push(end('seat tube', r, stR, 180 - ang(g.seatDir, tRear), 0, paper)); // seat tube up vs TT forward
-    else extra.push('Beam frame: no seat tube, so the rear end is left square (joint design is up to the builder).');
+    if (hasTTJoint) ends.push(end('seat tube', r, stR, 180 - ang(g.seatDir, tRear), 0, paper)); // seat tube up vs TT forward
+    else extra.push('Beam frame: no seat tube section at the top tube junction, so the rear end is left square (joint design is up to the builder).');
     const a2 = ang(sub(g.htTop, g.ttFront), mul(tFront, -1));
     ends.push(end('head tube', r, headTubeRadiusAt(d, g, g.ttFront), 180 - a2, 0, paper));
     make('tt', 'Top tube', 'ttOD', 'ttWall', polyLength(ttPts), ends, 1, 0, extra);
@@ -177,9 +189,17 @@ export function tubeCuts(d: Design, g: Geometry): TubeCut[] {
     make('dt', 'Down tube', 'dtOD', 'dtWall', polyLength(dtPts), [end('BB shell', r, bbR, 90, 0, paper), end('head tube', r, headTubeRadiusAt(d, g, g.dtFront), a, 0, paper)]);
   }
   // Seat tube into BB shell (square cut at top).
-  if (hasST) {
+  if (!beam) {
     const r = numOf(d, 'stODBottom') / 2;
-    make('st', 'Seat tube', 'stOD', 'stWall', polyLength(stPts), [end('BB shell', r, bbR, 90, 0, paper)]);
+    make('st', 'Seat tube', 'stOD', 'stWall', stLen, [end('BB shell', r, bbR, 90, 0, paper)]);
+  }
+  // Beam frame: the seat tube sections. The bottom one mitres into the BB shell; the gap ends
+  // and the top are square.
+  for (const sec of stSections) {
+    const r = numOf(d, 'stODBottom') / 2;
+    if (sec.from <= 1e-9 && sec.to >= stLen - 1e-9) make('st', 'Seat tube', 'stOD', 'stWall', stLen, [end('BB shell', r, bbR, 90, 0, paper)]);
+    else if (sec.id === 'bottom') make('stBottom', 'Seat tube, BB section (K)', 'stOD', 'stWall', sec.to, [end('BB shell', r, bbR, 90, 0, paper)]);
+    else make('stTop', 'Seat tube, top section (J)', 'stOD', 'stWall', sec.to - sec.from, []);
   }
   // Chainstays into BB shell, seatstays into seat tube. The stays stop short
   // of the axle by the dropout offsets (as drawn); those ends are square.
@@ -191,21 +211,21 @@ export function tubeCuts(d: Design, g: Geometry): TubeCut[] {
     const r = numOf(d, 'ssOD') / 2;
     const ends: MitreEnd[] = [];
     const extra: string[] = [];
-    if (hasST) {
+    if (hasSSJoint) {
       // Stays sit on the sides of the seat tube: offset so the stay's outer
       // surface is flush with the seat tube's side (r + e = R), never outside it.
       const a = ang(sub(g.stBottom, g.ssTop), sub(g.rearAxle, g.ssTop));
       const e = Math.max(0, stR - r);
       ends.push(end('seat tube', r, stR, 180 - a, e, paper));
-    } else extra.push('Beam frame: no seat tube, so the seatstay top end is left square (joint design is up to the builder).');
+    } else extra.push('Beam frame: no seat tube section at the seatstay junction, so the seatstay top end is left square (joint design is up to the builder).');
     make('ss', 'Seatstay', 'ssOD', 'ssWall', polyLength(ssPts), ends, 2, numOf(d, 'ssDropoutOffset'), extra);
   }
   // Head tube: square both ends.
   {
     const htl = g.dims.headTubeLength;
-    const raw = htl + numOf(d, 'htExtTop') + numOf(d, 'htExtBottom');
+    const raw = htl;
     const warnings: string[] = [];
-    if (htl <= 0) warnings.push(`Head tube length is ${htl.toFixed(1)} mm (stack too low for this fork); cut length shown is clamped at zero plus any extensions.`);
+    if (htl <= 0) warnings.push(`Head tube length is ${htl.toFixed(1)} mm (stack too low for this fork); cut length shown is clamped at zero.`);
     const lp = Math.max(0, raw);
     tubes.push({
       id: 'ht',
