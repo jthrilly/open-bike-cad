@@ -5,6 +5,7 @@ import { switchFrontEndMode, switchTopTubeMode } from '../geometry/solve';
 import { DIM_OPTIONS } from '../render/DimensionLayer';
 import { Accordion } from '@base-ui/react/accordion';
 import { Field as BaseField } from '@base-ui/react/field';
+import { NumberField } from '@base-ui/react/number-field';
 import { ToggleGroup } from '@base-ui/react/toggle-group';
 import { Toggle } from '@base-ui/react/toggle';
 import { Check, Select, TextInput, Tip } from './kit';
@@ -149,68 +150,40 @@ export function Field({ p, value, onChange }: { p: ParamDef; value: ParamValue; 
 }
 
 /**
- * Number input that lets you type freely (including "-" or "7.") and commits
- * on valid input. Arrow keys step; Shift = ×10, Alt = ×0.1.
+ * Number box on Base UI NumberField. Typing updates the design live; arrow
+ * keys step (Shift = ×10, Alt = ×0.1); Enter commits and leaves the box.
  */
 export function NumberInput({ id, value, step, min, max, onChange }: { id?: string; value: number; step: number; min?: number; max?: number; onChange: (v: number) => void }) {
-  const [text, setText] = useState(fmt(value));
-  const focused = useRef(false);
-  /** True once the user has typed since focusing (or since the last step/commit from outside). */
-  const typed = useRef(false);
-  const lastSent = useRef<number | null>(null);
-  useEffect(() => {
-    // Resync from the model unless the user is mid-typing and this is the value they typed.
-    if (!focused.current || !typed.current || lastSent.current !== value) {
-      setText(fmt(value));
-      typed.current = false;
-    }
-  }, [value]);
-  const commit = (s: string) => {
-    // Accept a decimal comma; reject anything that isn't a whole number ("0x10", "72abc").
-    const t = s.trim().replace(',', '.');
-    const n = t === '' || t === '-' || t === '.' ? NaN : Number(t);
-    if (Number.isFinite(n)) {
-      const c = clamp(n, min, max);
-      lastSent.current = c;
-      onChange(c);
-    }
-  };
   return (
-    <TextInput
-      id={id}
-      type="text"
-      inputMode="decimal"
-      value={text}
-      onFocus={() => {
-        focused.current = true;
-        typed.current = false;
+    <NumberField.Root
+      className="number-field"
+      value={Number.isFinite(value) ? round(value) : null}
+      step={step}
+      smallStep={round(step * 0.1)}
+      largeStep={step * 10}
+      min={min}
+      max={max}
+      format={NUMBER_FORMAT}
+      onValueChange={(v) => {
+        if (v != null && Number.isFinite(v)) onChange(clamp(round(v), min, max));
       }}
-      onBlur={() => {
-        focused.current = false;
-        typed.current = false;
-        setText(fmt(value));
-      }}
-      onChange={(e) => {
-        typed.current = true;
-        setText(e.target.value);
-        commit(e.target.value);
-      }}
-      onKeyDown={(e) => {
-        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-          e.preventDefault();
-          const mult = e.shiftKey ? 10 : e.altKey ? 0.1 : 1;
-          const n = clamp(round(value + (e.key === 'ArrowUp' ? 1 : -1) * step * mult), min, max);
-          typed.current = false;
-          setText(fmt(n));
-          onChange(n);
-        } else if (e.key === 'Enter') {
-          (e.target as HTMLInputElement).blur();
-        }
-      }}
-    />
+    >
+      <NumberField.Input
+        id={id}
+        inputMode="decimal"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+          else if (e.key === ',' && !e.ctrlKey && !e.metaKey) {
+            // Accept a decimal comma whatever the browser's locale.
+            e.preventDefault();
+            document.execCommand('insertText', false, '.');
+          }
+        }}
+      />
+    </NumberField.Root>
   );
 }
 
+const NUMBER_FORMAT: Intl.NumberFormatOptions = { maximumFractionDigits: 3, useGrouping: false };
 const round = (n: number) => Math.round(n * 1000) / 1000;
-const fmt = (n: number) => (Number.isFinite(n) ? String(round(n)) : '');
 const clamp = (n: number, min?: number, max?: number) => Math.max(min ?? -Infinity, Math.min(max ?? Infinity, n));
