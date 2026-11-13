@@ -386,6 +386,15 @@ function CarrierBlockSide({ asm, outline, sw }: { asm: Assembly; outline: string
     <g>
       <path d={svgPath(box(side(cb.mountBlock.centre), cb.mountBlock.depth, cb.mountBlock.alongHT))} fill="#8a9099" stroke={outline} strokeWidth={sw * 0.8} />
       <path d={svgPath(box(side(cb.block.centre), cb.block.depth, cb.block.height))} fill="#2b2f36" stroke={outline} strokeWidth={sw} />
+      {asm.frontBag && (() => {
+        const b = asm.frontBag;
+        const c = side(b.centre);
+        const x0 = c.x - b.depth / 2;
+        const x1 = c.x + b.depth / 2;
+        const y0 = c.y - b.height / 2;
+        const y1 = c.y + b.height / 2;
+        return <path d={svgPath([v(x0, y0), v(x1, y0), v(x1, y1), v(x0, y1)])} fill="none" stroke={outline} strokeWidth={sw * 0.8} strokeDasharray={`${sw * 6} ${sw * 4}`} />;
+      })()}
     </g>
   );
 }

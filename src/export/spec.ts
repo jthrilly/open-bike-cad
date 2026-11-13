@@ -71,8 +71,9 @@ export function specRows(d: Design, g: Geometry): SpecRow[] {
           {
             section: 'Components',
             label: 'Fork dropouts',
-            value: `${f(numOf(d, 'forkDropoutPlate'), 1)} plate, ${f(numOf(d, 'forkDropoutSlotWidth'), 1)} slot${d.forkTorqueArm === true ? ', torque-washer faces + right torque arm' : ''}${numOf(d, 'forkCableGuides') > 0 ? `, ${f(numOf(d, 'forkCableGuides'), 0)} cable guides (right blade)` : ''}`,
-            unit: 'mm',
+            // Kept short so it fits the drawing sheet's spec table.
+            value: `${f(numOf(d, 'forkDropoutPlate'), 0)} mm plate, ${f(numOf(d, 'forkDropoutSlotWidth'), 0)} mm slot${d.forkTorqueArm === true ? ', torque arm' : ''}${numOf(d, 'forkCableGuides') > 0 ? `, ${f(numOf(d, 'forkCableGuides'), 0)} cable guides` : ''}`,
+            unit: '',
           },
         ]
       : []),

@@ -265,7 +265,19 @@ export function geometry3d(d: Design, g: Geometry) {
             up_xz: V(a.carrierBlock.up),
             mount_block: { ...a.carrierBlock.mountBlock, centre: R3(a.carrierBlock.mountBlock.centre), holes: R3s(a.carrierBlock.mountBlock.holes) },
             carrier_block: { ...a.carrierBlock.block, centre: R3(a.carrierBlock.block.centre) },
+            position: a.carrierBlock.position,
             note: 'Brompton-style. A steel mounting block is brazed to the front of the head tube with two M5 threaded holes 26 mm apart along the head tube (Brompton fixes its block with 2 x M5x16 socket head screws at 4 Nm, data sheet ds-fcba). The carrier block is a box about 65 deep x 60 wide x 60 high (Brompton ColourLab block listing; units assumed mm) bolted to it, with a latch the luggage frame clips onto. Brompton rate it at 10 kg. Hole spacing comes from a third-party block listing: measure a real block before brazing.',
+          }
+        : null,
+      front_bag: a.frontBag
+        ? {
+            centre: R3(a.frontBag.centre),
+            depth: a.frontBag.depth,
+            height: a.frontBag.height,
+            width: a.frontBag.width,
+            bottom_below_block: a.frontBag.bottomBelowBlock,
+            max_height: a.frontBag.maxHeight,
+            note: 'Envelope of a luggage-frame bag on the carrier block: a world-aligned box (x forward, z up), back panel vertical against the receiver on the block. max_height is the tallest bag with the same receiver position that keeps 30 mm hand room under the bar and stem and 20 mm from the front tyre/fender at full steering lock (see clearances).',
           }
         : null,
       e_assist: a.eAssist

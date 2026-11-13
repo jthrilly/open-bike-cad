@@ -240,6 +240,7 @@ def build(g):
         "tan": material("tyre_sidewall", "#9a7650", 0.0, 0.7),
         "chain": material("chain", "#5b5e63", 1.0, 0.45),
         "saddle": material("saddle_leather", "#4a2e1a", 0.0, 0.55, 0.0),
+        "bag": material("bag_fabric", "#c8553d", 0.0, 0.8),
     }
     tubes = {t["name"].split(" (")[0]: t for t in fr["tubes"]}
     parts = {}
@@ -694,6 +695,11 @@ def accessories(part, M, g, wheels, tubes):
             lathe(part("carrier_block_bolts", M["steel"]), disc_profile(0, 4.25, 4), Vector(h) + fwd * (mb["depth"] / 2 + cb["carrier_block"]["depth"] + 2), fwd, 16)
         blk = cb["carrier_block"]
         box(part("carrier_block", M["black"]), Vector(blk["centre"]), (blk["depth"], blk["width"], blk["height"]), rot)
+
+    # Front bag envelope on the carrier block (format v3 'front_bag'): a plain box, back panel vertical
+    fb = acc.get("front_bag")
+    if isinstance(fb, dict):
+        box(part("front_bag", M["bag"]), Vector(fb["centre"]), (fb["depth"], fb["width"], fb["height"]))
 
     # two-leg centre stand
     ks = acc.get("kickstand")

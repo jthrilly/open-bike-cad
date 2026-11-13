@@ -74,6 +74,19 @@ export interface CarrierBlock {
   /** Unit vectors: forward from the head tube, and up the head tube. */
   forward: Vec;
   up: Vec;
+  /** Where the mounting block is brazed: 45% down the head tube (standard) or low, carrierBlockLowPos above its bottom. */
+  position: 'standard' | 'low';
+}
+export interface FrontBag {
+  /** A luggage-frame bag hanging on the carrier block, back vertical, as a world-aligned box (x forward, z up). */
+  centre: P3;
+  depth: number;
+  height: number;
+  width: number;
+  /** Bag bottom below the carrier block centre (where the frame's receiver sits on the bag). */
+  bottomBelowBlock: number;
+  /** Tallest bag that keeps the handlebar/stem clearance with this receiver position. */
+  maxHeight: number;
 }
 export interface Box3 {
   /** Centre; the box is aligned with forward (side-view), up (side-view) and the lateral y axis. */
@@ -136,6 +149,7 @@ export interface Assembly {
   chainguard?: Chainguard;
   ringLock?: RingLock;
   carrierBlock?: CarrierBlock;
+  frontBag?: FrontBag;
   eAssist?: EAssist;
   kickstand?: Kickstand;
   clearances: Clearance[];
@@ -532,27 +546,65 @@ export function buildAssembly(d: Design, g: Geometry): Assembly {
   }
 
   // ------------------------------------------------------------- carrier block
+  // Front wheel + fender and the handlebar/stem swept through steering lock, as 3D point clouds.
+  const sweep = steerSweep(d, g);
   let carrierBlock: CarrierBlock | undefined;
+  let frontBag: FrontBag | undefined;
   if (d.carrierBlock === true) {
     const u = g.steerDir;
     const n = g.steerNormal;
     const up = mul(u, -1);
     const htR = numOf(d, 'htOD') / 2;
-    const mid = lerp(g.htTop, g.htBottom, 0.45);
     const mbDepth = 12;
-    const mbCentre = add(mid, mul(n, htR + mbDepth / 2 - 2));
-    const holes = [add(mbCentre, mul(up, 13)), add(mbCentre, mul(up, -13))].map((p) => p3(add(p, mul(n, mbDepth / 2))));
+    const htl = dist(g.htTop, g.htBottom);
+    const mountAt = (pos: 'standard' | 'low') => {
+      const mid = pos === 'low' ? add(g.htBottom, mul(up, numOf(d, 'carrierBlockLowPos'))) : lerp(g.htTop, g.htBottom, 0.45);
+      const centre = add(mid, mul(n, htR + mbDepth / 2 - 2));
+      const holes = [add(centre, mul(up, 13)), add(centre, mul(up, -13))].map((p) => p3(add(p, mul(n, mbDepth / 2))));
+      return { position: pos, centre, holes };
+    };
+    const position: 'standard' | 'low' = d.carrierBlockPosition === 'low' ? 'low' : 'standard';
+    const used = mountAt(position);
+    const mbCentre = used.centre;
     const blkDepth = 65;
     const blkCentre = add(mbCentre, mul(n, mbDepth / 2 + blkDepth / 2));
     carrierBlock = {
-      mountBlock: { centre: p3(mbCentre), alongHT: 40, width: 24, depth: mbDepth, holes, thread: 'M5', holeSpacing: 26 },
+      mountBlock: { centre: p3(mbCentre), alongHT: 40, width: 24, depth: mbDepth, holes: used.holes, thread: 'M5', holeSpacing: 26 },
       block: { centre: p3(blkCentre), depth: blkDepth, width: 60, height: 60, loadKg: 10 },
       forward: n,
       up,
+      position,
     };
+    if (position === 'low') {
+      // Mounting block (40 mm along the head tube) must sit clear of the lower headset cup and the down-tube fillet.
+      check('Low carrier-block mount: block bottom above head tube bottom', numOf(d, 'carrierBlockLowPos') - 20, 15);
+      check('Low carrier-block mount below head tube top', htl - numOf(d, 'carrierBlockLowPos') - 20, 15);
+    }
     // The front tyre must not reach the block when steered straight.
     const fr = dist(blkCentre, g.frontAxle) - 30 - g.frontWheelR - (d.fenders === true ? fClr + 3 : 0);
     check('Carrier block to front tyre/fender', fr, 15);
+    check('Carrier block to front tyre/fender at full steering lock', boxDistAxes({ centre: p3(blkCentre), depth: blkDepth, height: 60, width: 60 }, sweep.wheel, n, up), 15);
+
+    if (d.frontBag === true) {
+      const H = numOf(d, 'frontBagHeight');
+      const D = numOf(d, 'frontBagDepth');
+      const W = numOf(d, 'frontBagWidth');
+      const below = numOf(d, 'frontBagBelowBlock');
+      // Back panel vertical, touching the front of the receiver plate (6 mm) on the block's front face.
+      const face = add(blkCentre, mul(n, blkDepth / 2 + 6));
+      const bottom = blkCentre.y - below;
+      const X = v(1, 0);
+      const Z = v(0, 1);
+      const bagAt = (h: number): Box3 => ({ centre: [face.x + D / 2, 0, bottom + h / 2], depth: D, height: h, width: W });
+      const bag = bagAt(H);
+      // Hands on the grips need room: 30 mm over the bar and stem, swept through the lock.
+      const topGap = (h: number) => boxDistAxes(bagAt(h), sweep.bar, X, Z) - 12;
+      let maxH = 0;
+      for (let h = 100; h <= 800; h += 5) if (topGap(h) >= 30 && boxDistAxes(bagAt(h), sweep.wheel, X, Z) >= 20) maxH = h;
+      frontBag = { centre: bag.centre, depth: D, height: H, width: W, bottomBelowBlock: below, maxHeight: maxH };
+      check('Front bag to front tyre/fender at full steering lock', boxDistAxes(bag, sweep.wheel, X, Z), 20);
+      check('Front bag top to handlebar/stem at full steering lock (room for hands)', topGap(H), 30);
+    }
   }
 
 
@@ -565,41 +617,10 @@ export function buildAssembly(d: Design, g: Geometry): Assembly {
     const up = mul(g.steerDir, -1);
     const wiring: EAssist['wiring'] = [];
     let battery: EAssist['battery'];
-    // Front wheel + fender, swept through steering lock, as a cloud of 3D points.
-    const steerAxisPt = g.htTop;
-    const k: P3 = [g.steerDir.x, 0, g.steerDir.y];
-    const rotAboutAxis = (p: P3, th: number): P3 => {
-      const vv: P3 = [p[0] - steerAxisPt.x, p[1], p[2] - steerAxisPt.y];
-      const c = Math.cos(th);
-      const sn = Math.sin(th);
-      const kd = k[0] * vv[0] + k[1] * vv[1] + k[2] * vv[2];
-      const cr: P3 = [k[1] * vv[2] - k[2] * vv[1], k[2] * vv[0] - k[0] * vv[2], k[0] * vv[1] - k[1] * vv[0]];
-      return [steerAxisPt.x + vv[0] * c + cr[0] * sn + k[0] * kd * (1 - c), vv[1] * c + cr[1] * sn + k[1] * kd * (1 - c), steerAxisPt.y + vv[2] * c + cr[2] * sn + k[2] * kd * (1 - c)];
-    };
-    const frontR = g.frontWheelR + (d.fenders === true ? numOf(d, 'fenderClearance') + 3 : 0);
-    const halfW = (d.fenders === true ? numOf(d, 'frontTyre') + 18 : numOf(d, 'frontTyre')) / 2;
-    const wheelPts: P3[] = [];
-    for (let a = 20; a <= 200; a += 2)
-      for (let yy = -halfW; yy <= halfW + 0.01; yy += halfW / 4) wheelPts.push([g.frontAxle.x + frontR * Math.cos(rad(a)), yy, g.frontAxle.y + frontR * Math.sin(rad(a))]);
-    const swept: P3[] = [];
-    for (let t = -70; t <= 70; t += 5) for (const p of wheelPts) swept.push(rotAboutAxis(p, rad(t)));
-    // Handlebar (straight bar through the clamp, radius ~12) swept through the same lock.
-    const barW = numOf(d, 'barWidth') || 600;
-    const barPts: P3[] = [];
-    for (let yy = -barW / 2; yy <= barW / 2; yy += 10) barPts.push([g.barClamp.x, yy, g.barClamp.y]);
-    const barSwept: P3[] = [];
-    for (let t = -70; t <= 70; t += 5) for (const p of barPts) barSwept.push(rotAboutAxis(p, rad(t)));
-    const boxDist = (b: Box3, pts: P3[]) => {
-      let m = Infinity;
-      for (const p of pts) {
-        const rel = v(p[0] - b.centre[0], p[2] - b.centre[2]);
-        const ds = Math.max(Math.abs(dot(rel, fwd)) - b.depth / 2, 0);
-        const dh = Math.max(Math.abs(dot(rel, up)) - b.height / 2, 0);
-        const dw = Math.max(Math.abs(p[1] - b.centre[1]) - b.width / 2, 0);
-        m = Math.min(m, Math.hypot(ds, dh, dw));
-      }
-      return m;
-    };
+    const swept = sweep.wheel;
+    const barSwept = sweep.barOnly;
+    const barPts = sweep.barStraight;
+    const boxDist = (b: Box3, pts: P3[]) => boxDistAxes(b, pts, fwd, up);
     const at = (base: Vec, f: number, u: number) => add(add(base, mul(fwd, f)), mul(up, u));
 
     if (wantBatt) {
@@ -717,7 +738,61 @@ export function buildAssembly(d: Design, g: Geometry): Assembly {
     };
   }
 
-  return { stays, fenders, rack, chainguard, ringLock, carrierBlock, eAssist, kickstand, clearances };
+  return { stays, fenders, rack, chainguard, ringLock, carrierBlock, frontBag, eAssist, kickstand, clearances };
+}
+
+/** Distance from a box (aligned with side-view unit vectors fwd/up and the lateral y axis) to the nearest of pts. */
+function boxDistAxes(b: Box3, pts: P3[], fwd: Vec, up: Vec): number {
+  let m = Infinity;
+  for (const p of pts) {
+    const rel = v(p[0] - b.centre[0], p[2] - b.centre[2]);
+    const ds = Math.max(Math.abs(dot(rel, fwd)) - b.depth / 2, 0);
+    const dh = Math.max(Math.abs(dot(rel, up)) - b.height / 2, 0);
+    const dw = Math.max(Math.abs(p[1] - b.centre[1]) - b.width / 2, 0);
+    m = Math.min(m, Math.hypot(ds, dh, dw));
+  }
+  return m;
+}
+
+/** Front wheel (+ fender) and handlebar/stem, swept through +-70 degrees of steering about the steering axis. */
+function steerSweep(d: Design, g: Geometry) {
+  const steerAxisPt = g.htTop;
+  const k: P3 = [g.steerDir.x, 0, g.steerDir.y];
+  const rotAboutAxis = (p: P3, th: number): P3 => {
+    const vv: P3 = [p[0] - steerAxisPt.x, p[1], p[2] - steerAxisPt.y];
+    const c = Math.cos(th);
+    const sn = Math.sin(th);
+    const kd = k[0] * vv[0] + k[1] * vv[1] + k[2] * vv[2];
+    const cr: P3 = [k[1] * vv[2] - k[2] * vv[1], k[2] * vv[0] - k[0] * vv[2], k[0] * vv[1] - k[1] * vv[0]];
+    return [steerAxisPt.x + vv[0] * c + cr[0] * sn + k[0] * kd * (1 - c), vv[1] * c + cr[1] * sn + k[1] * kd * (1 - c), steerAxisPt.y + vv[2] * c + cr[2] * sn + k[2] * kd * (1 - c)];
+  };
+  const frontR = g.frontWheelR + (d.fenders === true ? numOf(d, 'fenderClearance') + 3 : 0);
+  const halfW = (d.fenders === true ? numOf(d, 'frontTyre') + 18 : numOf(d, 'frontTyre')) / 2;
+  const wheelPts: P3[] = [];
+  for (let a = 20; a <= 200; a += 2)
+    for (let yy = -halfW; yy <= halfW + 0.01; yy += halfW / 4) wheelPts.push([g.frontAxle.x + frontR * Math.cos(rad(a)), yy, g.frontAxle.y + frontR * Math.sin(rad(a))]);
+  const wheel: P3[] = [];
+  for (let t = -70; t <= 70; t += 5) for (const p of wheelPts) wheel.push(rotAboutAxis(p, rad(t)));
+  // Handlebar: a straight bar through the clamp (radius ~12).
+  const barW = numOf(d, 'barWidth') || 600;
+  const barStraight: P3[] = [];
+  for (let yy = -barW / 2; yy <= barW / 2; yy += 10) barStraight.push([g.barClamp.x, yy, g.barClamp.y]);
+  const stemPts: P3[] = [];
+  for (let i = 0; i <= 10; i++) {
+    const q = lerp(g.stemPivot, g.barClamp, i / 10);
+    stemPts.push([q.x, 0, q.y]);
+  }
+  const barOnly: P3[] = [];
+  const bar: P3[] = [];
+  for (let t = -70; t <= 70; t += 5) {
+    for (const p of barStraight) {
+      const q = rotAboutAxis(p, rad(t));
+      barOnly.push(q);
+      bar.push(q);
+    }
+    for (const p of stemPts) bar.push(rotAboutAxis(p, rad(t)));
+  }
+  return { wheel, bar, barOnly, barStraight };
 }
 
 export { arcPts };

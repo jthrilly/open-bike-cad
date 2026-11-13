@@ -123,3 +123,23 @@ describe('e-assist on the carrier block', () => {
     expect(j.wheels[1].hub).toHaveProperty('shell_dia', 130);
   });
 });
+
+describe('low carrier-block mount and front bag', () => {
+  const small = () => ({ ...city(), rearBSD: 406, frontBSD: 406, rearTyre: 54, frontTyre: 54, bbDrop: -23, forkLength: 310, forkRake: 32, headAngle: 70, frontEndMode: 'reachHtl', reach: 370, headTubeLength: 390, frontBag: true, frontBagHeight: 300 });
+  it('puts the low mounting block near the head tube bottom and leaves room for a taller bag', () => {
+    const std = small();
+    const low = { ...small(), carrierBlockPosition: 'low', carrierBlockLowPos: 60 };
+    const gs = solve(std);
+    const aStd = buildAssembly(std, gs);
+    const aLow = buildAssembly(low, solve(low));
+    expect(aLow.carrierBlock!.position).toBe('low');
+    expect(aLow.carrierBlock!.block.centre[2]).toBeLessThan(aStd.carrierBlock!.block.centre[2] - 100);
+    const mb = aLow.carrierBlock!.mountBlock.centre;
+    expect(Math.hypot(mb[0] - gs.htBottom.x, mb[2] - gs.htBottom.y)).toBeLessThan(70);
+    expect(aLow.frontBag!.maxHeight).toBeGreaterThan(aStd.frontBag!.maxHeight + 100);
+    for (const what of ['Front bag to front tyre/fender at full steering lock', 'Front bag top to handlebar/stem at full steering lock (room for hands)']) {
+      expect(aLow.clearances.find((c) => c.what === what)?.ok).toBe(true);
+    }
+    expect(geometry3d(low, solve(low)).accessories.front_bag?.max_height).toBe(aLow.frontBag!.maxHeight);
+  });
+});

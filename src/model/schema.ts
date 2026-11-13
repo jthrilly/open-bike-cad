@@ -476,6 +476,16 @@ export const PARAMS: ParamDef[] = [
   num('rackRearOverhang', 'Rack platform behind rear axle', 'accessories', 120, { help: 'How far the back of the rack platform reaches behind the rear axle.', showIf: (d) => d.rearRack === true }),
   bool('ringLock', 'Frame (ring) lock on seatstays', 'accessories', false),
   bool('carrierBlock', 'Front carrier block on head tube', 'accessories', false, { help: 'Brompton-style: a brazed-on mounting block with two M5 holes 26 mm apart on the front of the head tube, and a bolt-on carrier block that a luggage frame clips onto. The load does not steer.' }),
+  en('carrierBlockPosition', 'Carrier block mounting position', 'accessories', 'standard', [['standard', 'Standard (45% down the head tube)'], ['low', 'Low (near the bottom of the head tube)']], {
+    help: 'Where the mounting block is brazed. Low puts the block, and so a bag hanging on it, further below the handlebar, which leaves room for a taller bag. Best on long head tubes (small wheels).',
+    showIf: (d) => d.carrierBlock === true,
+  }),
+  num('carrierBlockLowPos', 'Low mount: block centre above head tube bottom', 'accessories', 60, { help: 'Measured along the head tube from its bottom face to the centre of the brazed mounting block (40 mm long). Leave room for the lower headset cup and the down tube fillet.', showIf: (d) => d.carrierBlock === true && d.carrierBlockPosition === 'low' }),
+  bool('frontBag', 'Show a front bag on the carrier block', 'accessories', false, { help: 'A luggage-frame bag hanging on the carrier block with its back vertical. Checked against the front tyre/fender at full steering lock and against the handlebar and stem (with room for hands); the tallest bag that fits is reported.', showIf: (d) => d.carrierBlock === true }),
+  num('frontBagHeight', 'Front bag height', 'accessories', 300, { showIf: (d) => d.frontBag === true }),
+  num('frontBagDepth', 'Front bag depth (forward)', 'accessories', 180, { showIf: (d) => d.frontBag === true }),
+  num('frontBagWidth', 'Front bag width', 'accessories', 330, { showIf: (d) => d.frontBag === true }),
+  num('frontBagBelowBlock', 'Front bag bottom below block centre', 'accessories', 60, { help: 'Set by where the luggage frame\'s receiver sits on the bag.', showIf: (d) => d.frontBag === true }),
   bool('blockBattery', 'E-assist battery cradle on carrier block', 'accessories', false, {
     help: 'A steel cradle bolted to the front of the carrier block holds a slide-in e-bike battery base (key lock, built-in contacts). The battery lifts out upward for charging. The motor controller sits in the cradle below the pack. Checked against the front tyre/fender at full steering lock and against the handlebar.',
     showIf: (d) => d.carrierBlock === true,
