@@ -23,3 +23,25 @@ saddle is a sprung leather city saddle (twin coil springs, rivets) sized from
 The clearance report also prints the JSON's own `clearances` list.
 
 Options: `--no-render` skips the renders; `--samples N` sets Cycles samples (default 96).
+
+## Children's school bag (concept)
+
+`build_school_bag.py` models an 18 L school bag that clips onto the kids' bike's Brompton-style
+front carrier block (`accessories.front_carrier_block`) and works as a backpack for walking:
+
+```bash
+/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P blender/build_school_bag.py -- OUT_DIR SA_City_Bike_24_kids_geometry.json
+```
+
+The bag is 330 W × 300 H × 180 D mm with a 35 mm front pocket: a recycled PET Cordura shell, a
+welded TPU base, reflective bands and a top grab handle. On the back, a 10 mm aluminium tube
+frame carries a glass-filled nylon receiver that slides down over the block. It wraps the
+block's front, sides and top, has a release lever on top, and is a wedge so the bag hangs
+vertically even though the block follows the head tube. The shoulder straps stow in a zipped
+pocket between the frame rails, and two spacer-mesh pads stand proud of the receiver for walking.
+
+It writes `school_bag.glb`/`.blend` (the bag alone, straps out), `school_bag_on_bike.glb`/`.blend`
+(the bike with the bag clipped on, straps stowed) and renders, and `school_bag_clearance.txt`.
+That file reports the gap to every steered part straight ahead, and the steering angle at which
+each first touches the bag, with a 25 mm allowance for a child's hand on the grips. It builds
+the bike with `build_bike.py`, so it follows any change to the geometry.
