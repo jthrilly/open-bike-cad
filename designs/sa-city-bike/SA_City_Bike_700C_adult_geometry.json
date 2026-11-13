@@ -1,0 +1,616 @@
+{
+ "name": "SA City Bike 700C (adult)",
+ "size": "One size, riders ~155-190 cm",
+ "material": "Mild / high-tensile ERW steel, fillet brazed (bronze)",
+ "units": "mm",
+ "coordinates": "Origin at BB centre. x forward (towards front wheel), y to the rider's left, z up. Ground plane is z = groundZ. Frame lies in the y=0 plane except stays, fork blades, dropouts and wheels, which carry their lateral offsets.",
+ "groundZ": -295,
+ "key_dims": {
+  "stack": 630.7,
+  "reach": 375,
+  "headAngle": 69,
+  "seatAngle": 70,
+  "effectiveSeatAngle": 68.9,
+  "headTubeLength": 210,
+  "ett": 606.6,
+  "ttCC": 605.6,
+  "ttAngle": 39.7,
+  "dtCC": 638.1,
+  "stCT": 460,
+  "stCC": 150,
+  "ssCC": 441.3,
+  "chainstay": 470,
+  "rearCenterHoriz": 464.5,
+  "bbDrop": 72,
+  "bbHeight": 295,
+  "wheelbase": 1120.3,
+  "frontCenter": 659.8,
+  "frontCenterHoriz": 655.9,
+  "trail": 74.5,
+  "mechanicalTrail": 69.5,
+  "flop": 24.9,
+  "standover": 645.4,
+  "forkLength": 405,
+  "forkRake": 62,
+  "toeOverlap": -20.4,
+  "saddleHeight": 720,
+  "saddleSetback": 261.3,
+  "saddleToBarDrop": -78.5,
+  "saddleToBarReach": 653.4,
+  "barReachFromBB": 392.2,
+  "barStackFromBB": 755.1,
+  "stackToTopOfHeadset": 644.7,
+  "reachToTopOfHeadset": 369.6,
+  "seatpostExposed": 200,
+  "seatpostMinLength": 300,
+  "frontWheelDia": 734,
+  "rearWheelDia": 734,
+  "headTubeToDownTubeAngle": 115.5,
+  "headTubeToTopTubeAngle": 71.3,
+  "seatTubeToTopTubeAngle": 109.7,
+  "seatTubeToDownTubeAngle": 63.5,
+  "seatTubeToSeatstayAngle": 69,
+  "seatTubeToChainstayAngle": 61.2,
+  "chainstayToSeatstayAngle": 49.9
+ },
+ "frame": {
+  "joint_style": "fillet brazed (bronze), fillet radius ~10 mm",
+  "tubes": [
+   {
+    "name": "head tube",
+    "od": 38,
+    "wall": 2,
+    "centreline": [
+     [
+      375,
+      0,
+      630.7
+     ],
+     [
+      450.3,
+      0,
+      434.6
+     ]
+    ]
+   },
+   {
+    "name": "down tube",
+    "od": 35,
+    "wall": 2,
+    "centreline": [
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      439.5,
+      0,
+      462.6
+     ]
+    ]
+   },
+   {
+    "name": "step tube (upper tube, \"top tube\" in the cut list)",
+    "od": 31.8,
+    "wall": 1.6,
+    "centreline": [
+     [
+      -51.3,
+      0,
+      141
+     ],
+     [
+      414.4,
+      0,
+      528
+     ]
+    ]
+   },
+   {
+    "name": "seat tube",
+    "od": 35,
+    "wall": 2,
+    "centreline": [
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      -157.3,
+      0,
+      432.3
+     ]
+    ]
+   },
+   {
+    "name": "chainstay left",
+    "od": 22.2,
+    "wall": 1.6,
+    "centreline": [
+     [
+      -464.5,
+      69,
+      72
+     ],
+     [
+      0,
+      35,
+      0
+     ]
+    ],
+    "note": "Straight between the points; in the real frame the stay is dimpled/crimped near the tyre and chainring."
+   },
+   {
+    "name": "chainstay right",
+    "od": 22.2,
+    "wall": 1.6,
+    "centreline": [
+     [
+      -464.5,
+      -69,
+      72
+     ],
+     [
+      0,
+      -35,
+      0
+     ]
+    ]
+   },
+   {
+    "name": "seatstay left",
+    "od": 19.05,
+    "wall": 1.6,
+    "centreline": [
+     [
+      -464.5,
+      69,
+      72
+     ],
+     [
+      -131.7,
+      17.5,
+      361.8
+     ]
+    ]
+   },
+   {
+    "name": "seatstay right",
+    "od": 19.05,
+    "wall": 1.6,
+    "centreline": [
+     [
+      -464.5,
+      -69,
+      72
+     ],
+     [
+      -131.7,
+      -17.5,
+      361.8
+     ]
+    ]
+   }
+  ],
+  "bb_shell": {
+   "centre": [
+    0,
+    0,
+    0
+   ],
+   "axis": "y",
+   "od": 40,
+   "width": 68,
+   "thread": "BSA 1.37x24"
+  },
+  "rear_dropouts": {
+   "type": "horizontal, forward-facing slot",
+   "axle": [
+    [
+     -464.5,
+     69,
+     72
+    ],
+    [
+     -464.5,
+     -69,
+     72
+    ]
+   ],
+   "slot_length": 30,
+   "slot_width": 10,
+   "plate_thickness": 6,
+   "plate_size": 50
+  },
+  "paint": {
+   "main": "#1f6f5c",
+   "stays": "#1f6f5c",
+   "head_tube": "#f2b134",
+   "accent": "#f2b134",
+   "decal": "CITY"
+  }
+ },
+ "fork": {
+  "type": "rigid, curved blades",
+  "steerer": {
+   "od": 28.6,
+   "from": [
+    454.6,
+    0,
+    423.4
+   ],
+   "to": [
+    341,
+    0,
+    719.4
+   ]
+  },
+  "crown": {
+   "top": [
+    454.6,
+    0,
+    423.4
+   ],
+   "bottom": [
+    463.5,
+    0,
+    400.1
+   ],
+   "half_width": 54.7
+  },
+  "blade_od": 25.4,
+  "blade_left": [
+   [
+    463.5,
+    54.7,
+    400.1
+   ],
+   [
+    547.8,
+    54.7,
+    180.5
+   ],
+   [
+    551.4,
+    54.6,
+    171.5
+   ],
+   [
+    555.2,
+    54.5,
+    162.9
+   ],
+   [
+    559.2,
+    54.4,
+    154.7
+   ],
+   [
+    563.4,
+    54.3,
+    146.9
+   ],
+   [
+    567.7,
+    54.2,
+    139.4
+   ],
+   [
+    572.3,
+    54,
+    132.3
+   ],
+   [
+    577,
+    53.9,
+    125.6
+   ],
+   [
+    582,
+    53.8,
+    119.2
+   ],
+   [
+    587.1,
+    53.7,
+    113.2
+   ],
+   [
+    592.4,
+    53.6,
+    107.6
+   ],
+   [
+    597.9,
+    53.5,
+    102.4
+   ],
+   [
+    603.6,
+    53.4,
+    97.5
+   ],
+   [
+    609.4,
+    53.3,
+    93
+   ],
+   [
+    615.5,
+    53.2,
+    88.9
+   ],
+   [
+    621.8,
+    53.1,
+    85.2
+   ],
+   [
+    628.2,
+    52.9,
+    81.8
+   ],
+   [
+    634.8,
+    52.8,
+    78.8
+   ],
+   [
+    641.7,
+    52.7,
+    76.1
+   ],
+   [
+    648.7,
+    52.6,
+    73.9
+   ],
+   [
+    655.9,
+    52.5,
+    72
+   ]
+  ],
+  "blade_right": [
+   [
+    463.5,
+    -54.7,
+    400.1
+   ],
+   [
+    547.8,
+    -54.7,
+    180.5
+   ],
+   [
+    551.4,
+    -54.6,
+    171.5
+   ],
+   [
+    555.2,
+    -54.5,
+    162.9
+   ],
+   [
+    559.2,
+    -54.4,
+    154.7
+   ],
+   [
+    563.4,
+    -54.3,
+    146.9
+   ],
+   [
+    567.7,
+    -54.1,
+    139.4
+   ],
+   [
+    572.3,
+    -54,
+    132.3
+   ],
+   [
+    577,
+    -53.9,
+    125.6
+   ],
+   [
+    582,
+    -53.8,
+    119.2
+   ],
+   [
+    587.1,
+    -53.7,
+    113.2
+   ],
+   [
+    592.4,
+    -53.6,
+    107.6
+   ],
+   [
+    597.9,
+    -53.5,
+    102.4
+   ],
+   [
+    603.6,
+    -53.4,
+    97.5
+   ],
+   [
+    609.4,
+    -53.3,
+    93
+   ],
+   [
+    615.5,
+    -53.2,
+    88.9
+   ],
+   [
+    621.8,
+    -53,
+    85.2
+   ],
+   [
+    628.2,
+    -52.9,
+    81.8
+   ],
+   [
+    634.8,
+    -52.8,
+    78.8
+   ],
+   [
+    641.7,
+    -52.7,
+    76.1
+   ],
+   [
+    648.7,
+    -52.6,
+    73.9
+   ],
+   [
+    655.9,
+    -52.5,
+    72
+   ]
+  ],
+  "axle": [
+   655.9,
+   0,
+   72
+  ],
+  "length_axle_to_crown": 405,
+  "rake": 62
+ },
+ "headset": {
+  "lower_stack": 12,
+  "upper_stack": 15,
+  "steering_axis_down": [
+   0.3584,
+   0,
+   -0.9336
+  ],
+  "head_angle": 69
+ },
+ "wheels": [
+  {
+   "which": "rear",
+   "axle": [
+    -464.5,
+    0,
+    72
+   ],
+   "axis": "y",
+   "rim_bsd": 622,
+   "tyre_width": 56,
+   "outer_diameter": 734,
+   "rim_depth": 20,
+   "spokes": 36,
+   "hub": {
+    "type": "Shimano Nexus 7/8 internal gear hub",
+    "old": 132,
+    "shell_dia": 95
+   }
+  },
+  {
+   "which": "front",
+   "axle": [
+    655.9,
+    0,
+    72
+   ],
+   "axis": "y",
+   "rim_bsd": 622,
+   "tyre_width": 56,
+   "outer_diameter": 734,
+   "rim_depth": 20,
+   "spokes": 36,
+   "hub": {
+    "type": "front hub",
+    "old": 100
+   }
+  }
+ ],
+ "drivetrain": {
+  "crank_length": 170,
+  "chainring_teeth": 38,
+  "sprocket_teeth": 20,
+  "chainline": 42,
+  "bb_centre": [
+   0,
+   0,
+   0
+  ]
+ },
+ "cockpit": {
+  "spacers": 40,
+  "stem_length": 70,
+  "stem_angle": 30,
+  "stem_pivot": [
+   348.1,
+   0,
+   700.7
+  ],
+  "bar_clamp": [
+   392.2,
+   0,
+   755.1
+  ],
+  "bar": {
+   "type": "flat",
+   "width": 600,
+   "clamp_dia": 31.8
+  },
+  "grips_at": [
+   392.2,
+   0,
+   755.1
+  ]
+ },
+ "saddle": {
+  "seatpost_dia": 30.9,
+  "seatpost_top": [
+   -225.7,
+   0,
+   620.2
+  ],
+  "saddle_top": [
+   -261.3,
+   0,
+   676.6
+  ],
+  "saddle_length": 260,
+  "saddle_height_bb_to_top": 720
+ },
+ "accessories": {
+  "fenders": {
+   "clearance": 14
+  },
+  "rear_rack": true,
+  "kickstand": "two-leg, plate between chainstays behind BB",
+  "brakes": "V-brakes front and rear (posts on fork blades and seatstays at rim radius 311 mm)",
+  "front_carrier_block": {
+   "on": "front face of head tube",
+   "centre": [
+    416.4,
+    0,
+    522.9
+   ],
+   "note": "Brompton-style carrier block bosses (2 x M5, ~26 mm apart, to be verified against a real block)."
+  },
+  "chainguard": true,
+  "ring_lock": "bosses on seatstays above rim",
+  "bottle_bosses": "down tube"
+ }
+}
