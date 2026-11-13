@@ -57,6 +57,8 @@ export interface RingLock {
   centre: Vec;
   /** Unit vector in side view pointing away from the axle through the lock. */
   radial: Vec;
+  /** Unit vector in side view, perpendicular to radial: the ring's normal (direction of travel, pointing back). */
+  tangent: Vec;
   innerR: number;
   outerR: number;
   /** Body arc covers this many degrees, centred on the outward direction; the shackle closes the rest through the spokes. */
@@ -151,6 +153,14 @@ function lateralRun(pts: Vec[], y0: number, y1: number): P3[] {
 }
 
 const R3n = (p: P3): P3 => [Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10, Math.round(p[2] * 10) / 10];
+
+function segDist3(p: P3, a: P3, b: P3) {
+  const ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+  const ap = [p[0] - a[0], p[1] - a[1], p[2] - a[2]];
+  const L2 = ab[0] ** 2 + ab[1] ** 2 + ab[2] ** 2;
+  const t = L2 ? Math.max(0, Math.min(1, (ab[0] * ap[0] + ab[1] * ap[1] + ab[2] * ap[2]) / L2)) : 0;
+  return Math.hypot(ap[0] - ab[0] * t, ap[1] - ab[1] * t, ap[2] - ab[2] * t);
+}
 
 export function chainringRadius(teeth: number) {
   return 12.7 / (2 * Math.sin(Math.PI / teeth));
@@ -323,7 +333,7 @@ export function buildAssembly(d: Design, g: Geometry): Assembly {
     const tanSA = Math.tan(rad(numOf(d, 'seatAngle')));
     const stXAt = (y: number) => g.stBottom.x - y / tanSA;
     const frontX = Math.min(ax.x + 0.55 * rearR, stXAt(platZ) - numOf(d, 'seatpostDia') / 2 - 40);
-    const backX = ax.x - 0.33 * rearR;
+    const backX = ax.x - numOf(d, 'rackRearOverhang');
     const hw = dropY + 14; // rails run outside the dropouts and eyelet bolts
     const eyelet = polar(ax, 26, 195);
     const legTopBack = v(backX + 20, platZ);
@@ -428,11 +438,44 @@ export function buildAssembly(d: Design, g: Geometry): Assembly {
   }
 
   // ------------------------------------------------------------- ring lock
+  // A Dutch-style frame (ring) lock: a ring in the plane spanned by the lateral
+  // axis and the wheel's radial direction. It has to enclose the whole wheel
+  // cross-section where it sits (tyre, rim and fender), with the shackle
+  // closing through the spokes below the rim. The body sits just behind the
+  // seatstays (rearward around the axle), bolted to bosses on the stays.
   let ringLock: RingLock | undefined;
   if (d.ringLock === true) {
-    const rC = rimR + tyreH / 2;
+    const rimDepth = numOf(d, 'rimDepth');
+    const rimHalfW = 14; // outer rim width about 28 mm for a 50-60 mm tyre
+    // Cross-section to enclose, as [lateral, radius from axle] points.
+    const sect: [number, number][] = [];
+    const tc = rimR + tyreH / 2;
+    for (let k = 0; k < 48; k++) {
+      const t = (2 * Math.PI * k) / 48;
+      sect.push([(tyreW / 2) * Math.cos(t), tc + (tyreH / 2) * Math.sin(t)]);
+    }
+    for (const sg of [1, -1]) {
+      sect.push([sg * rimHalfW, rimR - rimDepth], [sg * rimHalfW, rimR]);
+      if (d.fenders === true) {
+        const fw = (tyreW + 18) / 2;
+        sect.push([sg * fw, rearR + fClr], [sg * fw, rearR + fClr + 2]);
+      }
+    }
+    const reach = (rc: number) => Math.max(...sect.map(([y, r]) => Math.hypot(y, r - rc)));
+    let rC = tc;
+    let need = reach(tc);
+    for (let rc = rimR - rimDepth; rc <= rearR + fClr + 2; rc += 0.5) {
+      const n = reach(rc);
+      if (n < need) {
+        need = n;
+        rC = rc;
+      }
+    }
+    const innerR = Math.ceil(need + 5);
+    const outerR = innerR + 14;
+    const bodyLength = 30;
+    // Where the twin stay crosses radius rC.
     const sAt = (() => {
-      // Point on the twin stay whose distance from the axle is rC.
       let lo = 0;
       let hi = twinLen;
       for (let i = 0; i < 40; i++) {
@@ -443,25 +486,49 @@ export function buildAssembly(d: Design, g: Geometry): Assembly {
       return lo;
     })();
     const onStay = pointAlong(ssTwin, sAt).p;
-    const radial = norm(sub(onStay, g.rearAxle));
+    const stayAng = angleFrom(g.rearAxle, onStay);
+    // Rotate rearward (increasing angle, since the stays lean forward of vertical) so the body clears the stays.
+    const offset = ssR + bodyLength / 2 + 4;
+    const lockAng = stayAng + deg(offset / rC);
+    const radial = v(Math.cos(rad(lockAng)), Math.sin(rad(lockAng)));
+    const tangent = v(-radial.y, radial.x); // rearward, along the direction of travel reversed
     const centre = add(g.rearAxle, mul(radial, rC));
-    const innerR = tyreW / 2 + 6;
-    const outerR = innerR + 14;
-    const stayY = ssYAt(sAt);
     const mk = (ds: number, sg: number): Mount => {
       const p = pointAlong(ssTwin, sAt + ds).p;
-      return { name: `seatstay lock boss ${sg > 0 ? 'left' : 'right'} ${ds > 0 ? 'upper' : 'lower'}`, at: p3(p, sg * (ssYAt(sAt + ds) + ssR)), note: 'M5; spacing to suit the chosen lock (verify)' };
+      return {
+        name: `seatstay lock boss ${sg > 0 ? 'left' : 'right'} ${ds > 0 ? 'upper' : 'lower'}`,
+        at: p3(p, sg * (ssYAt(sAt + ds) + ssR)),
+        note: 'M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify).',
+      };
     };
     ringLock = {
       centre,
       radial,
+      tangent,
       innerR,
       outerR,
       bodyArcDeg: 220,
-      bodyLength: 30,
+      bodyLength,
       mounts: [mk(-25, 1), mk(25, 1), mk(-25, -1), mk(25, -1)],
     };
-    check('Frame lock body to seatstays', stayY - ssR - outerR, 3);
+    check('Ring lock inside to tyre, rim and fender', innerR - need, 4);
+    // Lock body (front face) to the seatstay surface, measured along the direction of travel.
+    const stayToCentre = sub(centre, onStay);
+    check('Ring lock body to seatstays', Math.abs(dot(stayToCentre, tangent)) - bodyLength / 2 - ssR, 2);
+    if (rack) {
+      // Ring lock to rack tubes, in 3D: sample the ring's mean circle and measure to each rack tube.
+      const rMid = (innerR + outerR) / 2;
+      const ring: P3[] = [];
+      for (let k = 0; k < 72; k++) {
+        const t = (2 * Math.PI * k) / 72;
+        const q = add(centre, mul(radial, rMid * Math.cos(t)));
+        ring.push([q.x, rMid * Math.sin(t), q.y]);
+      }
+      let best = Infinity;
+      for (const tb of rack.tubes) for (let i = 1; i < tb.pts.length; i++) for (const q of ring) best = Math.min(best, segDist3(q, tb.pts[i - 1], tb.pts[i]));
+      check('Ring lock to rear rack', best - (outerR - innerR) / 2 - rack.tubeOD / 2, 5);
+    }
+    check('Ring lock shackle above hub flange', rC - outerR - numOf(d, 'hubFlangeRear') / 2, 40);
   }
 
   // ------------------------------------------------------------- carrier block

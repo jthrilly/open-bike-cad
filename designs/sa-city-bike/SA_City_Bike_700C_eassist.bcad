@@ -241,6 +241,9 @@
 <entry key="OpenBikeCAD.rackTubeOD">12.0</entry>
 <entry key="OpenBikeCAD.rackHeightAboveTyre">40.0</entry>
 <entry key="OpenBikeCAD.rackLoad">25.0</entry>
+<entry key="OpenBikeCAD.rackRearOverhang">200.0</entry>
+<entry key="OpenBikeCAD.shifter">twist</entry>
+<entry key="OpenBikeCAD.gripLength">130.0</entry>
 <entry key="OpenBikeCAD.chainguard">true</entry>
 <entry key="OpenBikeCAD.ringLock">true</entry>
 <entry key="OpenBikeCAD.carrierBlock">true</entry>

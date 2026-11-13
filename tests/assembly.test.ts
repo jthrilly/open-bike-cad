@@ -26,6 +26,33 @@ describe('accessory assembly', () => {
     expect(f.stays[0].from[0]).toBeLessThan(g.frontAxle.x);
     expect(f.stays[0].to[0]).toBeLessThan(f.stays[0].from[0]);
   });
+  it('sizes the ring lock to enclose the tyre, rim and fender, and sits it behind the seatstays', () => {
+    const d = city();
+    const g = solve(d);
+    const a = buildAssembly(d, g);
+    const l = a.ringLock!;
+    const rC = Math.hypot(l.centre.x - g.rearAxle.x, l.centre.y - g.rearAxle.y);
+    // Inner edge below the rim's inner edge (shackle through the spokes) and above the fender top.
+    expect(rC - l.innerR).toBeLessThan(g.rearRimR - Number(d.rimDepth));
+    expect(rC + l.innerR).toBeGreaterThan(g.rearWheelR + Number(d.fenderClearance) + 2);
+    for (const what of ['Ring lock inside to tyre, rim and fender', 'Ring lock body to seatstays', 'Ring lock to rear rack']) {
+      expect(a.clearances.find((c) => c.what === what)?.ok).toBe(true);
+    }
+  });
+  it('extends the rack platform the set distance behind the rear axle', () => {
+    const d = { ...city(), rackRearOverhang: 200 };
+    const g = solve(d);
+    expect(g.rearAxle.x - buildAssembly(d, g).rack!.backX).toBeCloseTo(200, 5);
+  });
+  it('exports grips, brake levers and a twist shifter for flat bars', () => {
+    const d = { ...city(), barType: 'flat', barWidth: 600, shifter: 'twist' };
+    const ck = geometry3d(d, solve(d)).cockpit as any;
+    expect(ck.grips).toHaveLength(2);
+    expect(Math.abs(ck.grips[0].from[1])).toBe(300);
+    expect(ck.brake_levers.map((b: any) => b.brake)).toEqual(['rear', 'front']);
+    expect(ck.shifter.side).toBe('right');
+    expect(ck.shifter.from[1]).toBeLessThan(0);
+  });
   it('builds a chainguard on the drive side, above the upper chain run', () => {
     const d = city();
     const g = solve(d);

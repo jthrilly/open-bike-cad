@@ -420,6 +420,12 @@ export const PARAMS: ParamDef[] = [
     ['flat', 'Flat-bar lever'],
     ['none', 'None'],
   ]),
+  en('shifter', 'Gear shifter', 'cockpit', 'none', [
+    ['none', 'None / integrated in lever'],
+    ['trigger', 'Trigger, under the bar'],
+    ['twist', 'Twist grip'],
+  ], { showIf: (d) => d.barType !== 'drop' }),
+  num('gripLength', 'Grip length', 'cockpit', 130, { showIf: (d) => d.barType !== 'drop' }),
 
   // ---------------------------------------------------------------- saddle
   num('saddleHeight', 'Saddle height (BB to top, along ST)', 'saddle', 720, { bcad: ['Saddle height'] }),
@@ -463,6 +469,7 @@ export const PARAMS: ParamDef[] = [
   num('rackHeightAboveTyre', 'Rack platform above tyre', 'accessories', 40, { help: 'Height of the rack platform centreline above the top of the rear tyre.', showIf: (d) => d.rearRack === true }),
   num('rackLoad', 'Rack load rating', 'accessories', 25, { unit: 'kg', showIf: (d) => d.rearRack === true }),
   bool('chainguard', 'Chainguard', 'accessories', false),
+  num('rackRearOverhang', 'Rack platform behind rear axle', 'accessories', 120, { help: 'How far the back of the rack platform reaches behind the rear axle.', showIf: (d) => d.rearRack === true }),
   bool('ringLock', 'Frame (ring) lock on seatstays', 'accessories', false),
   bool('carrierBlock', 'Front carrier block on head tube', 'accessories', false, { help: 'Brompton-style: a brazed-on mounting block with two M5 holes 26 mm apart on the front of the head tube, and a bolt-on carrier block that a luggage frame clips onto. The load does not steer.' }),
   bool('blockBattery', 'E-assist battery cradle on carrier block', 'accessories', false, {

@@ -14,7 +14,61 @@ const R3 = (p: P3): P3 => [r1(p[0]), r1(p[1]), r1(p[2])];
 const R3s = (ps: P3[]) => ps.map(R3);
 const V = (p: Vec) => [r1(p.x), r1(p.y)];
 
-export const GEOMETRY_3D_VERSION = 2;
+export const GEOMETRY_3D_VERSION = 3;
+
+/**
+ * Bar, grips, brake levers and shifter as explicit 3D parts (flat-type bars).
+ * Order from each bar end inward: grip, then (right side, twist shifter) the
+ * shifter, then the brake lever clamp; a trigger shifter sits just inboard of
+ * the right brake lever, under the bar.
+ */
+function cockpitParts(d: Design, g: Geometry) {
+  if (d.barType === 'drop' || d.barType === 'aero' || d.barType === 'bullhorn') return {};
+  const w = numOf(d, 'barWidth');
+  const c = g.barClamp;
+  const h = g.hands;
+  const at = (y: number): P3 => {
+    // Clamp section (|y| <= 40) at the clamp; then a straight run to the bar end at the hand position.
+    const t = Math.max(0, Math.min(1, (Math.abs(y) - 40) / (w / 2 - 40)));
+    return [c.x + (h.x - c.x) * t, y, c.y + (h.y - c.y) * t];
+  };
+  const gripLen = numOf(d, 'gripLength');
+  const shifter = String(d.shifter);
+  const twistW = 60;
+  const sides = ([1, -1] as const).map((sg) => {
+    const end = w / 2;
+    const gripLenSide = sg < 0 && shifter === 'twist' ? Math.max(70, gripLen - twistW) : gripLen;
+    const gripIn = end - gripLenSide;
+    const twistIn = sg < 0 && shifter === 'twist' ? gripIn - twistW : gripIn;
+    const leverY = twistIn - 12; // centre of the 20 mm lever clamp band
+    const clamp = at(sg * leverY);
+    // Lever blade: pivot just ahead of the bar, blade runs outward in front of the grip, slightly below it.
+    const pivot: P3 = [clamp[0] + 28, sg * leverY, clamp[2] - 4];
+    const tip: P3 = [clamp[0] + 32, sg * (end - 25), clamp[2] - 22];
+    return { sg, end, gripIn, twistIn, leverY, clamp, pivot, tip };
+  });
+  const Rt = sides[1];
+  return {
+    bar_centreline: R3s([at(w / 2), at(40), at(0), at(-40), at(-w / 2)]),
+    bar_grip_dia: 22.2,
+    grips: sides.map((s) => ({ side: s.sg > 0 ? 'left' : 'right', from: R3(at(s.sg * s.end)), to: R3(at(s.sg * s.gripIn)), od: 32 })),
+    brake_levers: sides.map((s) => ({
+      side: s.sg > 0 ? 'left' : 'right',
+      brake: s.sg > 0 ? 'rear' : 'front', // right-hand front brake, as usual in South Africa and the UK
+      clamp_centre: R3(s.clamp),
+      clamp_width: 20,
+      pivot: R3(s.pivot),
+      blade_tip: R3(s.tip),
+      note: 'Flat-bar V-brake lever (long pull). Blade runs from pivot to blade_tip, in front of the grip.',
+    })),
+    shifter:
+      shifter === 'twist'
+        ? { type: 'twist grip (e.g. Shimano Revoshift for Nexus)', side: 'right', from: R3(at(-Rt.gripIn)), to: R3(at(-Rt.twistIn)), od: 36 }
+        : shifter === 'trigger'
+          ? { type: 'trigger, under the bar', side: 'right', clamp_centre: R3(at(-(Rt.leverY - 25))), pod_centre: R3([at(-(Rt.leverY - 25))[0] - 10, -(Rt.leverY - 25), at(-(Rt.leverY - 25))[2] - 25]) }
+          : null,
+  };
+}
 
 export function geometry3d(d: Design, g: Geometry) {
   const a = buildAssembly(d, g);
@@ -119,6 +173,7 @@ export function geometry3d(d: Design, g: Geometry) {
       bar_clamp: R3(p3(g.barClamp)),
       bar: { type: String(d.barType), width: numOf(d, 'barWidth'), clamp_dia: numOf(d, 'barDia') },
       grips_at: R3(p3(g.hands)),
+      ...cockpitParts(d, g),
     },
     saddle: {
       seatpost_dia: numOf(d, 'seatpostDia'),
@@ -160,9 +215,10 @@ export function geometry3d(d: Design, g: Geometry) {
             radial_xz: V(a.ringLock.radial),
             inner_radius: r1(a.ringLock.innerR),
             outer_radius: r1(a.ringLock.outerR),
+            tangent_xz: V(a.ringLock.tangent),
             body_arc_deg: a.ringLock.bodyArcDeg,
             body_length: a.ringLock.bodyLength,
-            note: "A U-shaped body around the tyre. Its arc lies in the plane spanned by the lateral axis (y) and radial_xz, centred on 'centre', covering body_arc_deg centred on the outward radial direction; the shackle closes the rest of the circle through the spokes. body_length is its thickness along the wheel's direction of travel.",
+            note: "A ring in the plane spanned by the lateral axis (y) and radial_xz, centred on 'centre'; tangent_xz is the ring's normal. inner_radius encloses the tyre, rim and fender cross-section with clearance (see clearances), so nothing passes through the ring. The body covers body_arc_deg centred on the outward radial direction; a round shackle (about 10 mm) closes the rest of the circle through the spokes, below the rim. body_length is the body's thickness along tangent_xz. The body sits just behind the seatstays and bolts to the stay bosses with short brackets.",
             mounts: a.ringLock.mounts.map((m) => ({ ...m, at: R3(m.at) })),
           }
         : null,

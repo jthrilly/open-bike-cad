@@ -1,6 +1,6 @@
 {
  "format": "open-bike-cad 3D geometry",
- "version": 2,
+ "version": 3,
  "name": "SA City Bike 24\" (kids)",
  "size": "Riders ~125-150 cm",
  "material": "Mild / high-tensile ERW steel, fillet brazed (bronze)",
@@ -112,8 +112,23 @@
    "ok": true
   },
   {
-   "what": "Frame lock body to seatstays",
-   "mm": 8.7,
+   "what": "Ring lock inside to tyre, rim and fender",
+   "mm": 5.4,
+   "ok": true
+  },
+  {
+   "what": "Ring lock body to seatstays",
+   "mm": 4,
+   "ok": true
+  },
+  {
+   "what": "Ring lock to rear rack",
+   "mm": 13.6,
+   "ok": true
+  },
+  {
+   "what": "Ring lock shackle above hub flange",
+   "mm": 164.5,
    "ok": true
   },
   {
@@ -682,7 +697,124 @@
    328.2,
    0,
    598.7
-  ]
+  ],
+  "bar_centreline": [
+   [
+    328.2,
+    260,
+    598.7
+   ],
+   [
+    328.2,
+    40,
+    598.7
+   ],
+   [
+    328.2,
+    0,
+    598.7
+   ],
+   [
+    328.2,
+    -40,
+    598.7
+   ],
+   [
+    328.2,
+    -260,
+    598.7
+   ]
+  ],
+  "bar_grip_dia": 22.2,
+  "grips": [
+   {
+    "side": "left",
+    "from": [
+     328.2,
+     260,
+     598.7
+    ],
+    "to": [
+     328.2,
+     150,
+     598.7
+    ],
+    "od": 32
+   },
+   {
+    "side": "right",
+    "from": [
+     328.2,
+     -260,
+     598.7
+    ],
+    "to": [
+     328.2,
+     -190,
+     598.7
+    ],
+    "od": 32
+   }
+  ],
+  "brake_levers": [
+   {
+    "side": "left",
+    "brake": "rear",
+    "clamp_centre": [
+     328.2,
+     138,
+     598.7
+    ],
+    "clamp_width": 20,
+    "pivot": [
+     356.2,
+     138,
+     594.7
+    ],
+    "blade_tip": [
+     360.2,
+     235,
+     576.7
+    ],
+    "note": "Flat-bar V-brake lever (long pull). Blade runs from pivot to blade_tip, in front of the grip."
+   },
+   {
+    "side": "right",
+    "brake": "front",
+    "clamp_centre": [
+     328.2,
+     -118,
+     598.7
+    ],
+    "clamp_width": 20,
+    "pivot": [
+     356.2,
+     -118,
+     594.7
+    ],
+    "blade_tip": [
+     360.2,
+     -235,
+     576.7
+    ],
+    "note": "Flat-bar V-brake lever (long pull). Blade runs from pivot to blade_tip, in front of the grip."
+   }
+  ],
+  "shifter": {
+   "type": "twist grip (e.g. Shimano Revoshift for Nexus)",
+   "side": "right",
+   "from": [
+    328.2,
+    -190,
+    598.7
+   ],
+   "to": [
+    328.2,
+    -130,
+    598.7
+   ],
+   "od": 36
+  }
  },
  "saddle": {
   "seatpost_dia": 30.9,
@@ -847,7 +979,7 @@
   "rear_rack": {
    "platform_z": 383.5,
    "front_x": -231.1,
-   "back_x": -498.1,
+   "back_x": -558,
    "half_width": 83,
    "tube_od": 12,
    "load_kg": 25,
@@ -861,7 +993,7 @@
        383.5
       ],
       [
-       -498.1,
+       -558,
        83,
        383.5
       ]
@@ -876,7 +1008,7 @@
        33.3
       ],
       [
-       -478.1,
+       -538,
        83,
        383.5
       ]
@@ -921,7 +1053,7 @@
        383.5
       ],
       [
-       -498.1,
+       -558,
        -83,
        383.5
       ]
@@ -936,7 +1068,7 @@
        33.3
       ],
       [
-       -478.1,
+       -538,
        -83,
        383.5
       ]
@@ -991,12 +1123,12 @@
      "name": "cross bar 2",
      "pts": [
       [
-       -320.1,
+       -340,
        83,
        383.5
       ],
       [
-       -320.1,
+       -340,
        -83,
        383.5
       ]
@@ -1006,12 +1138,12 @@
      "name": "cross bar 3",
      "pts": [
       [
-       -409.1,
+       -449,
        83,
        383.5
       ],
       [
-       -409.1,
+       -449,
        -83,
        383.5
       ]
@@ -1021,12 +1153,12 @@
      "name": "cross bar 4",
      "pts": [
       [
-       -498.1,
+       -558,
        83,
        383.5
       ],
       [
-       -498.1,
+       -558,
        -83,
        383.5
       ]
@@ -1271,55 +1403,59 @@
   },
   "ring_lock": {
    "centre": [
-    -177.5,
+    -192.2,
     0,
-    210.1
+    232.8
    ],
    "radial_xz": [
-    0.8,
-    0.6
+    0.7,
+    0.7
    ],
-   "inner_radius": 31,
-   "outer_radius": 45,
+   "inner_radius": 56,
+   "outer_radius": 70,
+   "tangent_xz": [
+    -0.7,
+    0.7
+   ],
    "body_arc_deg": 220,
    "body_length": 30,
-   "note": "A U-shaped body around the tyre. Its arc lies in the plane spanned by the lateral axis (y) and radial_xz, centred on 'centre', covering body_arc_deg centred on the outward radial direction; the shackle closes the rest of the circle through the spokes. body_length is its thickness along the wheel's direction of travel.",
+   "note": "A ring in the plane spanned by the lateral axis (y) and radial_xz, centred on 'centre'; tangent_xz is the ring's normal. inner_radius encloses the tyre, rim and fender cross-section with clearance (see clearances), so nothing passes through the ring. The body covers body_arc_deg centred on the outward radial direction; a round shackle (about 10 mm) closes the rest of the circle through the spokes, below the rim. body_length is the body's thickness along tangent_xz. The body sits just behind the seatstays and bolts to the stay bosses with short brackets.",
    "mounts": [
     {
      "name": "seatstay lock boss left lower",
      "at": [
-      -197.3,
-      70.4,
-      194.8
+      -194.5,
+      70.3,
+      197
      ],
-     "note": "M5; spacing to suit the chosen lock (verify)"
+     "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
     },
     {
      "name": "seatstay lock boss left upper",
      "at": [
-      -157.7,
+      -154.9,
       69,
-      225.4
+      227.5
      ],
-     "note": "M5; spacing to suit the chosen lock (verify)"
+     "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
     },
     {
      "name": "seatstay lock boss right lower",
      "at": [
-      -197.3,
-      -70.4,
-      194.8
+      -194.5,
+      -70.3,
+      197
      ],
-     "note": "M5; spacing to suit the chosen lock (verify)"
+     "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
     },
     {
      "name": "seatstay lock boss right upper",
      "at": [
-      -157.7,
+      -154.9,
       -69,
-      225.4
+      227.5
      ],
-     "note": "M5; spacing to suit the chosen lock (verify)"
+     "note": "M5 boss on the rear face of the stay; a bracket runs back to the lock body. Spacing to suit the chosen lock (verify)."
     }
    ]
   },
@@ -1369,6 +1505,7 @@
    },
    "note": "Brompton-style. A steel mounting block is brazed to the front of the head tube with two M5 threaded holes 26 mm apart along the head tube (Brompton fixes its block with 2 x M5x16 socket head screws at 4 Nm, data sheet ds-fcba). The carrier block is a box about 65 deep x 60 wide x 60 high (Brompton ColourLab block listing; units assumed mm) bolted to it, with a latch the luggage frame clips onto. Brompton rate it at 10 kg. Hole spacing comes from a third-party block listing: measure a real block before brazing."
   },
+  "e_assist": null,
   "kickstand": {
    "plate": {
     "centre": [

@@ -5,7 +5,7 @@
 import React from 'react';
 import { Design, numOf, parseTeeth } from '../model/schema';
 import { Geometry } from '../geometry/solve';
-import { Vec, v, add, sub, mul, norm, perp, len, dist, rad, dirDeg, angleOf, lerp, rot } from '../geometry/vec';
+import { Vec, v, add, sub, mul, norm, perp, len, dist, rad, dirDeg, angleOf, lerp, rot, dot } from '../geometry/vec';
 import { tubeOutline, svgPath, sx, sy, arcPts, pointAlong, orientedRect, polyLength, subPolyline } from '../geometry/shapes';
 import { poseRider } from '../fit/rider';
 import { DimensionLayer } from './DimensionLayer';
@@ -298,13 +298,25 @@ function RearRack({ asm, outline }: { asm: Assembly; outline: string }) {
 
 function RingLockSide({ asm, outline, sw }: { asm: Assembly; outline: string; sw: number }) {
   const l = asm.ringLock!;
-  const t = v(-l.radial.y, l.radial.x);
-  // The U body seen from the side: it spans from just inside the tyre centre out past the tread.
-  const a = add(l.centre, mul(l.radial, -l.outerR * 0.35));
+  const t = l.tangent;
+  // Seen from the side the ring is edge-on: the body spans from below the ring centre out past the fender,
+  // and the shackle closes the ring through the spokes below the rim.
+  const a = add(l.centre, mul(l.radial, -l.outerR * 0.34));
   const b = add(l.centre, mul(l.radial, l.outerR));
   const h = l.bodyLength / 2;
   const pts = [add(a, mul(t, h)), add(b, mul(t, h)), add(b, mul(t, -h)), add(a, mul(t, -h))];
-  return <path d={svgPath(pts)} fill="#2b2f36" stroke={outline} strokeWidth={sw} />;
+  const shackleEnd = add(l.centre, mul(l.radial, -(l.innerR + l.outerR) / 2));
+  const front = (p: Vec) => add(l.centre, add(mul(l.radial, dot(sub(p, l.centre), l.radial)), mul(t, -h)));
+  const brackets = l.mounts.filter((m) => m.at[1] > 0).map((m) => side(m.at));
+  return (
+    <g>
+      <path d={svgPath([a, shackleEnd], false)} stroke="#8a9099" strokeWidth={10} strokeLinecap="round" fill="none" />
+      {brackets.map((p, i) => (
+        <path key={i} d={svgPath([p, front(p)], false)} stroke="#2b2f36" strokeWidth={4} fill="none" />
+      ))}
+      <path d={svgPath(pts)} fill="#2b2f36" stroke={outline} strokeWidth={sw} />
+    </g>
+  );
 }
 
 function KickstandSide({ asm, outline, sw }: { asm: Assembly; outline: string; sw: number }) {

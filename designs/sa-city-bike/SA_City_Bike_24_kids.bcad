@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
-<comment>Created by Open Bike CAD on Fri Nov 13 2026 16:40:24 GMT+0000 (Coordinated Universal Time)</comment>
+<comment>Created by Open Bike CAD on Fri Nov 13 2026 17:05:23 GMT+0000 (Coordinated Universal Time)</comment>
 <entry key="Head angle">69.0</entry>
 <entry key="Seat angle">71.0</entry>
 <entry key="DISCONTINUOUS">false</entry>
@@ -213,6 +213,8 @@
 <entry key="OpenBikeCAD.barRoll">0.0</entry>
 <entry key="OpenBikeCAD.barDia">31.8</entry>
 <entry key="OpenBikeCAD.leverStyle">flat</entry>
+<entry key="OpenBikeCAD.shifter">twist</entry>
+<entry key="OpenBikeCAD.gripLength">110.0</entry>
 <entry key="OpenBikeCAD.saddleHeight">560.0</entry>
 <entry key="OpenBikeCAD.seatpostSetback">10.0</entry>
 <entry key="OpenBikeCAD.saddleSetback">0.0</entry>
@@ -242,8 +244,21 @@
 <entry key="OpenBikeCAD.rackHeightAboveTyre">40.0</entry>
 <entry key="OpenBikeCAD.rackLoad">25.0</entry>
 <entry key="OpenBikeCAD.chainguard">true</entry>
+<entry key="OpenBikeCAD.rackRearOverhang">160.0</entry>
 <entry key="OpenBikeCAD.ringLock">true</entry>
 <entry key="OpenBikeCAD.carrierBlock">true</entry>
+<entry key="OpenBikeCAD.blockBattery">false</entry>
+<entry key="OpenBikeCAD.blockBatteryHeight">200.0</entry>
+<entry key="OpenBikeCAD.blockBatteryDepth">85.0</entry>
+<entry key="OpenBikeCAD.blockBatteryWidth">110.0</entry>
+<entry key="OpenBikeCAD.blockBatteryLift">30.0</entry>
+<entry key="OpenBikeCAD.blockBatteryWh">360.0</entry>
+<entry key="OpenBikeCAD.blockBatteryKg">2.3</entry>
+<entry key="OpenBikeCAD.frontHubMotor">false</entry>
+<entry key="OpenBikeCAD.motorShellDia">130.0</entry>
+<entry key="OpenBikeCAD.motorShellWidth">80.0</entry>
+<entry key="OpenBikeCAD.motorPower">250.0</entry>
+<entry key="OpenBikeCAD.pasSensor">cadence</entry>
 <entry key="OpenBikeCAD.frontRack">false</entry>
 <entry key="OpenBikeCAD.pump">false</entry>
 <entry key="OpenBikeCAD.cableGuides">true</entry>
