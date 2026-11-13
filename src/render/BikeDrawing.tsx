@@ -179,6 +179,8 @@ export function BikeDrawing({ d, g, ghost, onPick }: Props) {
       {showComp && d.battery === true && <Battery d={d} dtPts={dtPts} outline={outline} sw={sw} />}
       {showComp && d.pump === true && <Pump g={g} outline={outline} sw={sw} />}
 
+      {showComp && asm.eAssist?.motor && <HubMotorSide asm={asm} outline={outline} sw={sw} />}
+
       {/* Fork */}
       <g {...pick('fork')}>
         <Fork d={d} g={g} outline={outline} fill={fillFork} sw={sw} />
@@ -210,6 +212,7 @@ export function BikeDrawing({ d, g, ghost, onPick }: Props) {
         </g>
       )}
       {showComp && asm.carrierBlock && <CarrierBlockSide asm={asm} outline={outline} sw={sw} />}
+      {showComp && asm.eAssist && <EAssistSide asm={asm} outline={outline} sw={sw} />}
 
       {/* Centrelines */}
       {d.showCentrelines !== false && !ghost && <Centrelines d={d} g={g} pts={[ttPts, dtPts, stPts, csPts, ssPts]} />}
@@ -311,6 +314,47 @@ function KickstandSide({ asm, outline, sw }: { asm: Assembly; outline: string; s
     <g>
       <path d={svgPath(orientedRect(v(c.x - k.plate.length / 2, c.y), v(1, 0), k.plate.length, 8))} fill="#2b2f36" stroke={outline} strokeWidth={sw * 0.7} />
       <path d={svgPath([side(k.pivot), side(k.feet[0])], false)} stroke="#2b2f36" strokeWidth={10} strokeLinecap="round" fill="none" />
+    </g>
+  );
+}
+
+function HubMotorSide({ asm, outline, sw }: { asm: Assembly; outline: string; sw: number }) {
+  const m = asm.eAssist!.motor!;
+  const c = side(m.axle);
+  return (
+    <g>
+      <circle cx={sx(c)} cy={sy(c)} r={m.shellDia / 2} fill="#2b2f36" stroke={outline} strokeWidth={sw} />
+      <circle cx={sx(c)} cy={sy(c)} r={m.shellDia / 2 - 12} fill="none" stroke="#8a9099" strokeWidth={sw * 0.7} />
+      <circle cx={sx(c)} cy={sy(c)} r={9} fill="#8a9099" stroke={outline} strokeWidth={sw * 0.7} />
+    </g>
+  );
+}
+
+function EAssistSide({ asm, outline, sw }: { asm: Assembly; outline: string; sw: number }) {
+  const e = asm.eAssist!;
+  const f = e.forward;
+  const up = e.up;
+  const box = (b: { centre: [number, number, number]; depth: number; height: number }) => {
+    const c = side(b.centre);
+    const hd = mul(f, b.depth / 2);
+    const hh = mul(up, b.height / 2);
+    return [add(add(c, hd), hh), add(sub(c, hd), hh), sub(sub(c, hd), hh), sub(add(c, hd), hh)];
+  };
+  const b = e.battery;
+  return (
+    <g>
+      {e.wiring.map((w, i) => (
+        <path key={i} d={svgPath(w.pts.map(side), false)} fill="none" stroke="#111" strokeWidth={Math.max(w.od * 0.6, sw)} strokeLinecap="round" strokeLinejoin="round" opacity={0.75} />
+      ))}
+      {b && (
+        <g>
+          <path d={svgPath(box(b.cradle))} fill="#8a9099" fillOpacity={0.35} stroke={outline} strokeWidth={sw * 0.8} />
+          <path d={svgPath(box(b.base))} fill="#5c636e" stroke={outline} strokeWidth={sw * 0.7} />
+          <path d={svgPath(box(b.controller))} fill="#5c636e" stroke={outline} strokeWidth={sw * 0.7} />
+          <path d={svgPath(box(b.pack))} fill="#3d4450" stroke={outline} strokeWidth={sw} />
+          <circle cx={sx(side(b.headlight))} cy={sy(side(b.headlight))} r={14} fill="#f2e6a0" stroke={outline} strokeWidth={sw * 0.7} />
+        </g>
+      )}
     </g>
   );
 }

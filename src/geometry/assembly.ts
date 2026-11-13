@@ -9,7 +9,7 @@
 import { Design, numOf, parseTeeth } from '../model/schema';
 import { Geometry } from './solve';
 import { Vec, v, add, sub, mul, norm, len, dist, rad, deg, lerp, dot } from './vec';
-import { frameTubes } from './tubes';
+import { frameTubes, forkBladePts } from './tubes';
 import { pointAlong, polyLength, arcPts } from './shapes';
 
 export type P3 = [number, number, number];
@@ -73,6 +73,40 @@ export interface CarrierBlock {
   forward: Vec;
   up: Vec;
 }
+export interface Box3 {
+  /** Centre; the box is aligned with forward (side-view), up (side-view) and the lateral y axis. */
+  centre: P3;
+  depth: number;
+  height: number;
+  width: number;
+}
+export interface EAssist {
+  /** Side-view unit vectors the battery boxes are aligned with (same as the carrier block). */
+  forward: Vec;
+  up: Vec;
+  battery?: {
+    /** Steel cradle: back plate bolted to the carrier block's front face, side cheeks and a floor. */
+    cradle: Box3 & { plate: number };
+    /** Slide-in base with key lock and contacts, fixed in the cradle. */
+    base: Box3;
+    pack: Box3 & { wh: number; kg: number; volts: number };
+    controller: Box3;
+    keyLock: P3;
+    chargePort: P3;
+    headlight: P3;
+    /** Direction the pack lifts out (side view). */
+    removal: Vec;
+    blockLoadKg: number;
+    blockRatingKg: number;
+  };
+  motor?: { axle: P3; shellDia: number; shellWidth: number; power: number; cableSide: 'left' | 'right'; torqueWashers: P3[] };
+  sensor?: { type: string; at: P3 };
+  display?: { at: P3 };
+  wiring: { name: string; od: number; pts: P3[]; note?: string }[];
+  /** Mass added over the non-assist bike, and the share of it carried by the front wheel. */
+  addedKg: number;
+  frontShare: number;
+}
 export interface Kickstand {
   plate: { centre: P3; length: number; width: number };
   pivot: P3;
@@ -98,6 +132,7 @@ export interface Assembly {
   chainguard?: Chainguard;
   ringLock?: RingLock;
   carrierBlock?: CarrierBlock;
+  eAssist?: EAssist;
   kickstand?: Kickstand;
   clearances: Clearance[];
 }
@@ -112,6 +147,8 @@ function lateralRun(pts: Vec[], y0: number, y1: number): P3[] {
     return p3(p, y0 + (y1 - y0) * t);
   });
 }
+
+const R3n = (p: P3): P3 => [Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10, Math.round(p[2] * 10) / 10];
 
 export function chainringRadius(teeth: number) {
   return 12.7 / (2 * Math.sin(Math.PI / teeth));
@@ -449,6 +486,149 @@ export function buildAssembly(d: Design, g: Geometry): Assembly {
     check('Carrier block to front tyre/fender', fr, 15);
   }
 
+
+  // ------------------------------------------------------------- e-assist
+  let eAssist: EAssist | undefined;
+  const wantBatt = d.blockBattery === true && carrierBlock !== undefined;
+  const wantMotor = d.frontHubMotor === true;
+  if (wantBatt || wantMotor) {
+    const fwd = g.steerNormal;
+    const up = mul(g.steerDir, -1);
+    const wiring: EAssist['wiring'] = [];
+    let battery: EAssist['battery'];
+    // Front wheel + fender, swept through steering lock, as a cloud of 3D points.
+    const steerAxisPt = g.htTop;
+    const k: P3 = [g.steerDir.x, 0, g.steerDir.y];
+    const rotAboutAxis = (p: P3, th: number): P3 => {
+      const vv: P3 = [p[0] - steerAxisPt.x, p[1], p[2] - steerAxisPt.y];
+      const c = Math.cos(th);
+      const sn = Math.sin(th);
+      const kd = k[0] * vv[0] + k[1] * vv[1] + k[2] * vv[2];
+      const cr: P3 = [k[1] * vv[2] - k[2] * vv[1], k[2] * vv[0] - k[0] * vv[2], k[0] * vv[1] - k[1] * vv[0]];
+      return [steerAxisPt.x + vv[0] * c + cr[0] * sn + k[0] * kd * (1 - c), vv[1] * c + cr[1] * sn + k[1] * kd * (1 - c), steerAxisPt.y + vv[2] * c + cr[2] * sn + k[2] * kd * (1 - c)];
+    };
+    const frontR = g.frontWheelR + (d.fenders === true ? numOf(d, 'fenderClearance') + 3 : 0);
+    const halfW = (d.fenders === true ? numOf(d, 'frontTyre') + 18 : numOf(d, 'frontTyre')) / 2;
+    const wheelPts: P3[] = [];
+    for (let a = 20; a <= 200; a += 2)
+      for (let yy = -halfW; yy <= halfW + 0.01; yy += halfW / 4) wheelPts.push([g.frontAxle.x + frontR * Math.cos(rad(a)), yy, g.frontAxle.y + frontR * Math.sin(rad(a))]);
+    const swept: P3[] = [];
+    for (let t = -70; t <= 70; t += 5) for (const p of wheelPts) swept.push(rotAboutAxis(p, rad(t)));
+    // Handlebar (straight bar through the clamp, radius ~12) swept through the same lock.
+    const barW = numOf(d, 'barWidth') || 600;
+    const barPts: P3[] = [];
+    for (let yy = -barW / 2; yy <= barW / 2; yy += 10) barPts.push([g.barClamp.x, yy, g.barClamp.y]);
+    const barSwept: P3[] = [];
+    for (let t = -70; t <= 70; t += 5) for (const p of barPts) barSwept.push(rotAboutAxis(p, rad(t)));
+    const boxDist = (b: Box3, pts: P3[]) => {
+      let m = Infinity;
+      for (const p of pts) {
+        const rel = v(p[0] - b.centre[0], p[2] - b.centre[2]);
+        const ds = Math.max(Math.abs(dot(rel, fwd)) - b.depth / 2, 0);
+        const dh = Math.max(Math.abs(dot(rel, up)) - b.height / 2, 0);
+        const dw = Math.max(Math.abs(p[1] - b.centre[1]) - b.width / 2, 0);
+        m = Math.min(m, Math.hypot(ds, dh, dw));
+      }
+      return m;
+    };
+    const at = (base: Vec, f: number, u: number) => add(add(base, mul(fwd, f)), mul(up, u));
+
+    if (wantBatt) {
+      const cb = carrierBlock!;
+      const blkC = v(cb.block.centre[0], cb.block.centre[2]);
+      const face = at(blkC, cb.block.depth / 2, 0);
+      const plate = 4;
+      const baseT = 16;
+      const pd = numOf(d, 'blockBatteryDepth');
+      const ph = numOf(d, 'blockBatteryHeight');
+      const pw = numOf(d, 'blockBatteryWidth');
+      const lift = numOf(d, 'blockBatteryLift');
+      const packC = at(face, plate + baseT + pd / 2, lift);
+      const baseC = at(face, plate + baseT / 2, lift);
+      // Controller: a slim box tucked behind the cradle back plate, beside the carrier block (drive side), out of the tyre's sweep.
+      const ctrlH = 90;
+      const ctrlC = at(blkC, 5, 0);
+      const cradleBottom = lift - ph / 2 - 8;
+      const cradleTop = lift + ph / 2 - 40; // cheeks stop short so the pack lifts out
+      const cradleC = at(face, (plate + baseT + pd * 0.5) / 2, (cradleTop + cradleBottom) / 2);
+      const pack: Box3 = { centre: p3(packC), depth: pd, height: ph, width: pw };
+      const ctrl: Box3 = { centre: p3(ctrlC, -(cb.block.width / 2 + 17)), depth: 50, height: ctrlH, width: 30 };
+      const kg = numOf(d, 'blockBatteryKg');
+      battery = {
+        cradle: { centre: p3(cradleC), depth: plate + baseT + pd * 0.5, height: cradleTop - cradleBottom, width: pw + 8, plate },
+        base: { centre: p3(baseC), depth: baseT, height: ph, width: pw - 20 },
+        pack: { ...pack, wh: numOf(d, 'blockBatteryWh'), kg, volts: 36 },
+        controller: ctrl,
+        keyLock: p3(at(face, plate + baseT + pd * 0.5, lift - ph / 2 + 15), -(pw / 2 + 4)),
+        chargePort: p3(at(face, plate + baseT + pd * 0.6, lift + ph / 2 - 30), pw / 2 + 2),
+        headlight: p3(at(face, plate + baseT + pd + 10, lift - ph / 2 + 25)),
+        removal: up,
+        blockLoadKg: Math.round((kg + 0.9 + 0.4 + 0.2) * 10) / 10,
+        blockRatingKg: cb.block.loadKg,
+      };
+      check('Battery pack to front tyre/fender at full steering lock', boxDist(pack, swept), 25);
+      check('Motor controller to front tyre/fender at full steering lock', boxDist(ctrl, swept), 25);
+      check('Battery pack to handlebar at full steering lock', boxDist(pack, barSwept) - 12, 30);
+      check('Battery pack slid 50 mm up to unlock, to handlebar (bars straight)', boxDist({ ...pack, centre: p3(at(packC, 0, 50)) }, barPts) - 12, 15);
+    }
+
+    let motor: EAssist['motor'];
+    if (wantMotor) {
+      const fs = numOf(d, 'frontSpacing');
+      motor = {
+        axle: p3(g.frontAxle),
+        shellDia: numOf(d, 'motorShellDia'),
+        shellWidth: numOf(d, 'motorShellWidth'),
+        power: numOf(d, 'motorPower'),
+        cableSide: 'right',
+        torqueWashers: [p3(g.frontAxle, fs / 2 + 3), p3(g.frontAxle, -fs / 2 - 3)],
+      };
+      // Motor cable: out of the axle on the left, up the back of the left blade, then a steering loop to the controller.
+      const blade = forkBladePts(d, g);
+      const tipY = fs / 2 + 2.5;
+      const crownHalf = numOf(d, 'frontTyre') / 2 + (d.fenders === true ? numOf(d, 'fenderClearance') : 6) + numOf(d, 'forkBladeDia') / 2;
+      const bladeOff = numOf(d, 'forkBladeDia') / 2 + 4;
+      const run: P3[] = [p3(add(g.frontAxle, v(-12, 8)), -(tipY + 6))];
+      const bl = [...blade].reverse();
+      for (let i = 1; i < bl.length - 1; i += Math.max(1, Math.floor(bl.length / 6))) {
+        const tt = 1 - i / (bl.length - 1);
+        run.push(p3(add(bl[i], mul(fwd, -bladeOff)), -(crownHalf + (tipY - crownHalf) * tt + 4)));
+      }
+      const crownSide = add(blade[0], mul(fwd, -bladeOff));
+      run.push(p3(crownSide, -(crownHalf + 4)));
+      if (battery) {
+        const c = battery.controller.centre;
+        run.push([crownSide.x + 30, c[1] - 10, crownSide.y + 70]);
+        run.push([c[0], c[1], c[2] - battery.controller.height / 2]);
+      }
+      wiring.push({ name: 'motor cable (from controller to hub, right side)', od: 8, pts: run.map(R3n), note: 'Steering loop between head tube and fork crown: leave ~120 mm slack so the bars turn full lock without tugging. Clip to the back of the right blade with 3 brazed cable guides or P-clips; waterproof connector just below the crown.' });
+    }
+
+    let sensor: EAssist['sensor'];
+    let display: EAssist['display'];
+    if (wantMotor) {
+      sensor = { type: String(d.pasSensor || 'cadence'), at: p3(v(0, 0), 40) };
+      display = { at: p3(g.barClamp, 60) };
+      if (battery) {
+        const c = battery.controller.centre;
+        const { dtPts } = frameTubes(d, g);
+        const dtR = numOf(d, 'dtOD') / 2;
+        const dtRun = dtPts.filter((_, i) => i % Math.max(1, Math.floor(dtPts.length / 6)) === 0).map((p) => p3(p, dtR * 0.7 + 3));
+        wiring.push({ name: 'pedal sensor cable (BB to controller, along down tube)', od: 4, pts: [p3(v(-5, -10), 40), ...dtRun.slice(1), p3(add(g.htBottom, mul(fwd, 25)), 20), [c[0], c[1], c[2] - 20] as P3].map(R3n), note: 'Run under the left side of the down tube on the existing brazed cable guides; zip-tie to the brake housing.' });
+        wiring.push({ name: 'display / brake-sensor loom (bar to controller)', od: 6, pts: [p3(g.barClamp, 40), p3(at(g.stemPivot, 60, -10), 30), [c[0], c[1], c[2] + battery.controller.height / 2] as P3].map(R3n), note: 'Bundle with the brake and gear housings; same steering slack as the housings.' });
+      }
+    }
+
+    // Mass: battery + cradle/controller/loom on the frame, motor at the front axle (less a 0.45 kg normal hub).
+    const battKg = battery ? battery.blockLoadKg + 0.3 : 0;
+    const motorKg = wantMotor ? 2.4 - 0.45 : 0;
+    const added = battKg + motorKg;
+    const wb = g.frontAxle.x - g.rearAxle.x;
+    const battFront = battery ? (battery.pack.centre[0] - g.rearAxle.x) / wb : 0;
+    const frontKg = battKg * battFront + motorKg;
+    eAssist = { forward: fwd, up, battery, motor, sensor, display, wiring, addedKg: Math.round(added * 10) / 10, frontShare: added ? Math.round((frontKg / added) * 100) / 100 : 0 };
+  }
+
   // ------------------------------------------------------------- kickstand
   let kickstand: Kickstand | undefined;
   if (d.kickstand === true) {
@@ -463,7 +643,7 @@ export function buildAssembly(d: Design, g: Geometry): Assembly {
     };
   }
 
-  return { stays, fenders, rack, chainguard, ringLock, carrierBlock, kickstand, clearances };
+  return { stays, fenders, rack, chainguard, ringLock, carrierBlock, eAssist, kickstand, clearances };
 }
 
 export { arcPts };

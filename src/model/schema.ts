@@ -17,7 +17,7 @@ export interface ParamDef {
   group: GroupId;
   kind: ParamKind;
   default: ParamValue;
-  unit?: 'mm' | '°' | 'teeth' | 'kg' | '%' | 'count' | '';
+  unit?: 'mm' | '°' | 'teeth' | 'kg' | 'W' | 'Wh' | '%' | 'count' | '';
   min?: number;
   max?: number;
   step?: number;
@@ -465,6 +465,21 @@ export const PARAMS: ParamDef[] = [
   bool('chainguard', 'Chainguard', 'accessories', false),
   bool('ringLock', 'Frame (ring) lock on seatstays', 'accessories', false),
   bool('carrierBlock', 'Front carrier block on head tube', 'accessories', false, { help: 'Brompton-style: a brazed-on mounting block with two M5 holes 26 mm apart on the front of the head tube, and a bolt-on carrier block that a luggage frame clips onto. The load does not steer.' }),
+  bool('blockBattery', 'E-assist battery cradle on carrier block', 'accessories', false, {
+    help: 'A steel cradle bolted to the front of the carrier block holds a slide-in e-bike battery base (key lock, built-in contacts). The battery lifts out upward for charging. The motor controller sits in the cradle below the pack. Checked against the front tyre/fender at full steering lock and against the handlebar.',
+    showIf: (d) => d.carrierBlock === true,
+  }),
+  num('blockBatteryHeight', 'Battery pack height (along head tube)', 'accessories', 200, { showIf: (d) => d.blockBattery === true }),
+  num('blockBatteryDepth', 'Battery pack depth (forward)', 'accessories', 85, { showIf: (d) => d.blockBattery === true }),
+  num('blockBatteryWidth', 'Battery pack width', 'accessories', 110, { showIf: (d) => d.blockBattery === true }),
+  num('blockBatteryLift', 'Battery pack raised above block centre', 'accessories', 30, { help: 'Moves the pack up the head tube from the carrier block centre. Higher clears the front fender at full lock; lower clears the handlebar and cables.', showIf: (d) => d.blockBattery === true }),
+  num('blockBatteryWh', 'Battery capacity', 'accessories', 360, { unit: 'Wh', step: 10, showIf: (d) => d.blockBattery === true }),
+  num('blockBatteryKg', 'Battery mass', 'accessories', 2.3, { unit: 'kg', step: 0.1, showIf: (d) => d.blockBattery === true }),
+  bool('frontHubMotor', 'Front hub motor (e-assist)', 'accessories', false, { help: 'Geared front hub motor, 100 mm OLD, 10 mm axle with flats. Fork dropouts need 10 mm slots, 6 mm plate and anti-rotation (torque) washers on both sides.' }),
+  num('motorShellDia', 'Hub motor shell diameter', 'accessories', 130, { showIf: (d) => d.frontHubMotor === true }),
+  num('motorShellWidth', 'Hub motor shell width', 'accessories', 80, { showIf: (d) => d.frontHubMotor === true }),
+  num('motorPower', 'Motor rated power', 'accessories', 250, { unit: 'W', step: 10, showIf: (d) => d.frontHubMotor === true }),
+  en('pasSensor', 'Pedal assist sensor', 'accessories', 'cadence', [['cadence', 'Cadence (magnet disc at BB)'], ['torque', 'Torque-sensing BB cartridge']], { showIf: (d) => d.frontHubMotor === true }),
   bool('frontRack', 'Front rack', 'accessories', false),
   bool('pump', 'Frame pump', 'accessories', false),
   bool('cableGuides', 'Cable guides / ports', 'accessories', true),

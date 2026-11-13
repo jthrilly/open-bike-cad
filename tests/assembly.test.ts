@@ -61,3 +61,26 @@ describe('accessory assembly', () => {
     expect(cuts.find((c) => c.id === 'ssYoke')!.cc).toBeGreaterThan(120);
   });
 });
+
+describe('e-assist on the carrier block', () => {
+  const ebike = () => ({ ...city(), fenders: true, blockBattery: true, frontHubMotor: true });
+  it('places the battery pack ahead of the carrier block and clear of the steered front wheel and the bars', () => {
+    const d = ebike();
+    const g = solve(d);
+    const a = buildAssembly(d, g);
+    const b = a.eAssist!.battery!;
+    const off = (p: number[]) => (p[0] - g.htTop.x) * g.steerNormal.x + (p[2] - g.htTop.y) * g.steerNormal.y;
+    expect(off(b.pack.centre)).toBeGreaterThan(off(a.carrierBlock!.block.centre));
+    for (const c of a.clearances.filter((c) => /Battery|controller/.test(c.what))) expect(c.ok, c.what).toBe(true);
+    expect(b.blockLoadKg).toBeLessThan(b.blockRatingKg);
+  });
+  it('exports the hub motor, battery and wiring in the 3D geometry', () => {
+    const d = ebike();
+    const j = geometry3d(d, solve(d));
+    const e = j.accessories.e_assist!;
+    expect(e.battery!.pack.wh).toBe(360);
+    expect(e.motor!.power_w).toBe(250);
+    expect(e.wiring.length).toBe(3);
+    expect(j.wheels[1].hub).toHaveProperty('shell_dia', 130);
+  });
+});

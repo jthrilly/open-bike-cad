@@ -97,7 +97,10 @@ export function geometry3d(d: Design, g: Geometry) {
       outer_diameter: r1(2 * (w === 'rear' ? g.rearWheelR : g.frontWheelR)),
       rim_depth: numOf(d, 'rimDepth'),
       spokes: numOf(d, w === 'rear' ? 'spokesRear' : 'spokesFront'),
-      hub: { old: numOf(d, w === 'rear' ? 'rearSpacing' : 'frontSpacing'), flange_dia: numOf(d, w === 'rear' ? 'hubFlangeRear' : 'hubFlangeFront') },
+      hub:
+        w === 'front' && a.eAssist?.motor
+          ? { old: numOf(d, 'frontSpacing'), flange_dia: a.eAssist.motor.shellDia - 10, shell_dia: a.eAssist.motor.shellDia, shell_width: a.eAssist.motor.shellWidth, type: `geared hub motor, ${a.eAssist.motor.power} W` }
+          : { old: numOf(d, w === 'rear' ? 'rearSpacing' : 'frontSpacing'), flange_dia: numOf(d, w === 'rear' ? 'hubFlangeRear' : 'hubFlangeFront') },
     })),
     drivetrain: {
       crank_length: numOf(d, 'crankLength'),
@@ -171,6 +174,37 @@ export function geometry3d(d: Design, g: Geometry) {
             carrier_block: { ...a.carrierBlock.block, centre: R3(a.carrierBlock.block.centre) },
             note: 'Brompton-style. A steel mounting block is brazed to the front of the head tube with two M5 threaded holes 26 mm apart along the head tube (Brompton fixes its block with 2 x M5x16 socket head screws at 4 Nm, data sheet ds-fcba). The carrier block is a box about 65 deep x 60 wide x 60 high (Brompton ColourLab block listing; units assumed mm) bolted to it, with a latch the luggage frame clips onto. Brompton rate it at 10 kg. Hole spacing comes from a third-party block listing: measure a real block before brazing.',
           }
+        : null,
+      e_assist: a.eAssist
+        ? (() => {
+            const e = a.eAssist!;
+            const bx = (b: { centre: P3; depth: number; height: number; width: number }) => ({ centre: R3(b.centre), depth: r1(b.depth), height: r1(b.height), width: r1(b.width) });
+            return {
+              forward_xz: V(e.forward),
+              up_xz: V(e.up),
+              note: 'Boxes are aligned with forward_xz (depth), up_xz (height) and y (width), centred on centre. 36 V pedal-assist, 250 W, assist cut-off 25 km/h.',
+              battery: e.battery
+                ? {
+                    cradle: { ...bx(e.battery.cradle), plate: e.battery.cradle.plate, note: 'Steel cradle: back plate bolted to the carrier block front face, side cheeks and floor; cheeks stop 40 mm below the pack top so it lifts out.' },
+                    slide_base: { ...bx(e.battery.base), note: 'Slide-in battery base with key lock and contacts, bolted to the cradle back plate.' },
+                    pack: { ...bx(e.battery.pack), wh: e.battery.pack.wh, kg: e.battery.pack.kg, volts: e.battery.pack.volts },
+                    controller: bx(e.battery.controller),
+                    key_lock: R3(e.battery.keyLock),
+                    charge_port: R3(e.battery.chargePort),
+                    headlight: R3(e.battery.headlight),
+                    removal_xz: V(e.battery.removal),
+                    block_load_kg: e.battery.blockLoadKg,
+                    block_rating_kg: e.battery.blockRatingKg,
+                  }
+                : null,
+              motor: e.motor ? { axle: R3(e.motor.axle), shell_dia: e.motor.shellDia, shell_width: e.motor.shellWidth, power_w: e.motor.power, cable_side: e.motor.cableSide, torque_washers: R3s(e.motor.torqueWashers) } : null,
+              pedal_sensor: e.sensor ? { type: e.sensor.type, at: R3(e.sensor.at) } : null,
+              display: e.display ? { at: R3(e.display.at) } : null,
+              wiring: e.wiring,
+              added_mass_kg: e.addedKg,
+              added_mass_front_share: e.frontShare,
+            };
+          })()
         : null,
       kickstand: a.kickstand ? { plate: { ...a.kickstand.plate, centre: R3(a.kickstand.plate.centre) }, pivot: R3(a.kickstand.pivot), feet: R3s(a.kickstand.feet), type: 'two-leg centre stand' } : null,
     },
