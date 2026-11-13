@@ -708,17 +708,61 @@ def accessories(part, M, g, wheels, tubes):
         for foot in ks["feet"]:
             sweep(part("kickstand", M["black"]), [pivot + Vector((0, math.copysign(15, foot[1]), 0)), foot], 8, segs=12)
 
-    if acc.get("brakes") == "vbrake":
-        for vb in vbrakes(g, tubes, wheels):
-            for side in vb["arms"]:
-                sweep(part("brakes", M["alu"]), side["arm"], 0, segs=12, radii=[6.5, 6, 5, 4.5])
-                lathe(part("brake_pads", M["black"]), disc_profile(0, 7, 12), side["arm"][0], Y, 16)
-                b0 = side["arm"][0]
-                sweep(part("brake_cable", M["steel"]), [Vector((b0.x, b0.y * 0.75, b0.z)), b0], 4, segs=12)
-                pad, inward, tang = side["pad"], side["inward"], vb["tangent"]
-                box(part("brake_pads", M["black"]), pad, (8, abs(inward.y) * 1 + 10, 34), basis_from(vb["radial"], tang))
-            sweep(part("brake_cable", M["steel"]), vb["noodle"], 3.2, segs=10)
-            sweep(part("brake_cable", M["steel"]), [vb["noodle"][-1], vb["cable_end"]], 0.9, segs=6, caps=True)
+    br = acc.get("brakes")
+    if isinstance(br, dict):
+        for vb in vbrakes(g):
+            front_axle = Vector(wheels[vb["which"]]["axle"])
+            for bs in vb["bosses"]:
+                lathe(part("brake_bosses", M["fork"] if vb["which"] == "front" else M["stays"]), disc_profile(0, bs["od"] / 2, 6), Vector(bs["base"]).lerp(Vector(bs["tip"]), 0.1), (Vector(bs["tip"]) - Vector(bs["base"])).normalized(), 16)
+                sweep(part("brake_cable", M["steel"]), [bs["base"], bs["tip"]], 4, segs=12)
+            for arm in vb["arms"]:
+                pv, top = Vector(arm["pivot"]), Vector(arm["top"])
+                up = (top - pv).normalized()
+                sweep(part("brakes", M["alu"]), [pv - up * 12, pv + up * 30, top - up * 8, top + up * 4], 0, segs=12, radii=[7, 6, 5, 4.5])
+                lathe(part("brake_pads", M["black"]), disc_profile(0, 8, 10), pv, Y, 16)
+            for pd in vb["pads"]:
+                c, contact = Vector(pd["centre"]), Vector(pd["contact"])
+                radial = Vector((c.x - front_axle.x, 0, c.z - front_axle.z)).normalized()
+                tang = Y.cross(radial).normalized()
+                thick = abs(c.y - contact.y) * 2
+                box(part("brake_pads", M["black"]), c, (pd["length"] * 0.7, thick, pd["height"]), Matrix((tang, Y, radial)).transposed())
+                # pad post and holder out to the arm
+                arm = min(vb["arms"], key=lambda a: (Vector(a["pivot"]) - c).length)
+                pv, top = Vector(arm["pivot"]), Vector(arm["top"])
+                u = (top - pv).normalized()
+                on_arm = pv + u * max(0.0, (c - pv).dot(u))
+                on_arm.y = pv.y + (top.y - pv.y) * max(0.0, (c - pv).dot(u)) / (top - pv).length
+                sweep(part("brake_cable", M["steel"]), [c + Vector((0, math.copysign(thick / 2, c.y), 0)), on_arm], 3, segs=10)
+            nd = vb["noodle"]
+            n0, n1 = Vector(nd["from"]), Vector(nd["to"])
+            left_top = Vector(next(a["top"] for a in vb["arms"] if a["side"] == "left"))
+            noodle = catmull([n0, n0.lerp(left_top, 0.6) + (n0 - n1).normalized() * 3, n1], 8)
+            sweep(part("brake_cable", M["steel"]), noodle, 3.2, segs=10)
+            sweep(part("brake_cable", M["steel"]), [n1, vb["cable_clamp_right_arm"]], 0.9, segs=6)
+            lathe(part("brake_cable", M["steel"]), disc_profile(0, 4, 6), Vector(vb["cable_clamp_right_arm"]), Y, 12)
+        hb = br.get("hub_brake")
+        if hb:
+            uc = Vector(hb["unit_centre"])
+            r, w = hb["unit_dia"] / 2, hb["unit_width"]
+            sgn = 1 if uc.y > 0 else -1
+            lathe(part("hub_brake", M["chain"]), disc_profile(8, r * 0.75, w), uc, Y, 48)
+            for k in range(6):
+                lathe(part("hub_brake", M["chain"]), disc_profile(r * 0.75, r, 2), uc + Y * (-w / 2 + 2 + k * (w - 4) / 5), Y, 48)
+            ra = hb["reaction_arm"]
+            a0, a1 = Vector(ra["from"]), Vector(ra["to"])
+            along = a1 - a0
+            along.y = 0
+            L = along.length
+            along.normalize()
+            ym = (a0.y + a1.y) / 2
+            box(part("hub_brake", M["black"]), Vector(((a0.x + a1.x) / 2, ym, (a0.z + a1.z) / 2)), (L, 4, 14), Matrix((along, Y, along.cross(Y))).transposed())
+            cc = Vector(hb["chainstay_clamp"])
+            cs = tubes["chainstay left" if sgn > 0 else "chainstay right"]
+            c0, c1 = (Vector(p) for p in cs["centreline"])
+            cdir = (c1 - c0).normalized()
+            centre = c0 + cdir * (cc - c0).dot(cdir)
+            lathe(part("hub_brake", M["steel"]), disc_profile(cs["od"] / 2 - 0.5, cs["od"] / 2 + 1.5, 12), centre, cdir, 32)
+            sweep(part("hub_brake", M["steel"]), [centre + Vector((0, sgn * cs["od"] / 2, 0)), a1], 3, segs=10)
 
 
 def fork_dropout(part, M, fk, tip):
@@ -775,36 +819,9 @@ def fork_hardware(part, M, fk):
         lathe(part("cable_guides", M["steel"]), disc_profile(2.8, 4.5, 6), base + out * 7.5, bdir, 16)
 
 
-def vbrakes(g, tubes, wheels):
-    """V-brake bosses below the braking track on the fork blades and seatstays, arms rising past the tyre."""
-    out = []
-    mounts = []
-    if "blade_left" in g["fork"]:
-        mounts.append((wheels["front"], g["fork"]["blade_left"], g["fork"]["blade_od"]))
-    mounts.append((wheels["rear"], list(reversed(tubes["seatstay left"]["centreline"])), tubes["seatstay left"]["od"]))
-    for w, poly, od in mounts:
-        ax = Vector(w["axle"])
-        bsd = w["rim_bsd"] / 2
-        tyre_r = w["outer_diameter"] / 2
-        post, _ = point_at_distance(poly, ax, bsd - 28)
-        if post is None:
-            continue
-        radial = (Vector((post.x, 0, post.z)) - Vector((ax.x, 0, ax.z))).normalized()
-        tangent = Y.cross(radial).normalized()
-        arm_len = tyre_r + 9 - (bsd - 28)
-        arms = []
-        for sgn in (1, -1):
-            boss_p = Vector((post.x, sgn * (abs(post.y) + od / 2 + 8), post.z))
-            top = boss_p + radial * arm_len
-            top.y = sgn * max(w["tyre_width"] / 2 + 14, abs(boss_p.y) - 10)
-            arm = [boss_p, boss_p + radial * 25 + Vector((0, -sgn * 2, 0)), boss_p + radial * (arm_len - 15), top]
-            inward = Vector((0, -sgn * (abs(boss_p.y) - 16), 0))
-            pad = boss_p + radial * 36 + inward / 2
-            arms.append({"arm": arm, "top": top, "pad": pad, "inward": inward})
-        lt, rt = arms[0]["top"], arms[1]["top"]
-        noodle = catmull([lt + radial * 45 + Vector((0, 4, 0)), lt + radial * 12 + Vector((0, 2, 0)), lt + Vector((0, -10, 0))], 6)
-        out.append({"arms": arms, "radial": radial, "tangent": tangent, "noodle": noodle, "cable_end": rt, "housing_start": noodle[0]})
-    return out
+def vbrakes(g):
+    br = g["accessories"].get("brakes")
+    return br.get("v_brakes", []) if isinstance(br, dict) else []
 
 
 def catmull(pts, n=8):
@@ -886,7 +903,9 @@ def cables(part, M, g, tubes, controls, wheels):
     ht_fwd = Y.cross(ht_dir).normalized()
     if ht_fwd.x < 0:
         ht_fwd = -ht_fwd
-    vbs = vbrakes(g, tubes, wheels) if g["accessories"].get("brakes") == "vbrake" else []
+    vbs = vbrakes(g)
+    br = g["accessories"].get("brakes")
+    hb = br.get("hub_brake") if isinstance(br, dict) else None
     housing = part("cables", M["black"])
     r = 2.6
     upper = tubes.get("top tube") or tubes["step tube"]
@@ -899,20 +918,24 @@ def cables(part, M, g, tubes, controls, wheels):
 
     if vbs and controls.get(("brake", "front")):
         fb = vbs[0]
-        lv = controls.get(("brake", "front"))
-        hs = fb["housing_start"]
-        pts = [lv, lv + Vector((15, 15, -50)), beside_ht(-0.1, -1), beside_ht(0.55, -1, 4) + ht_fwd * 10, ht[0].lerp(ht[1], 0.85) + ht_fwd * (ht_r + 30), beside_ht(1.0, 1, 10) + ht_fwd * 14, hs + fb["radial"] * 40, hs]
+        lv = controls[("brake", "front")]
+        n0 = Vector(fb["noodle"]["from"])
+        arm = next(a for a in fb["arms"] if a["side"] == "left")
+        up = (Vector(arm["top"]) - Vector(arm["pivot"])).normalized()
+        pts = [lv, lv + Vector((15, 15, -50)), beside_ht(-0.1, -1), beside_ht(0.55, -1, 4) + ht_fwd * 10, ht[0].lerp(ht[1], 0.85) + ht_fwd * (ht_r + 30), beside_ht(1.0, 1, 10) + ht_fwd * 14, n0 + up * 45, n0]
         sweep(housing, catmull(pts, 10), r, segs=10)
-    if len(vbs) > 1 and controls.get(("brake", "rear")):
-        rb = vbs[1]
+    if hb and controls.get(("brake", "rear")):
         lv = controls[("brake", "rear")]
-        ss = [Vector(p) for p in tubes["seatstay left"]["centreline"]]
-        ss_dir = (ss[1] - ss[0]).normalized()
-        ss_top = Vector((-ss_dir.z, 0, ss_dir.x)) * (tubes["seatstay left"]["od"] / 2 + r + 0.5)
-        if ss_top.z < 0:
-            ss_top = -ss_top
-        hs = rb["housing_start"]
-        pts = [lv, lv + Vector((15, -15, -50)), beside_ht(-0.1, 1, 4), beside_ht(0.3, 1, 4), ub + top_off + Vector((-45, 0, 0)), ub.lerp(ua, 0.5) + top_off, ua + top_off + Vector((25, 0, 0)), ss[1] + ss_top + Vector((0, 0, 4)), ss[1].lerp(ss[0], 0.35) + ss_top, hs + rb["radial"] * 30, hs]
+        sgn = 1 if hb["unit_centre"][1] > 0 else -1
+        dt = [Vector(p) for p in tubes["down tube"]["centreline"]]
+        dt_dir = (dt[1] - dt[0]).normalized()
+        dt_side = Vector((0, sgn * (tubes["down tube"]["od"] / 2 + r + 0.5), 0))
+        cs = [Vector(p) for p in tubes["chainstay left" if sgn > 0 else "chainstay right"]["centreline"]]
+        cs_top = Vector((0, 0, tubes["chainstay left"]["od"] / 2 + r + 0.5))
+        a0 = Vector(hb["reaction_arm"]["from"])
+        a1 = Vector(hb["reaction_arm"]["to"])
+        stop = a0.lerp(a1, 0.35) + Vector((0, sgn * 6, 14))
+        pts = [lv, lv + Vector((15, -15, -50)), beside_ht(-0.1, 1, 4), beside_ht(0.85, 1, 4), dt[1] - dt_dir * 90 + dt_side, dt[0] + dt_dir * 120 + dt_side, dt[0] + Vector((-30, sgn * 30, 30)), cs[1].lerp(cs[0], 0.3) + cs_top, cs[1].lerp(cs[0], 0.7) + cs_top, stop + Vector((40, 0, 6)), stop]
         sweep(housing, catmull(pts, 10), r, segs=10)
     if "shift" in controls:
         lv = controls["shift"]

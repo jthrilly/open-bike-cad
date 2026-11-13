@@ -16,8 +16,10 @@ the crown.
 Accessories are built only from the `accessories` section of the geometry (format version 2):
 fenders and their stays, the rear rack tubes, the chainguard outline and lip, the ring lock,
 the front carrier block, the front bag envelope (`front_bag`, a plain box, on the 20" bike) and the kickstand. The cockpit (bar, grips, brake levers and twist
-shifter) comes from `cockpit`. V-brake arms, pads and the link cable sit on the fork blade
-and seatstay below the rim, and the cable housings run from the levers to the brakes and hub. Nothing there is invented by the
+shifter) comes from `cockpit`. Brakes come from `accessories.brakes`: the front V-brake's bosses, arms, pads,
+noodle and cable clamp, and the rear roller brake with its reaction arm and chainstay clamp.
+The fork ends, torque arm and blade cable guides come from `fork`. Cable housings run from
+the levers and shifter to the brakes and hub. Nothing there is invented by the
 script, so a change to a drawing shows up in the model once the JSON is regenerated. The
 saddle is a sprung leather city saddle (twin coil springs, rivets) sized from
 `saddle.saddle_length`; it is the one part not described by the JSON.
