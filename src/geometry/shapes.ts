@@ -108,6 +108,21 @@ export function pointAlong(pts: Vec[], dist: number): { p: Vec; t: Vec } {
   return { p: pts[0], t: v(1, 0) };
 }
 
+/** The part of a polyline between two distances along it (clamped to its length). */
+export function subPolyline(pts: Vec[], from: number, to: number): Vec[] {
+  const L = polyLength(pts);
+  const a = Math.max(0, Math.min(L, from));
+  const b = Math.max(a, Math.min(L, to));
+  const out: Vec[] = [pointAlong(pts, a).p];
+  let acc = 0;
+  for (let i = 1; i < pts.length - 1; i++) {
+    acc += len(sub(pts[i], pts[i - 1]));
+    if (acc > a && acc < b) out.push(pts[i]);
+  }
+  out.push(pointAlong(pts, b).p);
+  return out;
+}
+
 export function circlePts(c: Vec, r: number, n = 48): Vec[] {
   const out: Vec[] = [];
   for (let i = 0; i < n; i++) {
