@@ -147,7 +147,7 @@ export const PARAMS: ParamDef[] = [
     help: 'Horizontal distance from BB centre to the top of the head tube.',
     showIf: (d) => d.frontEndMode === 'stackReach' || d.frontEndMode === 'reachHtl',
   }),
-  num('frontCenter', 'Front centre', 'frontEnd', 590, { showIf: isMode('frontCenter'), bcad: ['FCD textfield'] }),
+  num('frontCenter', 'Front centre', 'frontEnd', 590, { showIf: isMode('frontCenter') }),
   num('ettLength', 'Effective top tube', 'frontEnd', 550, {
     help: 'Horizontal distance from the head tube top to the seat tube line (or its extension).',
     showIf: isMode('ett'),
