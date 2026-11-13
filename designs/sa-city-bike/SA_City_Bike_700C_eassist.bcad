@@ -294,7 +294,7 @@
 <entry key="OpenBikeCAD.size">One size, riders ~155-190 cm</entry>
 <entry key="OpenBikeCAD.material">Mild / high-tensile ERW steel, fillet brazed (bronze)</entry>
 <entry key="OpenBikeCAD.drawingDate"></entry>
-<entry key="OpenBikeCAD.notes">Twin straight-tube step-through. Second (upper) tube meets the seat tube 150 mm above BB centre. Wishbone seatstays (2 x 19.05 stays to a 130 mm yoke, 25.4 mono stay) clear the 56 mm tyre, fender and ring lock; chainstays dimpled 7 mm at tyre and chainring. Rear: horizontal forward-facing dropouts, 132 mm OLD for Shimano Nexus 7/8 (with non-turn washers). Braze-ons: V-brake posts front+rear, fender eyelets, rear rack mounts rated for an adult passenger (~100 kg), chainguard tabs, two-leg kickstand plate behind BB, ring-lock bosses on seatstays, 1 bottle mount, front carrier-block bosses on head tube. E-ASSIST VARIANT: 250 W geared front hub motor (100 mm OLD, 10 mm axle with flats; fork dropouts 6 mm plate, 10 mm slots, anti-rotation washers both sides). 36 V 10 Ah (360 Wh) slide-in battery with key lock on a steel cradle bolted to the front carrier block; controller in the cradle below the pack; headlight on the cradle. Cadence sensor at BB. Assist cut-off 25 km/h. No front luggage: loads go on the rear rack.</entry>
+<entry key="OpenBikeCAD.notes">Twin straight-tube step-through. Second (upper) tube meets the seat tube 150 mm above BB centre. Wishbone seatstays (2 x 19.05 stays to a 130 mm yoke, 25.4 mono stay) clear the 56 mm tyre, fender and ring lock; chainstays dimpled 7 mm at tyre and chainring. Rear: horizontal forward-facing dropouts, 132 mm OLD for Shimano Nexus 7/8 (with non-turn washers). Braze-ons: V-brake posts front+rear, fender eyelets, rear rack mounts rated for an adult passenger (~100 kg), chainguard tabs, two-leg kickstand plate behind BB, ring-lock bosses on seatstays, 1 bottle mount, front carrier-block bosses on head tube. E-ASSIST VARIANT: 250 W geared front hub motor (100 mm OLD, 10 mm axle with flats; fork dropouts 6 mm plate, 10 mm slots, anti-rotation washers both sides). 36 V 10 Ah (360 Wh) 10S2P 21700 slide-in battery, 111 x 151 x 85 mm, with key lock on a steel cradle bolted to the front carrier block; controller in the cradle below the pack; headlight on the cradle. Cadence sensor at BB. Assist cut-off 25 km/h. No front luggage: loads go on the rear rack.</entry>
 <entry key="OpenBikeCAD.sheetSize">A3</entry>
 <entry key="OpenBikeCAD.titleBlockColor">#2f6fde</entry>
 <entry key="OpenBikeCAD.showDims">true</entry>
@@ -311,15 +311,16 @@
 <entry key="OpenBikeCAD.dimSet">stack,reach,ha,sa,htl,cs,bbdrop,bbh,wb,fc,trail,st,tt,dt,standover,fork,rake</entry>
 <entry key="OpenBikeCAD.fingerprint">8d656c68</entry>
 <entry key="OpenBikeCAD.blockBattery">true</entry>
-<entry key="OpenBikeCAD.blockBatteryHeight">200.0</entry>
-<entry key="OpenBikeCAD.blockBatteryDepth">85.0</entry>
-<entry key="OpenBikeCAD.blockBatteryWidth">110.0</entry>
+<entry key="OpenBikeCAD.blockBatteryHeight">151.0</entry>
+<entry key="OpenBikeCAD.blockBatteryDepth">111.0</entry>
+<entry key="OpenBikeCAD.blockBatteryWidth">85.0</entry>
 <entry key="OpenBikeCAD.blockBatteryLift">30.0</entry>
 <entry key="OpenBikeCAD.blockBatteryWh">360.0</entry>
-<entry key="OpenBikeCAD.blockBatteryKg">2.3</entry>
+<entry key="OpenBikeCAD.blockBatteryKg">2.2</entry>
 <entry key="OpenBikeCAD.frontHubMotor">true</entry>
 <entry key="OpenBikeCAD.motorShellDia">130.0</entry>
 <entry key="OpenBikeCAD.motorShellWidth">80.0</entry>
 <entry key="OpenBikeCAD.motorPower">250.0</entry>
 <entry key="OpenBikeCAD.pasSensor">cadence</entry>
+<entry key="OpenBikeCAD.blockBatteryLayout">10S2P of 21700 cells (5.0 Ah, 21.7 x 70.8 mm, ~69 g). Cells lie across the bike (axis = y) in a 4 deep x 5 high grid on 22.2 mm holder pitch: core 88.8 deep x 111 high x 74.5 wide incl. holders and nickel. Adds: kapton/fish-paper wrap 1 mm a side; 10S 20 A BMS (~60 x 45 x 8 mm) plus leads on the back face, 12 mm; EVA foam 1.5 mm a side; ABS/alu case wall 2.5 mm a side; slide-in lock and contact block under the cells 18 mm; carry handle and charge port in the top cap 12 mm. Pack 111 deep x 151 high x 85 wide, ~2.2 kg (cells 1.38 kg). Controller is not in the pack.</entry>
 </properties>

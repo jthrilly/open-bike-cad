@@ -138,7 +138,7 @@
   },
   {
    "what": "Battery pack to front tyre/fender at full steering lock",
-   "mm": 86.1,
+   "mm": 110.4,
    "ok": true
   },
   {
@@ -148,12 +148,12 @@
   },
   {
    "what": "Battery pack to handlebar at full steering lock",
-   "mm": 62.5,
+   "mm": 87,
    "ok": true
   },
   {
    "what": "Battery pack slid 50 mm up to unlock, to handlebar (bars straight)",
-   "mm": 46.7,
+   "mm": 60.5,
    "ok": true
   }
  ],
@@ -1584,13 +1584,13 @@
    "battery": {
     "cradle": {
      "centre": [
-      523.6,
+      529.7,
       0,
-      602.4
+      604.7
      ],
-     "depth": 62.5,
-     "height": 168,
-     "width": 118,
+     "depth": 75.5,
+     "height": 119,
+     "width": 93,
      "plate": 4,
      "note": "Steel cradle: back plate bolted to the carrier block front face, side cheeks and floor; cheeks stop 40 mm below the pack top so it lifts out."
     },
@@ -1601,22 +1601,23 @@
       617.9
      ],
      "depth": 16,
-     "height": 200,
-     "width": 90,
+     "height": 151,
+     "width": 65,
      "note": "Slide-in battery base with key lock and contacts, bolted to the cradle back plate."
     },
     "pack": {
      "centre": [
-      544.2,
+      556.4,
       0,
-      636
+      640.7
      ],
-     "depth": 85,
-     "height": 200,
-     "width": 110,
+     "depth": 111,
+     "height": 151,
+     "width": 85,
      "wh": 360,
-     "kg": 2.3,
-     "volts": 36
+     "kg": 2.2,
+     "volts": 36,
+     "build_up": "10S2P of 21700 cells (5.0 Ah, 21.7 x 70.8 mm, ~69 g). Cells lie across the bike (axis = y) in a 4 deep x 5 high grid on 22.2 mm holder pitch: core 88.8 deep x 111 high x 74.5 wide incl. holders and nickel. Adds: kapton/fish-paper wrap 1 mm a side; 10S 20 A BMS (~60 x 45 x 8 mm) plus leads on the back face, 12 mm; EVA foam 1.5 mm a side; ABS/alu case wall 2.5 mm a side; slide-in lock and contact block under the cells 18 mm; carry handle and charge port in the top cap 12 mm. Pack 111 deep x 151 high x 85 wide, ~2.2 kg (cells 1.38 kg). Controller is not in the pack."
     },
     "controller": {
      "centre": [
@@ -1629,19 +1630,19 @@
      "width": 30
     },
     "key_lock": [
-     574.7,
-     -59,
-     556.6
+     578,
+     -46.5,
+     584.2
     ],
     "charge_port": [
-     527.1,
-     57,
-     704.4
+     550.4,
+     44.5,
+     687.1
     ],
     "headlight": [
-     620.1,
+     597.2,
      0,
-     584.8
+     573.3
     ],
     "removal_xz": [
      -0.4,
@@ -1654,14 +1655,14 @@
       492.2
      ],
      "from": [
-      537.6,
+      528.9,
       0,
-      517.8
+      540.7
      ],
      "bar": "20 x 4 mm steel flat, M5 at each end",
      "note": "M5 boss brazed to the front of the head tube; flat-bar stay up to the cradle floor."
     },
-    "block_load_kg": 3.8,
+    "block_load_kg": 3.7,
     "block_rating_kg": 10
    },
    "motor": {
@@ -1815,8 +1816,8 @@
      "note": "Bundle with the brake and gear housings; same steering slack as the housings."
     }
    ],
-   "added_mass_kg": 6.1,
-   "added_mass_front_share": 0.93
+   "added_mass_kg": 6,
+   "added_mass_front_share": 0.94
   },
   "kickstand": {
    "plate": {
