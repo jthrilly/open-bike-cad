@@ -314,12 +314,8 @@ def build(g):
         radii = [fk["blade_od"] / 2 * (1 - 0.35 * max(0, i - 1) / (n - 2)) for i in range(n)]
         sweep(part("fork", M["fork"]), pts, 0, segs=24, radii=radii)
         tip = Vector(pts[-1])
-        prism(
-            part("fork", M["fork"]),
-            [(tip.x - 14, tip.z - 12), (tip.x + 14, tip.z - 12), (tip.x + 12, tip.z + 22), (tip.x - 12, tip.z + 22)],
-            tip.y - 2.5,
-            tip.y + 2.5,
-        )
+        fork_dropout(part, M, fk, tip)
+    fork_hardware(part, M, fk)
 
     # stem, spacers, bar
     ck = g["cockpit"]
@@ -723,6 +719,60 @@ def accessories(part, M, g, wheels, tubes):
                 box(part("brake_pads", M["black"]), pad, (8, abs(inward.y) * 1 + 10, 34), basis_from(vb["radial"], tang))
             sweep(part("brake_cable", M["steel"]), vb["noodle"], 3.2, segs=10)
             sweep(part("brake_cable", M["steel"]), [vb["noodle"][-1], vb["cable_end"]], 0.9, segs=6, caps=True)
+
+
+def fork_dropout(part, M, fk, tip):
+    """Fork-end plate from fork.dropouts: a vertical slot open downward, lawyer lips, torque washer face."""
+    do = fk.get("dropouts") or {}
+    t = do.get("plate_thickness", 5)
+    sw = do.get("slot_width", 9.5) / 2
+    sgn = 1 if tip.y > 0 else -1
+    faces = do.get("inner_faces_y")
+    inner = min(abs(v) for v in faces) if faces else abs(tip.y) - t / 2
+    y0, y1 = sgn * inner, sgn * (inner + t)
+    ax, az = tip.x, tip.z
+    arc = [(ax + sw * math.cos(math.pi - a), az + sw * math.sin(math.pi - a)) for a in [math.pi * k / 10 for k in range(11)]]
+    outline = [(ax - 15, az - 13), (ax - sw, az - 13), *arc, (ax + sw, az - 13), (ax + 15, az - 13), (ax + 12, az + 24), (ax - 12, az + 24)]
+    prism(part("fork", M["fork"]), outline, min(y0, y1), max(y0, y1))
+    lip_y = sgn * (inner + t + 1.5)
+    for dx in (-1, 1):
+        box(part("fork", M["fork"]), Vector((ax + dx * (sw + 4), lip_y, az - 10)), (7, 3, 6))
+    if do.get("torque_washer_faces"):
+        lathe(part("fork_hardware", M["steel"]), disc_profile(sw, 12, 2), Vector((ax, sgn * (inner + t + 1), az)), Y, 24)
+
+
+def fork_hardware(part, M, fk):
+    """Torque arm (keyed to the axle, hose-clamped to the blade) and the blade cable guides."""
+    ta = fk.get("torque_arm")
+    blade_r = fk["blade_od"] / 2
+    if ta:
+        a, b = Vector(ta["from_axle"]), Vector(ta["to_clamp"])
+        th, w = ta.get("thickness", 4), ta.get("width", 16)
+        along = (b - a)
+        along.y = 0
+        L = along.length
+        along.normalize()
+        rot = Matrix((along, Y, along.cross(Y))).transposed()
+        mid = (a + b) / 2
+        box(part("torque_arm", M["steel"]), mid, (L, th, w), rot)
+        lathe(part("torque_arm", M["steel"]), disc_profile(5, w / 2 + 2, th), a, Y, 24)
+        side = "blade_right" if ta.get("side", "right") == "right" else "blade_left"
+        blade = [Vector(p) for p in fk[side]]
+        k = min(range(len(blade) - 1), key=lambda i: dist_point_segment(b, blade[i], blade[i + 1]))
+        bdir = (blade[k] - blade[k + 1]).normalized()
+        centre = blade[k].lerp(blade[k + 1], max(0.0, min(1.0, (b - blade[k + 1]).dot(-bdir) / max(1e-6, (blade[k] - blade[k + 1]).length))))
+        lathe(part("torque_arm", M["steel"]), disc_profile(blade_r - 0.5, blade_r + 1.2, 12), centre, bdir, 32)
+        box(part("torque_arm", M["steel"]), centre + Vector((0, math.copysign(blade_r + 4, b.y), 0)), (12, 7, 12))
+    for gp in fk.get("cable_guides", []):
+        p = Vector(gp)
+        out = Vector((0, math.copysign(1, p.y), 0))
+        base = p + out * (blade_r - 0.5)
+        sweep(part("cable_guides", M["steel"]), [base, base + out * 4], 3, segs=12)
+        side = "blade_right" if p.y < 0 else "blade_left"
+        blade = [Vector(q) for q in fk[side]]
+        k = min(range(len(blade) - 1), key=lambda i: dist_point_segment(p, blade[i], blade[i + 1]))
+        bdir = (blade[k] - blade[k + 1]).normalized()
+        lathe(part("cable_guides", M["steel"]), disc_profile(2.8, 4.5, 6), base + out * 7.5, bdir, 16)
 
 
 def vbrakes(g, tubes, wheels):
