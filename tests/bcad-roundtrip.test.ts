@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { parseProperties, serializeProperties } from '../src/bcad/properties';
 import { exportBcad, importBcad } from '../src/bcad/io';
+import { solve } from '../src/geometry/solve';
 
 const xml = readFileSync(new URL('./fixtures/sample.bcad', import.meta.url), 'utf8');
 const wrap = (body: string) =>
@@ -101,5 +102,24 @@ describe('.bcad save keeps BikeCAD values', () => {
   it('keeps the default fork rake when a file has no fork keys', () => {
     const d = importBcad(wrap('<entry key="Head angle">73.0</entry>'), 'x.bcad').design;
     expect(d.forkRake).toBe(45);
+  });
+});
+
+describe('.bcad measure styles on save', () => {
+  it('writes BB height, not drop, when the file measures BB height', () => {
+    const src = xml.replace('</properties>', '<entry key="BB measure style">1</entry></properties>').replace(/(key="BB textfield">)[^<]*/, '$1273.0');
+    const f = importBcad(src, 'x.bcad');
+    // Bigger tyres with more drop: BB height stays the same.
+    const d = { ...f.design, bbDrop: Number(f.design.bbDrop) + 5, rearTyre: Number(f.design.rearTyre) + 5 };
+    const out = parseProperties(exportBcad({ ...f, design: d })).entries;
+    expect(parseFloat(out.get('BB textfield')!)).toBeCloseTo(273, 0);
+  });
+
+  it('keeps the seat tube length in centre-to-centre form for ST measure style 1', () => {
+    const src = xml.replace('</properties>', '<entry key="ST measure style">1</entry><entry key="Seat tube extension2">20.0</entry></properties>');
+    const f = importBcad(src, 'x.bcad');
+    const d = { ...f.design, topTubeMode: 'angle', seatTubeLength: Number(f.design.seatTubeLength) + 20 };
+    const out = parseProperties(exportBcad({ ...f, design: d })).entries;
+    expect(parseFloat(out.get('Seat tube length')!)).toBeCloseTo(solve(d).dims.stCC, 0);
   });
 });

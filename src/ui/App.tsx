@@ -21,7 +21,8 @@ function isEditable(t: EventTarget | null): boolean {
   const el = t as HTMLElement | null;
   if (!el || !el.tagName) return false;
   if (el.isContentEditable) return true;
-  if (el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') return true;
+  // Selects have no undo of their own, so app undo still applies to them.
+  if (el.tagName === 'TEXTAREA') return true;
   if (el.tagName === 'INPUT') return !['checkbox', 'radio', 'range', 'button', 'submit', 'reset', 'color', 'file', 'image'].includes((el as HTMLInputElement).type);
   return false;
 }

@@ -89,6 +89,19 @@ function readContent(xml: string, from: number, name: string): { text: string; e
   throw new PropertiesParseError(`Unclosed <${name}> element.`);
 }
 
+/** Index of the '>' that ends the tag starting at `lt`, skipping quoted attribute values. */
+function tagEnd(xml: string, lt: number): number {
+  let quote = '';
+  for (let j = lt + 1; j < xml.length; j++) {
+    const c = xml[j];
+    if (quote) {
+      if (c === quote) quote = '';
+    } else if (c === '"' || c === "'") quote = c;
+    else if (c === '>') return j;
+  }
+  return -1;
+}
+
 export function parseProperties(xml: string): PropertiesDoc {
   // Strip BOM and normalise line endings the way every XML reader does.
   if (xml.charCodeAt(0) === 0xfeff) xml = xml.slice(1);
@@ -125,7 +138,7 @@ export function parseProperties(xml: string): PropertiesDoc {
       }
       i = j + 1;
     } else {
-      const gt = xml.indexOf('>', lt);
+      const gt = tagEnd(xml, lt);
       if (gt < 0) break;
       const tag = xml.slice(lt, gt + 1);
       const name = /^<\/?([^\s/>]+)/.exec(tag)?.[1] ?? '';

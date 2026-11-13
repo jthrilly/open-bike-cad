@@ -39,6 +39,8 @@ export function upgradeDesign(d: Design): Design {
 export interface HistoryState {
   items: BikeFile[];
   index: number;
+  /** The commit that produced the current entry, for merging the next one into it. */
+  last?: MergeInfo;
 }
 /** What the last commit was, used to decide whether the next one merges into it. */
 export interface MergeInfo {
@@ -84,17 +86,24 @@ export function pushHistory(s: HistoryState, next: BikeFile, merge: boolean): Hi
   return { items, index: items.length - 1 };
 }
 
+/**
+ * Commit `next` under merge key `key` at time `now`. The merge decision lives in the state
+ * itself, so a commit that changes nothing leaves it untouched and can't make a later
+ * edit merge into an unrelated step.
+ */
+export function commitHistory(s: HistoryState, next: BikeFile, key: string | null, now: number): HistoryState {
+  const merge = shouldMerge(s.last ?? { key: null, time: 0 }, key, now);
+  const out = pushHistory(s, next, merge);
+  return out === s ? s : { ...out, last: { key, time: now } };
+}
+
 export function useBikeHistory(initial: () => BikeFile) {
   const [stack, setStack] = useState<HistoryState>(() => ({ items: [initial()], index: 0 }));
   const file = stack.items[stack.index];
-  // Decided outside the state updater so StrictMode's double invocation stays pure.
-  const last = useRef<MergeInfo>({ key: null, time: 0 });
-
   const apply = useCallback((fn: (cur: BikeFile) => BikeFile, key: string | null) => {
+    // The time is taken outside the updater so StrictMode's double invocation stays pure.
     const now = Date.now();
-    const merge = shouldMerge(last.current, key, now);
-    last.current = { key, time: now };
-    setStack((s) => pushHistory(s, fn(s.items[s.index]), merge));
+    setStack((s) => commitHistory(s, fn(s.items[s.index]), key, now));
   }, []);
 
   const commit = useCallback((next: BikeFile, coalesce: string | false = false) => apply(() => next, mergeKey(null, coalesce)), [apply]);
@@ -109,12 +118,10 @@ export function useBikeHistory(initial: () => BikeFile) {
   /** Load a different file (New / Open / library / swap) as a new undoable step. */
   const replace = useCallback((f: BikeFile) => apply(() => f, null), [apply]);
   const undo = useCallback(() => {
-    last.current = { key: null, time: 0 };
-    setStack((s) => ({ ...s, index: Math.max(0, s.index - 1) }));
+    setStack((s) => ({ ...s, index: Math.max(0, s.index - 1), last: undefined }));
   }, []);
   const redo = useCallback(() => {
-    last.current = { key: null, time: 0 };
-    setStack((s) => ({ ...s, index: Math.min(s.items.length - 1, s.index + 1) }));
+    setStack((s) => ({ ...s, index: Math.min(s.items.length - 1, s.index + 1), last: undefined }));
   }, []);
 
   return {

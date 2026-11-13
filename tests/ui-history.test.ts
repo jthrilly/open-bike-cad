@@ -61,3 +61,17 @@ describe('library parsing', () => {
     expect(parseLibrary('[null, 3, {"id":"x"}, {"id":"y","design":{}}]').map((i) => i.id)).toEqual(['y']);
   });
 });
+
+describe('commitHistory', () => {
+  it('a commit that changes nothing does not let the next edit merge into an older step', async () => {
+    const { commitHistory } = await import('../src/ui/state');
+    const { newBikeFile } = await import('../src/bcad/io');
+    const a = newBikeFile();
+    const withD = (patch: Record<string, number>) => ({ ...a, design: { ...a.design, ...patch } });
+    let s: HistoryState = { items: [a], index: 0 };
+    s = commitHistory(s, withD({ reach: 400 }), mergeKey({ reach: 1 }, true), 0);
+    s = commitHistory(s, withD({ reach: 400 }), mergeKey({ stack: 1 }, true), 1500); // no change
+    s = commitHistory(s, withD({ reach: 400, stack: 565.5 }), mergeKey({ stack: 1 }, true), 1600);
+    expect(s.items.length).toBe(3);
+  });
+});

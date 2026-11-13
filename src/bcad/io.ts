@@ -63,8 +63,10 @@ function readSpecial(e: Map<string, string>): Partial<Design> {
   const fi = forkIndex(e);
   const forkL = n(`FORK${fi}L`) ?? n('FORK0L');
   const forkR = n(`FORK${fi}R`) ?? n('FORK0R');
-  if (forkL != null) out.forkLength = round1(forkAxialIsMeasured(e, fi) ? Math.hypot(forkL, forkR ?? 0) : forkL);
-  if (forkR != null) out.forkRake = forkR;
+  if (forkL != null) {
+    out.forkLength = round1(forkAxialIsMeasured(e, fi) ? Math.hypot(forkL, forkR ?? 0) : forkL);
+    out.forkRake = forkR ?? 0;
+  } else if (forkR != null) out.forkRake = forkR;
   if (e.get('DUAL_CROWN') === 'true') out.forkType = 'dualCrown';
   else if (fi === 1) out.forkType = 'suspension';
   else if (e.get('Fork straight blade') === 'true') out.forkType = 'straight';
@@ -325,6 +327,9 @@ function designFromEntries(e: Map<string, string>): { design: Design; mappedKeys
   return { design, mappedKeys: [...mappedKeys] };
 }
 
+/** BikeCAD keys whose value depends on a measure style, written only by exportBcad's special code. */
+const STYLED_KEYS = new Set(['Head tube length textfield', 'Top tube angle textfield', 'BB textfield', 'CS textfield', 'Seat tube length']);
+
 const SPECIAL_KEYS = new Set([
   'BSD rear',
   'BSD front',
@@ -416,6 +421,8 @@ export function exportBcad(file: BikeFile, derived?: Record<string, number>): st
 
   for (const p of PARAMS) {
     const v = d[p.id];
+    // Keys whose meaning depends on the file's measure style are written below.
+    if (p.bcad?.some((k) => STYLED_KEYS.has(k))) continue;
     if (p.bcad && p.bcad.length && changed(p.id) && (!file.source || p.bcad.some((k) => entries.has(k)))) {
       const key = p.bcad.find((k) => entries.has(k)) ?? p.bcad[0];
       if (p.toBcad) entries.set(key, p.toBcad(v, d));
@@ -454,14 +461,14 @@ export function exportBcad(file: BikeFile, derived?: Record<string, number>): st
   const fcdKey = style === 3 ? 'reach' : style === 0 ? 'ett' : style === 2 ? 'ttCC' : 'frontCenter';
   if (dimChanged(fcdKey)) setNum('FCD textfield', round1(g.dims[fcdKey]));
   if (dimChanged('stack') && (style === 3 || entries.has('Stack'))) setNum('Stack', round1(g.dims.stack));
-  if (dimChanged('headTubeLength')) setNum('Head tube length textfield', round1(g.dims.headTubeLength));
-  if (dimChanged('ttAngle')) setNum('Top tube angle textfield', round1(g.dims.ttAngle));
+  if (changed('headTubeLength') || dimChanged('headTubeLength')) setNum('Head tube length textfield', round1(g.dims.headTubeLength));
+  if (changed('topTubeAngle') || dimChanged('ttAngle')) setNum('Top tube angle textfield', round1(g.dims.ttAngle));
 
   // BB and chainstay in the file's measure styles.
-  if (num('BB measure style') === 1 ? dimChanged('bbHeight') : changed('bbDrop')) {
+  if (changed('bbDrop') || dimChanged('bbHeight')) {
     setNum('BB textfield', num('BB measure style') === 1 ? round1(g.dims.bbHeight) : n('bbDrop'));
   }
-  if (num('CS measure style') === 1 ? dimChanged('rearCenterHoriz') : changed('chainstayLength')) {
+  if (changed('chainstayLength') || dimChanged('rearCenterHoriz')) {
     setNum('CS textfield', num('CS measure style') === 1 ? round1(g.dims.rearCenterHoriz) : n('chainstayLength'));
   }
 
@@ -471,7 +478,7 @@ export function exportBcad(file: BikeFile, derived?: Record<string, number>): st
   const stExt = n('seatTubeLength') - g.dims.stCC;
   const stExtBase = base && gBase ? Number(base.seatTubeLength) - gBase.dims.stCC : NaN;
   if (!base || Math.abs(stExt - stExtBase) > 1e-6) setNum('Seat tube extension2', round1(stExt));
-  if (num('ST measure style') === 1 ? dimChanged('stCC') : changed('seatTubeLength')) {
+  if (changed('seatTubeLength') || dimChanged('stCC')) {
     setNum('Seat tube length', num('ST measure style') === 1 ? round1(g.dims.stCC) : n('seatTubeLength'));
   }
   if (changed('ssSeatOffset')) {
@@ -498,6 +505,9 @@ export function exportBcad(file: BikeFile, derived?: Record<string, number>): st
       setNum('Head tube diameter', topInD ? n('htODBottom') : n('htOD'));
       setNum('Head tube d', topInD ? n('htOD') : n('htODBottom'));
       setInt('Head tube type', 1);
+    } else if (d.htProfile === 'hourglass') {
+      // BikeCAD has no hourglass head tube; keep its end diameter.
+      setNum('Head tube diameter', n('htODBottom'));
     } else {
       setNum('Head tube diameter', n('htOD'));
       if (num('Head tube type') === 1) setInt('Head tube type', 0);
