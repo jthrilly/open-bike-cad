@@ -91,7 +91,7 @@ export interface EAssist {
     cradle: Box3 & { plate: number };
     /** Slide-in base with key lock and contacts, fixed in the cradle. */
     base: Box3;
-    pack: Box3 & { wh: number; kg: number; volts: number };
+    pack: Box3 & { wh: number; kg: number; volts: number; layout: string };
     controller: Box3;
     keyLock: P3;
     chargePort: P3;
@@ -626,11 +626,11 @@ export function buildAssembly(d: Design, g: Geometry): Assembly {
       battery = {
         cradle: { centre: p3(cradleC), depth: plate + baseT + pd * 0.5, height: cradleTop - cradleBottom, width: pw + 8, plate },
         base: { centre: p3(baseC), depth: baseT, height: ph, width: pw - 20 },
-        pack: { ...pack, wh: numOf(d, 'blockBatteryWh'), kg, volts: 36 },
+        pack: { ...pack, wh: numOf(d, 'blockBatteryWh'), kg, volts: 36, layout: String(d.blockBatteryLayout ?? '') },
         controller: ctrl,
         keyLock: p3(at(face, plate + baseT + pd * 0.5, lift - ph / 2 + 15), -(pw / 2 + 4)),
         chargePort: p3(at(face, plate + baseT + pd * 0.6, lift + ph / 2 - 30), pw / 2 + 2),
-        headlight: p3(at(face, plate + baseT + pd + 10, lift - ph / 2 + 25)),
+        headlight: p3(at(face, plate + baseT + pd * 0.5 + 14, cradleBottom + 6)), // on the cradle floor's front lip, so it stays when the pack is lifted out
         removal: up,
         brace: (() => {
           const htR = numOf(d, 'htOD') / 2;

@@ -280,7 +280,7 @@ export function geometry3d(d: Design, g: Geometry) {
                 ? {
                     cradle: { ...bx(e.battery.cradle), plate: e.battery.cradle.plate, note: 'Steel cradle: back plate bolted to the carrier block front face, side cheeks and floor; cheeks stop 40 mm below the pack top so it lifts out.' },
                     slide_base: { ...bx(e.battery.base), note: 'Slide-in battery base with key lock and contacts, bolted to the cradle back plate.' },
-                    pack: { ...bx(e.battery.pack), wh: e.battery.pack.wh, kg: e.battery.pack.kg, volts: e.battery.pack.volts },
+                    pack: { ...bx(e.battery.pack), wh: e.battery.pack.wh, kg: e.battery.pack.kg, volts: e.battery.pack.volts, build_up: e.battery.pack.layout },
                     controller: bx(e.battery.controller),
                     key_lock: R3(e.battery.keyLock),
                     charge_port: R3(e.battery.chargePort),
