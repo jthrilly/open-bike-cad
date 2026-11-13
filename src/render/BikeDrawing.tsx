@@ -6,9 +6,11 @@ import React from 'react';
 import { Design, numOf, parseTeeth } from '../model/schema';
 import { Geometry } from '../geometry/solve';
 import { Vec, v, add, sub, mul, norm, perp, len, dist, rad, dirDeg, angleOf, lerp, rot } from '../geometry/vec';
-import { centreline, tubeOutline, svgPath, sx, sy, arcPts, pointAlong, orientedRect, polyLength, subPolyline } from '../geometry/shapes';
+import { tubeOutline, svgPath, sx, sy, arcPts, pointAlong, orientedRect, polyLength, subPolyline } from '../geometry/shapes';
 import { poseRider } from '../fit/rider';
 import { DimensionLayer } from './DimensionLayer';
+import { frameTubes, forkBladePts } from '../geometry/tubes';
+import { buildAssembly, Assembly, P3 } from '../geometry/assembly';
 
 export type PickTarget = string;
 
@@ -19,22 +21,7 @@ interface Props {
   onPick?: (group: PickTarget) => void;
 }
 
-export function frameTubes(d: Design, g: Geometry) {
-  const ttPts = centreline(g.ttRear, g.ttFront, numOf(d, 'ttBend'));
-  const dtPts = centreline(g.dtRear, g.dtFront, -numOf(d, 'dtBend'));
-  const stPts = centreline(g.stBottom, g.stTop, -numOf(d, 'stBend'));
-  const csPts = centreline(g.rearAxle, g.bb, -numOf(d, 'csBend'));
-  let ssPts: Vec[];
-  if (d.seatstayStyle === 'wishbone') {
-    const wl = numOf(d, 'wishboneLength');
-    const dir = norm(sub(g.rearAxle, g.ssTop));
-    const split = add(g.ssTop, mul(dir, wl));
-    ssPts = [...centreline(g.rearAxle, split, numOf(d, 'ssBend')), g.ssTop];
-  } else {
-    ssPts = centreline(g.rearAxle, g.ssTop, numOf(d, 'ssBend'));
-  }
-  return { ttPts, dtPts, stPts, csPts, ssPts };
-}
+export { frameTubes };
 
 /**
  * Beam frame = BikeCAD's discontinuous seat tube: only a section J (stTopSection) below the top
@@ -76,6 +63,7 @@ export function BikeDrawing({ d, g, ghost, onPick }: Props) {
   const pick = (grp: string) => (onPick ? { onClick: (e: React.MouseEvent) => (e.stopPropagation(), onPick(grp)), style: { cursor: 'pointer' } } : {});
   const { ttPts, dtPts, stPts, csPts, ssPts } = frameTubes(d, g);
   const showComp = d.showComponents !== false;
+  const asm = buildAssembly(d, g);
   const frameStyle = String(d.frameStyle);
 
   const P = (pts: Vec[], fill: string, extra: React.SVGProps<SVGPathElement> = {}) => (
@@ -118,10 +106,16 @@ export function BikeDrawing({ d, g, ghost, onPick }: Props) {
         </g>
       )}
 
-      {showComp && d.fenders === true && (
+      {showComp && (asm.fenders.rear || asm.fenders.front) && (
         <g {...pick('accessories')}>
-          <Fender c={g.rearAxle} R={g.rearWheelR + numOf(d, 'fenderClearance')} from={20} to={200} outline={outline} sw={sw} />
-          <Fender c={g.frontAxle} R={g.frontWheelR + numOf(d, 'fenderClearance')} from={-20} to={150} outline={outline} sw={sw} />
+          {[asm.fenders.rear, asm.fenders.front].map((f, i) =>
+            f ? (
+              <g key={i}>
+                <Fender c={f.centre} R={f.radius} from={f.startDeg} to={f.endDeg} outline={outline} sw={sw} />
+                <path d={svgPath(f.stays.slice(0, 1).flatMap((st) => [side(st.from), side(st.to)]), false)} stroke={outline} strokeWidth={4} fill="none" strokeLinecap="round" />
+              </g>
+            ) : null,
+          )}
         </g>
       )}
 
@@ -133,14 +127,22 @@ export function BikeDrawing({ d, g, ghost, onPick }: Props) {
       )}
 
       {/* Rear rack */}
-      {showComp && d.rearRack === true && <Rack axle={g.rearAxle} anchor={g.ssTop} R={g.rearWheelR} outline={outline} sw={sw} dir={-1} />}
+      {showComp && asm.rack && <RearRack asm={asm} outline={outline} />}
       {showComp && d.frontRack === true && <Rack axle={g.frontAxle} anchor={sub(g.crownRace, mul(g.steerDir, -20))} R={g.frontWheelR} outline={outline} sw={sw} dir={1} />}
 
       {/* Stays */}
       <g {...pick('rear')}>
         {frameStyle === 'mixte' && <MixteStays d={d} g={g} outline={outline} fill={fillStays} sw={sw} />}
         {P(tubeOutline(csPts, numOf(d, 'csODTip') / 2, numOf(d, 'csOD') / 2), fillStays)}
-        {P(tubeOutline(ssPts, numOf(d, 'ssODTip') / 2, numOf(d, 'ssOD') / 2), fillStays)}
+        {d.seatstayStyle === 'wishbone' ? (
+          <>
+            {P(tubeOutline(ssPts.slice(0, -1), numOf(d, 'ssODTip') / 2, numOf(d, 'ssOD') / 2), fillStays)}
+            {P(tubeOutline(ssPts.slice(-2), numOf(d, 'ssMonoOD') / 2, numOf(d, 'ssMonoOD') / 2), fillStays)}
+            <circle cx={sx(ssPts[ssPts.length - 2])} cy={sy(ssPts[ssPts.length - 2])} r={numOf(d, 'ssOD') / 2 + 1} fill={fillStays} stroke={outline} strokeWidth={sw} />
+          </>
+        ) : (
+          P(tubeOutline(ssPts, numOf(d, 'ssODTip') / 2, numOf(d, 'ssOD') / 2), fillStays)
+        )}
         {d.loopedStays === true && (
           <path
             d={svgPath(arcPts(add(g.ssTop, mul(g.seatDir, 2)), numOf(d, 'ssOD') * 0.9, angleOf(g.seatDir) - 80, angleOf(g.seatDir) + 80), false)}
@@ -152,6 +154,8 @@ export function BikeDrawing({ d, g, ghost, onPick }: Props) {
         <Dropout d={d} g={g} outline={outline} fill={fillAccent} sw={sw} />
         <StayBridges d={d} g={g} csPts={csPts} ssPts={ssPts} outline={outline} fill={fillStays} sw={sw} />
       </g>
+      {showComp && asm.ringLock && <RingLockSide asm={asm} outline={outline} sw={sw} />}
+      {showComp && asm.kickstand && <KickstandSide asm={asm} outline={outline} sw={sw} />}
 
       {/* Main triangle */}
       <g {...pick('frame')}>
@@ -200,6 +204,12 @@ export function BikeDrawing({ d, g, ghost, onPick }: Props) {
           <Drivetrain d={d} g={g} outline={outline} fill={comp} sw={sw} />
         </g>
       )}
+      {showComp && asm.chainguard && (
+        <g {...pick('accessories')}>
+          <path d={svgPath(asm.chainguard.outline)} fill="#2b2f36" fillOpacity={0.85} stroke={outline} strokeWidth={sw} strokeLinejoin="round" />
+        </g>
+      )}
+      {showComp && asm.carrierBlock && <CarrierBlockSide asm={asm} outline={outline} sw={sw} />}
 
       {/* Centrelines */}
       {d.showCentrelines !== false && !ghost && <Centrelines d={d} g={g} pts={[ttPts, dtPts, stPts, csPts, ssPts]} />}
@@ -260,6 +270,66 @@ function Fender({ c, R, from, to, outline, sw }: { c: Vec; R: number; from: numb
   const outer = arcPts(c, R + 3, from, to, 40);
   const inner = arcPts(c, R, to, from, 40);
   return <path d={svgPath([...outer, ...inner])} fill="#555b66" stroke={outline} strokeWidth={sw * 0.6} />;
+}
+
+/** Side-view projection of a 3D point. */
+const side = (p: P3): Vec => v(p[0], p[2]);
+
+function RearRack({ asm, outline }: { asm: Assembly; outline: string }) {
+  const r = asm.rack!;
+  // Side view: the left-side tubes (the right side lies behind them); cross bars show as dots.
+  const tubes = r.tubes.filter((t) => !t.name.startsWith('cross') && !t.name.endsWith('right'));
+  return (
+    <g stroke={outline} strokeWidth={r.tubeOD} fill="none" strokeLinecap="round" strokeLinejoin="round">
+      {tubes.map((t) => (
+        <path key={t.name} d={svgPath(t.pts.map(side), false)} />
+      ))}
+      {r.tubes
+        .filter((t) => t.name.startsWith('cross'))
+        .map((t) => (
+          <circle key={t.name} cx={t.pts[0][0]} cy={-t.pts[0][2]} r={r.tubeOD * 0.7} fill={outline} stroke="none" />
+        ))}
+    </g>
+  );
+}
+
+function RingLockSide({ asm, outline, sw }: { asm: Assembly; outline: string; sw: number }) {
+  const l = asm.ringLock!;
+  const t = v(-l.radial.y, l.radial.x);
+  // The U body seen from the side: it spans from just inside the tyre centre out past the tread.
+  const a = add(l.centre, mul(l.radial, -l.outerR * 0.35));
+  const b = add(l.centre, mul(l.radial, l.outerR));
+  const h = l.bodyLength / 2;
+  const pts = [add(a, mul(t, h)), add(b, mul(t, h)), add(b, mul(t, -h)), add(a, mul(t, -h))];
+  return <path d={svgPath(pts)} fill="#2b2f36" stroke={outline} strokeWidth={sw} />;
+}
+
+function KickstandSide({ asm, outline, sw }: { asm: Assembly; outline: string; sw: number }) {
+  const k = asm.kickstand!;
+  const c = side(k.plate.centre);
+  return (
+    <g>
+      <path d={svgPath(orientedRect(v(c.x - k.plate.length / 2, c.y), v(1, 0), k.plate.length, 8))} fill="#2b2f36" stroke={outline} strokeWidth={sw * 0.7} />
+      <path d={svgPath([side(k.pivot), side(k.feet[0])], false)} stroke="#2b2f36" strokeWidth={10} strokeLinecap="round" fill="none" />
+    </g>
+  );
+}
+
+function CarrierBlockSide({ asm, outline, sw }: { asm: Assembly; outline: string; sw: number }) {
+  const cb = asm.carrierBlock!;
+  const f = cb.forward;
+  const up = cb.up;
+  const box = (c: Vec, depth: number, height: number) => {
+    const hd = mul(f, depth / 2);
+    const hh = mul(up, height / 2);
+    return [add(add(c, hd), hh), add(sub(c, hd), hh), sub(sub(c, hd), hh), sub(add(c, hd), hh)];
+  };
+  return (
+    <g>
+      <path d={svgPath(box(side(cb.mountBlock.centre), cb.mountBlock.depth, cb.mountBlock.alongHT))} fill="#8a9099" stroke={outline} strokeWidth={sw * 0.8} />
+      <path d={svgPath(box(side(cb.block.centre), cb.block.depth, cb.block.height))} fill="#2b2f36" stroke={outline} strokeWidth={sw} />
+    </g>
+  );
 }
 
 function Rack({ axle, anchor, R, outline, sw, dir }: { axle: Vec; anchor: Vec; R: number; outline: string; sw: number; dir: 1 | -1 }) {
@@ -545,16 +615,7 @@ function Fork({ d, g, outline, fill, sw }: { d: Design; g: Geometry; outline: st
     parts.push(<path key="blade" d={svgPath(tubeOutline([start, axle], bladeR + 2, bladeR * 0.6))} fill={fill} stroke={outline} strokeWidth={sw} />);
   } else {
     // Curved blade: straight along steering axis, then a tangent bend to the axle.
-    const bend = numOf(d, 'forkBladeBendLength');
-    const axisFoot = sub(axle, mul(n, numOf(d, 'forkRake')));
-    const bendStart = sub(axisFoot, mul(u, bend));
-    const ctrl = add(lerp(bendStart, axisFoot, 0.7), mul(n, 0));
-    const pts: Vec[] = [crownBot];
-    for (let i = 0; i <= 20; i++) {
-      const t = i / 20;
-      const mt = 1 - t;
-      pts.push(v(mt * mt * bendStart.x + 2 * mt * t * ctrl.x + t * t * axle.x, mt * mt * bendStart.y + 2 * mt * t * ctrl.y + t * t * axle.y));
-    }
+    const pts = forkBladePts(d, g);
     parts.push(<path key="blade" d={svgPath(tubeOutline(pts, bladeR + 1, bladeR * 0.55))} fill={fill} stroke={outline} strokeWidth={sw} />);
   }
   // Fork tip

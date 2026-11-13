@@ -207,7 +207,26 @@ export function tubeCuts(d: Design, g: Geometry): TubeCut[] {
     const r = numOf(d, 'csOD') / 2;
     make('cs', 'Chainstay', 'csOD', 'csWall', polyLength(csPts), [end('BB shell', r, bbR, 90, 0, paper)], 2, numOf(d, 'csDropoutOffset'));
   }
-  {
+  if (d.seatstayStyle === 'wishbone') {
+    // Wishbone: two stays from the dropouts to a yoke bar, and one mono stay from the yoke to the seat tube.
+    const r = numOf(d, 'ssOD') / 2;
+    const twin = ssPts.slice(0, -1);
+    const split = twin[twin.length - 1];
+    const spread = numOf(d, 'wishboneSpread');
+    // Each twin stay runs in 3D from the dropout (y = OLD/2 + 3) to the yoke (y = spread/2).
+    const dy = numOf(d, 'rearSpacing') / 2 + 3 - spread / 2;
+    const twinLen = Math.hypot(polyLength(twin), dy);
+    make('ss', 'Seatstay (to wishbone yoke)', 'ssOD', 'ssWall', twinLen, [end('yoke bar', r, r, 90, 0, paper)], 2, numOf(d, 'ssDropoutOffset'));
+    const monoR = numOf(d, 'ssMonoOD') / 2;
+    const ends: MitreEnd[] = [];
+    if (hasSSJoint) {
+      const a = ang(sub(g.stBottom, g.ssTop), sub(split, g.ssTop));
+      ends.push(end('seat tube', monoR, stR, 180 - a, 0, paper));
+    }
+    ends.push(end('yoke bar', monoR, r, 90, 0, paper));
+    make('ssMono', 'Seatstay mono stay (wishbone)', 'ssMonoOD', 'ssMonoWall', dist(split, g.ssTop), ends, 1);
+    make('ssYoke', 'Wishbone yoke bar', 'ssOD', 'ssWall', spread + 2 * r, [], 1);
+  } else {
     const r = numOf(d, 'ssOD') / 2;
     const ends: MitreEnd[] = [];
     const extra: string[] = [];

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
-<comment>Created by Open Bike CAD on Fri Nov 13 2026 16:02:09 GMT+0000 (Coordinated Universal Time)</comment>
+<comment>Created by Open Bike CAD on Fri Nov 13 2026 16:40:24 GMT+0000 (Coordinated Universal Time)</comment>
 <entry key="Head angle">69.0</entry>
 <entry key="Seat angle">70.0</entry>
 <entry key="DISCONTINUOUS">false</entry>
@@ -48,7 +48,7 @@
 <entry key="Head tube lower extension">1.2</entry>
 <entry key="Seat tube extension">286.5</entry>
 <entry key="Seat tube length">460.0</entry>
-<entry key="Seat stay junction0">-235.0</entry>
+<entry key="Seat stay junction0">-270.0</entry>
 <entry key="Top tube diameter">31.8</entry>
 <entry key="Down tube front diameter">35.0</entry>
 <entry key="Down tube diameter">35.0</entry>
@@ -78,7 +78,7 @@
 <entry key="DROPPER">false</entry>
 <entry key="bottle DOWNTUBE0 show">true</entry>
 <entry key="bottle SEATTUBE0 show">false</entry>
-<entry key="Seat stay wishbone">false</entry>
+<entry key="Seat stay wishbone">true</entry>
 <entry key="Chain stay wishbone">false</entry>
 <entry key="Teeth on chainring 0">38</entry>
 <entry key="Number of chainrings">0</entry>
@@ -108,9 +108,12 @@
 <entry key="OpenBikeCAD.stBottomSection">0.0</entry>
 <entry key="OpenBikeCAD.mixteRearOffset">0.0</entry>
 <entry key="OpenBikeCAD.chainstayLength">470.0</entry>
-<entry key="OpenBikeCAD.ssSeatOffset">-235.0</entry>
-<entry key="OpenBikeCAD.seatstayStyle">standard</entry>
-<entry key="OpenBikeCAD.wishboneLength">120.0</entry>
+<entry key="OpenBikeCAD.ssSeatOffset">-270.0</entry>
+<entry key="OpenBikeCAD.seatstayStyle">wishbone</entry>
+<entry key="OpenBikeCAD.wishboneLength">45.0</entry>
+<entry key="OpenBikeCAD.ssMonoOD">25.4</entry>
+<entry key="OpenBikeCAD.ssMonoWall">1.6</entry>
+<entry key="OpenBikeCAD.wishboneSpread">130.0</entry>
 <entry key="OpenBikeCAD.rearSpacing">132.0</entry>
 <entry key="OpenBikeCAD.frontSpacing">100.0</entry>
 <entry key="OpenBikeCAD.dropoutStyle">horizontal</entry>
@@ -121,9 +124,10 @@
 <entry key="OpenBikeCAD.ssDropoutOffset">35.0</entry>
 <entry key="OpenBikeCAD.bbShellWidth">68.0</entry>
 <entry key="OpenBikeCAD.bbShellOD">40.0</entry>
-<entry key="OpenBikeCAD.csWidthAtBB">70.0</entry>
+<entry key="OpenBikeCAD.csWidthAtBB">50.0</entry>
 <entry key="OpenBikeCAD.csYoke">false</entry>
-<entry key="OpenBikeCAD.csBridgePos">70.0</entry>
+<entry key="OpenBikeCAD.csDimple">7.0</entry>
+<entry key="OpenBikeCAD.csBridgePos">85.0</entry>
 <entry key="OpenBikeCAD.ssBridgePos">130.0</entry>
 <entry key="OpenBikeCAD.forkType">rigid</entry>
 <entry key="OpenBikeCAD.forkLength">415.0</entry>
@@ -229,7 +233,17 @@
 <entry key="OpenBikeCAD.bossSpacing">64.0</entry>
 <entry key="OpenBikeCAD.fenders">true</entry>
 <entry key="OpenBikeCAD.fenderClearance">14.0</entry>
+<entry key="OpenBikeCAD.fenderRearStart">5.0</entry>
+<entry key="OpenBikeCAD.fenderRearEnd">200.0</entry>
+<entry key="OpenBikeCAD.fenderFrontStart">40.0</entry>
+<entry key="OpenBikeCAD.fenderFrontEnd">195.0</entry>
 <entry key="OpenBikeCAD.rearRack">true</entry>
+<entry key="OpenBikeCAD.rackTubeOD">12.0</entry>
+<entry key="OpenBikeCAD.rackHeightAboveTyre">40.0</entry>
+<entry key="OpenBikeCAD.rackLoad">25.0</entry>
+<entry key="OpenBikeCAD.chainguard">true</entry>
+<entry key="OpenBikeCAD.ringLock">true</entry>
+<entry key="OpenBikeCAD.carrierBlock">true</entry>
 <entry key="OpenBikeCAD.frontRack">false</entry>
 <entry key="OpenBikeCAD.pump">false</entry>
 <entry key="OpenBikeCAD.cableGuides">true</entry>
@@ -273,7 +287,7 @@
 <entry key="OpenBikeCAD.size">One size, riders ~155-190 cm</entry>
 <entry key="OpenBikeCAD.material">Mild / high-tensile ERW steel, fillet brazed (bronze)</entry>
 <entry key="OpenBikeCAD.drawingDate"></entry>
-<entry key="OpenBikeCAD.notes">Twin straight-tube step-through. Second (upper) tube meets the seat tube 150 mm above BB centre. Rear: horizontal forward-facing dropouts, 132 mm OLD for Shimano Nexus 7/8 (with non-turn washers). Braze-ons: V-brake posts front+rear, fender eyelets, rear rack mounts rated for an adult passenger (~100 kg), chainguard tabs, two-leg kickstand plate behind BB, ring-lock bosses on seatstays, 1 bottle mount, front carrier-block bosses on head tube.</entry>
+<entry key="OpenBikeCAD.notes">Twin straight-tube step-through. Second (upper) tube meets the seat tube 150 mm above BB centre. Wishbone seatstays (2 x 19.05 stays to a 130 mm yoke, 25.4 mono stay) clear the 56 mm tyre, fender and ring lock; chainstays dimpled 7 mm at tyre and chainring. Rear: horizontal forward-facing dropouts, 132 mm OLD for Shimano Nexus 7/8 (with non-turn washers). Braze-ons: V-brake posts front+rear, fender eyelets, rear rack mounts rated for an adult passenger (~100 kg), chainguard tabs, two-leg kickstand plate behind BB, ring-lock bosses on seatstays, 1 bottle mount, front carrier-block bosses on head tube.</entry>
 <entry key="OpenBikeCAD.sheetSize">A3</entry>
 <entry key="OpenBikeCAD.titleBlockColor">#2f6fde</entry>
 <entry key="OpenBikeCAD.showDims">true</entry>
@@ -288,5 +302,5 @@
 <entry key="OpenBikeCAD.dimTextSize">14.0</entry>
 <entry key="OpenBikeCAD.dimColor">#c2410c</entry>
 <entry key="OpenBikeCAD.dimSet">stack,reach,ha,sa,htl,cs,bbdrop,bbh,wb,fc,trail,st,tt,dt,standover,fork,rake</entry>
-<entry key="OpenBikeCAD.fingerprint">919e7b91</entry>
+<entry key="OpenBikeCAD.fingerprint">16123723</entry>
 </properties>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BikeFile, exportBcad, importBcad, newBikeFile } from '../bcad/io';
 import { parseProperties } from '../bcad/properties';
 import { Design, GroupId, PARAMS, defaultDesign } from '../model/schema';
+import { geometry3d } from '../export/geometry3d';
 import { solve } from '../geometry/solve';
 import { Canvas, CanvasHandle } from './Canvas';
 import { NumberInput, ParamPanel } from './ParamPanel';
@@ -330,6 +331,9 @@ export function App() {
           <MenuSep />
           <Item onClick={() => runExport('CSV', () => download(`${baseName(file.design)}_spec.csv`, specCsv(file.design, gReal), 'text/csv'))}>
             Spec, cut list & parameters (CSV)
+          </Item>
+          <Item onClick={() => runExport('JSON', () => download(`${baseName(file.design)}_geometry.json`, JSON.stringify(geometry3d(file.design, gReal), null, 1), 'application/json'))}>
+            3D geometry (JSON)
           </Item>
           {compare && (
             <Item

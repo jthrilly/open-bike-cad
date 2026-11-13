@@ -1,60 +1,129 @@
 {
+ "format": "open-bike-cad 3D geometry",
+ "version": 2,
  "name": "SA City Bike 24\" (kids)",
  "size": "Riders ~125-150 cm",
  "material": "Mild / high-tensile ERW steel, fillet brazed (bronze)",
  "units": "mm",
- "coordinates": "Origin at BB centre. x forward (towards front wheel), y to the rider's left, z up. Ground plane is z = groundZ. Frame lies in the y=0 plane except stays, fork blades, dropouts and wheels, which carry their lateral offsets.",
+ "coordinates": "Origin at BB centre. x forward (towards the front wheel), y to the rider's LEFT (non-drive side), z up. The chain is on the right (negative y). Ground is z = groundZ. Side-view (x, z) pairs are given as [x, z].",
  "groundZ": -263.5,
  "key_dims": {
-  "stack": 494.4,
+  "stack": 499.2,
   "reach": 320,
   "headAngle": 69,
   "seatAngle": 71,
   "effectiveSeatAngle": 70,
   "headTubeLength": 150,
-  "ett": 493.4,
-  "ttCC": 503.1,
-  "ttAngle": 41,
-  "dtCC": 526.4,
+  "ett": 495,
+  "ttCC": 506.2,
+  "ttAngle": 41.4,
+  "dtCC": 529.8,
   "stCT": 330,
   "stCC": 90,
-  "ssCC": 376.2,
+  "ssCC": 383.4,
   "chainstay": 400,
   "rearCenterHoriz": 398,
   "bbDrop": 40,
   "bbHeight": 263.5,
-  "wheelbase": 940.6,
-  "frontCenter": 544.1,
-  "frontCenterHoriz": 542.6,
+  "wheelbase": 942.4,
+  "frontCenter": 545.9,
+  "frontCenterHoriz": 544.5,
   "trail": 68.3,
   "mechanicalTrail": 63.8,
   "flop": 22.9,
-  "standover": 526.3,
-  "forkLength": 345,
+  "standover": 528.6,
+  "forkLength": 350,
   "forkRake": 45,
-  "toeOverlap": -16.4,
+  "toeOverlap": -18.2,
   "saddleHeight": 560,
   "saddleSetback": 192.3,
-  "saddleToBarDrop": -64.5,
+  "saddleToBarDrop": -69.2,
   "saddleToBarReach": 520.5,
   "barReachFromBB": 328.2,
-  "barStackFromBB": 594,
-  "stackToTopOfHeadset": 508.5,
+  "barStackFromBB": 598.7,
+  "stackToTopOfHeadset": 513.2,
   "reachToTopOfHeadset": 314.6,
   "seatpostExposed": 175,
   "seatpostMinLength": 255,
   "frontWheelDia": 607,
   "rearWheelDia": 607,
-  "headTubeToDownTubeAngle": 115.3,
-  "headTubeToTopTubeAngle": 70,
-  "seatTubeToTopTubeAngle": 112,
-  "seatTubeToDownTubeAngle": 62.7,
-  "seatTubeToSeatstayAngle": 75,
+  "headTubeToDownTubeAngle": 115.6,
+  "headTubeToTopTubeAngle": 69.6,
+  "seatTubeToTopTubeAngle": 112.4,
+  "seatTubeToDownTubeAngle": 62.4,
+  "seatTubeToSeatstayAngle": 71.4,
   "seatTubeToChainstayAngle": 65.3,
-  "chainstayToSeatstayAngle": 39.8
+  "chainstayToSeatstayAngle": 43.4
  },
+ "clearances": [
+  {
+   "what": "Rear tyre to seatstays",
+   "mm": 28.7,
+   "ok": true
+  },
+  {
+   "what": "Rear tyre to chainstays (with 7 mm dimple)",
+   "mm": 10.7,
+   "ok": true
+  },
+  {
+   "what": "Chainring to drive-side chainstay (with 7 mm dimple)",
+   "mm": 4.8,
+   "ok": true
+  },
+  {
+   "what": "Wishbone yoke to rear fender",
+   "mm": 15.9,
+   "ok": true
+  },
+  {
+   "what": "Rear fender to seatstays",
+   "mm": 18.6,
+   "ok": true
+  },
+  {
+   "what": "Rear fender front end to seat tube",
+   "mm": 35.8,
+   "ok": true
+  },
+  {
+   "what": "Front fender under fork crown",
+   "mm": 5.7,
+   "ok": true
+  },
+  {
+   "what": "Rack platform front to seat tube centreline",
+   "mm": 99,
+   "ok": true
+  },
+  {
+   "what": "Rack platform to rear fender top",
+   "mm": 18,
+   "ok": true
+  },
+  {
+   "what": "Rack platform to tyre top",
+   "mm": 34,
+   "ok": true
+  },
+  {
+   "what": "Chainguard bottom edge to chainstay top",
+   "mm": 24.4,
+   "ok": true
+  },
+  {
+   "what": "Frame lock body to seatstays",
+   "mm": 8.7,
+   "ok": true
+  },
+  {
+   "what": "Carrier block to front tyre/fender",
+   "mm": 91.4,
+   "ok": true
+  }
+ ],
  "frame": {
-  "joint_style": "fillet brazed (bronze), fillet radius ~10 mm",
+  "joint_style": "fillet",
   "tubes": [
    {
     "name": "head tube",
@@ -64,12 +133,12 @@
      [
       320,
       0,
-      494.4
+      499.2
      ],
      [
       373.8,
       0,
-      354.4
+      359.1
      ]
     ]
    },
@@ -86,12 +155,12 @@
      [
       363.7,
       0,
-      380.6
+      385.3
      ]
     ]
    },
    {
-    "name": "step tube (upper tube, \"top tube\" in the cut list)",
+    "name": "top tube (step tube on step-through designs)",
     "od": 25.4,
     "wall": 1.6,
     "centreline": [
@@ -103,7 +172,7 @@
      [
       350.5,
       0,
-      415.1
+      419.8
      ]
     ]
    },
@@ -136,11 +205,10 @@
      ],
      [
       0,
-      35,
+      25,
       0
      ]
-    ],
-    "note": "Straight between the points; in the real frame the stay is dimpled/crimped near the tyre and chainring."
+    ]
    },
    {
     "name": "chainstay right",
@@ -154,7 +222,7 @@
      ],
      [
       0,
-      -35,
+      -25,
       0
      ]
     ]
@@ -170,9 +238,9 @@
       40
      ],
      [
-      -86.3,
-      17.5,
-      250.6
+      -126.1,
+      60,
+      249.8
      ]
     ]
    },
@@ -187,9 +255,43 @@
       40
      ],
      [
-      -86.3,
-      -17.5,
-      250.6
+      -126.1,
+      -60,
+      249.8
+     ]
+    ]
+   },
+   {
+    "name": "seatstay mono stay (wishbone)",
+    "od": 25.4,
+    "wall": 1.6,
+    "centreline": [
+     [
+      -126.1,
+      0,
+      249.8
+     ],
+     [
+      -94.4,
+      0,
+      274.2
+     ]
+    ]
+   },
+   {
+    "name": "seatstay yoke (wishbone bridge)",
+    "od": 16,
+    "wall": 1.6,
+    "centreline": [
+     [
+      -126.1,
+      60,
+      249.8
+     ],
+     [
+      -126.1,
+      -60,
+      249.8
      ]
     ]
    }
@@ -202,11 +304,10 @@
    ],
    "axis": "y",
    "od": 40,
-   "width": 68,
-   "thread": "BSA 1.37x24"
+   "width": 68
   },
   "rear_dropouts": {
-   "type": "horizontal, forward-facing slot",
+   "style": "horizontal",
    "axle": [
     [
      -398,
@@ -219,44 +320,44 @@
      40
     ]
    ],
-   "slot_length": 30,
-   "slot_width": 10,
    "plate_thickness": 6,
-   "plate_size": 50
+   "slot_length": 30,
+   "slot_width": 10
   },
   "paint": {
    "main": "#1f6f5c",
    "stays": "#1f6f5c",
+   "fork": "#1f6f5c",
    "head_tube": "#f2b134",
    "accent": "#f2b134",
    "decal": "CITY"
   }
  },
  "fork": {
-  "type": "rigid, curved blades",
+  "type": "rigid",
   "steerer": {
    "od": 28.6,
    "from": [
     378.1,
     0,
-    343.2
+    347.9
    ],
    "to": [
     289.5,
     0,
-    573.8
+    578.5
    ]
   },
   "crown": {
    "top": [
     378.1,
     0,
-    343.2
+    347.9
    ],
    "bottom": [
     387,
     0,
-    319.9
+    324.6
    ],
    "half_width": 50.1
   },
@@ -265,110 +366,110 @@
    [
     387,
     50.1,
-    319.9
+    324.6
    ],
    [
-    461.2,
+    463,
     50.1,
     126.6
    ],
    [
-    464,
+    465.8,
     50.2,
     119.5
    ],
    [
-    467,
+    468.8,
     50.3,
     112.8
    ],
    [
-    470.1,
+    471.9,
     50.5,
     106.3
    ],
    [
-    473.3,
+    475.1,
     50.6,
     100.1
    ],
    [
-    476.7,
+    478.5,
     50.7,
     94.2
    ],
    [
-    480.1,
+    481.9,
     50.8,
     88.6
    ],
    [
-    483.7,
+    485.6,
     50.9,
     83.3
    ],
    [
-    487.5,
+    489.3,
     51.1,
     78.2
    ],
    [
-    491.4,
+    493.2,
     51.2,
     73.5
    ],
    [
-    495.4,
+    497.2,
     51.3,
     69
    ],
    [
-    499.5,
+    501.3,
     51.4,
     64.8
    ],
    [
-    503.8,
+    505.6,
     51.5,
     60.9
    ],
    [
-    508.2,
+    510,
     51.7,
     57.3
    ],
    [
-    512.7,
+    514.5,
     51.8,
     54
    ],
    [
-    517.4,
+    519.2,
     51.9,
     50.9
    ],
    [
-    522.2,
+    524,
     52,
     48.2
    ],
    [
-    527.1,
+    528.9,
     52.1,
     45.7
    ],
    [
-    532.1,
+    533.9,
     52.3,
     43.5
    ],
    [
-    537.3,
+    539.1,
     52.4,
     41.6
    ],
    [
-    542.6,
+    544.5,
     52.5,
     40
    ]
@@ -377,120 +478,120 @@
    [
     387,
     -50.1,
-    319.9
+    324.6
    ],
    [
-    461.2,
+    463,
     -50.1,
     126.6
    ],
    [
-    464,
+    465.8,
     -50.2,
     119.5
    ],
    [
-    467,
+    468.8,
     -50.3,
     112.8
    ],
    [
-    470.1,
+    471.9,
     -50.5,
     106.3
    ],
    [
-    473.3,
+    475.1,
     -50.6,
     100.1
    ],
    [
-    476.7,
+    478.5,
     -50.7,
     94.2
    ],
    [
-    480.1,
+    481.9,
     -50.8,
     88.6
    ],
    [
-    483.7,
+    485.6,
     -50.9,
     83.3
    ],
    [
-    487.5,
+    489.3,
     -51.1,
     78.2
    ],
    [
-    491.4,
+    493.2,
     -51.2,
     73.5
    ],
    [
-    495.4,
+    497.2,
     -51.3,
     69
    ],
    [
-    499.5,
+    501.3,
     -51.4,
     64.8
    ],
    [
-    503.8,
+    505.6,
     -51.5,
     60.9
    ],
    [
-    508.2,
+    510,
     -51.7,
     57.3
    ],
    [
-    512.7,
+    514.5,
     -51.8,
     54
    ],
    [
-    517.4,
+    519.2,
     -51.9,
     50.9
    ],
    [
-    522.2,
+    524,
     -52,
     48.2
    ],
    [
-    527.1,
+    528.9,
     -52.1,
     45.7
    ],
    [
-    532.1,
+    533.9,
     -52.3,
     43.5
    ],
    [
-    537.3,
+    539.1,
     -52.4,
     41.6
    ],
    [
-    542.6,
+    544.5,
     -52.5,
     40
    ]
   ],
   "axle": [
-   542.6,
+   544.5,
    0,
    40
   ],
-  "length_axle_to_crown": 345,
+  "length_axle_to_crown": 350,
   "rake": 45
  },
  "headset": {
@@ -518,15 +619,14 @@
    "rim_depth": 20,
    "spokes": 36,
    "hub": {
-    "type": "Shimano Nexus 7/8 internal gear hub",
     "old": 132,
-    "shell_dia": 95
+    "flange_dia": 95
    }
   },
   {
    "which": "front",
    "axle": [
-    542.6,
+    544.5,
     0,
     40
    ],
@@ -537,21 +637,27 @@
    "rim_depth": 20,
    "spokes": 36,
    "hub": {
-    "type": "front hub",
-    "old": 100
+    "old": 100,
+    "flange_dia": 45
    }
   }
  ],
  "drivetrain": {
   "crank_length": 140,
-  "chainring_teeth": 33,
-  "sprocket_teeth": 20,
+  "chainring_teeth": [
+   33
+  ],
+  "chainring_radius": [
+   66.8
+  ],
+  "sprocket_teeth": [
+   20
+  ],
+  "sprocket_radius": [
+   40.6
+  ],
   "chainline": 42,
-  "bb_centre": [
-   0,
-   0,
-   0
-  ]
+  "chain_y": -42
  },
  "cockpit": {
   "spacers": 30,
@@ -560,12 +666,12 @@
   "stem_pivot": [
    296.7,
    0,
-   555.1
+   559.8
   ],
   "bar_clamp": [
    328.2,
    0,
-   594
+   598.7
   ],
   "bar": {
    "type": "flat",
@@ -575,7 +681,7 @@
   "grips_at": [
    328.2,
    0,
-   594
+   598.7
   ]
  },
  "saddle": {
@@ -594,143 +700,703 @@
   "saddle_height_bb_to_top": 560
  },
  "accessories": {
+  "brakes": "vbrake",
   "fenders": {
-   "clearance": 14
-  },
-  "rear_rack": {
-   "note": "Separate brazed rack. Platform is entirely BEHIND the seatpost: its front end is 99 mm behind the seat tube centreline at platform height. x decreases towards the rear.",
-   "load_rating_kg": 25,
-   "tube_od": 12,
-   "tube_note": "solid rod or 16 x 1.5 tube",
-   "platform": {
-    "z": 383.5,
-    "front_x": -231.1,
-    "back_x": -498.1,
-    "width": 160,
-    "rails": [
-     [
-      [
-       -231.1,
-       80,
-       383.5
-      ],
-      [
-       -498.1,
-       80,
-       383.5
-      ]
-     ],
-     [
-      [
-       -231.1,
-       -80,
-       383.5
-      ],
-      [
-       -498.1,
-       -80,
-       383.5
-      ]
-     ]
+   "clearance": 14,
+   "rear": {
+    "centre_xz": [
+     -398,
+     40
     ],
-    "cross_bars_x": [
-     -231.1,
-     -364.6,
-     -498.1
+    "axis": "y",
+    "radius_inner": 317.5,
+    "width": 68,
+    "start_deg": 5,
+    "end_deg": 200,
+    "angle_convention": "degrees around the axle in the side (x-z) plane: 0 = forward (+x), 90 = up (+z), 180 = back",
+    "stays": [
+     {
+      "from": [
+       -415,
+       74,
+       23
+      ],
+      "to": [
+       -696.3,
+       36,
+       148.6
+      ],
+      "od": 5
+     },
+     {
+      "from": [
+       -415,
+       -74,
+       23
+      ],
+      "to": [
+       -696.3,
+       -36,
+       148.6
+      ],
+      "od": 5
+     }
+    ],
+    "mounts": [
+     {
+      "name": "chainstay bridge (fender front end bolt)",
+      "at": [
+       -74.1,
+       0,
+       7.5
+      ]
+     },
+     {
+      "name": "seatstay bridge (fender bolt)",
+      "at": [
+       -138.7,
+       0,
+       240
+      ]
+     },
+     {
+      "name": "dropout eyelet left (fender stay)",
+      "at": [
+       -415,
+       72,
+       23
+      ]
+     },
+     {
+      "name": "dropout eyelet right (fender stay)",
+      "at": [
+       -415,
+       -72,
+       23
+      ]
+     }
     ]
    },
-   "legs": [
-    [
-     [
-      -428,
-      80,
-      383.5
-     ],
-     [
-      -423,
-      80,
-      25
-     ]
+   "front": {
+    "centre_xz": [
+     544.5,
+     40
     ],
-    [
-     [
-      -428,
-      -80,
-      383.5
-     ],
-     [
-      -423,
-      -80,
-      25
-     ]
-    ]
-   ],
-   "front_stays": [
-    [
-     [
-      -231.1,
-      80,
-      383.5
-     ],
-     [
-      -179.8,
-      41,
-      187.4
-     ]
+    "axis": "y",
+    "radius_inner": 317.5,
+    "width": 68,
+    "start_deg": 40,
+    "end_deg": 195,
+    "angle_convention": "degrees around the axle in the side (x-z) plane: 0 = forward (+x), 90 = up (+z), 180 = back",
+    "stays": [
+     {
+      "from": [
+       533.5,
+       57,
+       29.4
+      ],
+      "to": [
+       269.5,
+       36,
+       198.8
+      ],
+      "od": 5
+     },
+     {
+      "from": [
+       533.5,
+       -57,
+       29.4
+      ],
+      "to": [
+       269.5,
+       -36,
+       198.8
+      ],
+      "od": 5
+     }
     ],
-    [
-     [
-      -231.1,
-      -80,
-      383.5
-     ],
-     [
-      -179.8,
-      -40.9,
-      187.4
-     ]
-    ]
-   ],
-   "frame_mounts": {
-    "dropout_eyelets": [
-     [
-      -423,
-      69,
-      25
-     ],
-     [
-      -423,
-      -69,
-      25
-     ]
-    ],
-    "seatstay_bosses": [
-     [
-      -179.8,
-      33,
-      187.4
-     ],
-     [
-      -179.8,
-      -32.9,
-      187.4
-     ]
+    "mounts": [
+     {
+      "name": "fork crown (fender bolt through crown)",
+      "at": [
+       389.8,
+       0,
+       319.6
+      ]
+     },
+     {
+      "name": "fork eyelet left, rear side of fork end",
+      "at": [
+       533.5,
+       54,
+       29.4
+      ]
+     },
+     {
+      "name": "fork eyelet right, rear side of fork end",
+      "at": [
+       533.5,
+       -54,
+       29.4
+      ]
+     }
     ]
    }
   },
-  "kickstand": "two-leg, plate between chainstays behind BB",
-  "brakes": "V-brakes front and rear (posts on fork blades and seatstays at rim radius 253.5 mm)",
-  "front_carrier_block": {
-   "on": "front face of head tube",
-   "centre": [
-    349.6,
-    0,
-    417.4
+  "rear_rack": {
+   "platform_z": 383.5,
+   "front_x": -231.1,
+   "back_x": -498.1,
+   "half_width": 83,
+   "tube_od": 12,
+   "load_kg": 25,
+   "tubes": [
+    {
+     "name": "side rail left",
+     "pts": [
+      [
+       -231.1,
+       83,
+       383.5
+      ],
+      [
+       -498.1,
+       83,
+       383.5
+      ]
+     ]
+    },
+    {
+     "name": "rear leg left",
+     "pts": [
+      [
+       -423.1,
+       83,
+       33.3
+      ],
+      [
+       -478.1,
+       83,
+       383.5
+      ]
+     ]
+    },
+    {
+     "name": "front leg left",
+     "pts": [
+      [
+       -423.1,
+       83,
+       33.3
+      ],
+      [
+       -367.6,
+       83,
+       383.5
+      ]
+     ]
+    },
+    {
+     "name": "front stay left",
+     "pts": [
+      [
+       -231.1,
+       83,
+       383.5
+      ],
+      [
+       -138,
+       72.4,
+       240.6
+      ]
+     ]
+    },
+    {
+     "name": "side rail right",
+     "pts": [
+      [
+       -231.1,
+       -83,
+       383.5
+      ],
+      [
+       -498.1,
+       -83,
+       383.5
+      ]
+     ]
+    },
+    {
+     "name": "rear leg right",
+     "pts": [
+      [
+       -423.1,
+       -83,
+       33.3
+      ],
+      [
+       -478.1,
+       -83,
+       383.5
+      ]
+     ]
+    },
+    {
+     "name": "front leg right",
+     "pts": [
+      [
+       -423.1,
+       -83,
+       33.3
+      ],
+      [
+       -367.6,
+       -83,
+       383.5
+      ]
+     ]
+    },
+    {
+     "name": "front stay right",
+     "pts": [
+      [
+       -231.1,
+       -83,
+       383.5
+      ],
+      [
+       -138,
+       -72.4,
+       240.6
+      ]
+     ]
+    },
+    {
+     "name": "cross bar 1",
+     "pts": [
+      [
+       -231.1,
+       83,
+       383.5
+      ],
+      [
+       -231.1,
+       -83,
+       383.5
+      ]
+     ]
+    },
+    {
+     "name": "cross bar 2",
+     "pts": [
+      [
+       -320.1,
+       83,
+       383.5
+      ],
+      [
+       -320.1,
+       -83,
+       383.5
+      ]
+     ]
+    },
+    {
+     "name": "cross bar 3",
+     "pts": [
+      [
+       -409.1,
+       83,
+       383.5
+      ],
+      [
+       -409.1,
+       -83,
+       383.5
+      ]
+     ]
+    },
+    {
+     "name": "cross bar 4",
+     "pts": [
+      [
+       -498.1,
+       83,
+       383.5
+      ],
+      [
+       -498.1,
+       -83,
+       383.5
+      ]
+     ]
+    }
    ],
-   "note": "Brompton-style carrier block bosses (2 x M5, ~26 mm apart, to be verified against a real block)."
+   "mounts": [
+    {
+     "name": "dropout eyelet left (rack legs)",
+     "at": [
+      -423.1,
+      72,
+      33.3
+     ]
+    },
+    {
+     "name": "dropout eyelet right (rack legs)",
+     "at": [
+      -423.1,
+      -72,
+      33.3
+     ]
+    },
+    {
+     "name": "seatstay boss left (rack front stay)",
+     "at": [
+      -138,
+      68.4,
+      240.6
+     ]
+    },
+    {
+     "name": "seatstay boss right (rack front stay)",
+     "at": [
+      -138,
+      -68.4,
+      240.6
+     ]
+    }
+   ]
   },
-  "chainguard": true,
-  "ring_lock": "bosses on seatstays above rim",
-  "bottle_bosses": "down tube"
+  "chainguard": {
+   "outline_xz": [
+    [
+     71.4,
+     -33.3
+    ],
+    [
+     74.8,
+     -24.9
+    ],
+    [
+     77.1,
+     -16.1
+    ],
+    [
+     78.5,
+     -7.2
+    ],
+    [
+     78.8,
+     1.9
+    ],
+    [
+     78,
+     10.9
+    ],
+    [
+     76.3,
+     19.8
+    ],
+    [
+     73.5,
+     28.4
+    ],
+    [
+     69.7,
+     36.7
+    ],
+    [
+     65.1,
+     44.5
+    ],
+    [
+     59.5,
+     51.6
+    ],
+    [
+     53.2,
+     58.1
+    ],
+    [
+     46.2,
+     63.9
+    ],
+    [
+     38.5,
+     68.7
+    ],
+    [
+     30.4,
+     72.7
+    ],
+    [
+     21.8,
+     75.7
+    ],
+    [
+     13,
+     77.7
+    ],
+    [
+     -309.1,
+     89
+    ],
+    [
+     -313,
+     65.4
+    ],
+    [
+     9,
+     54.1
+    ],
+    [
+     7.4,
+     44.2
+    ],
+    [
+     14.1,
+     42.5
+    ],
+    [
+     20.4,
+     39.9
+    ],
+    [
+     26.3,
+     36.3
+    ],
+    [
+     31.5,
+     31.9
+    ],
+    [
+     36,
+     26.7
+    ],
+    [
+     39.6,
+     20.9
+    ],
+    [
+     42.4,
+     14.6
+    ],
+    [
+     44.1,
+     7.9
+    ],
+    [
+     44.8,
+     1.1
+    ],
+    [
+     44.4,
+     -5.8
+    ],
+    [
+     43,
+     -12.5
+    ],
+    [
+     40.6,
+     -18.9
+    ]
+   ],
+   "plate_y": -56,
+   "plate_thickness": 1.5,
+   "lip_xz": [
+    [
+     77.6,
+     13.7
+    ],
+    [
+     74.6,
+     25.4
+    ],
+    [
+     69.8,
+     36.5
+    ],
+    [
+     63.4,
+     46.8
+    ],
+    [
+     55.5,
+     56
+    ],
+    [
+     46.2,
+     63.8
+    ],
+    [
+     35.9,
+     70.1
+    ],
+    [
+     24.8,
+     74.8
+    ],
+    [
+     13,
+     77.7
+    ],
+    [
+     -309.1,
+     89
+    ]
+   ],
+   "lip_from_y": -56,
+   "lip_to_y": -34,
+   "note": "Outer plate in the plane y = plate_y, outline given in side view; a top lip runs along lip_xz from the plate inward to lip_to_y, covering the top of the chainring and upper chain run.",
+   "mounts": [
+    {
+     "name": "seat tube tab, drive side",
+     "at": [
+      -17.3,
+      -17.5,
+      78.8
+     ]
+    },
+    {
+     "name": "chainstay tab, drive side",
+     "at": [
+      -289,
+      -66.5,
+      29
+     ]
+    }
+   ]
+  },
+  "ring_lock": {
+   "centre": [
+    -177.5,
+    0,
+    210.1
+   ],
+   "radial_xz": [
+    0.8,
+    0.6
+   ],
+   "inner_radius": 31,
+   "outer_radius": 45,
+   "body_arc_deg": 220,
+   "body_length": 30,
+   "note": "A U-shaped body around the tyre. Its arc lies in the plane spanned by the lateral axis (y) and radial_xz, centred on 'centre', covering body_arc_deg centred on the outward radial direction; the shackle closes the rest of the circle through the spokes. body_length is its thickness along the wheel's direction of travel.",
+   "mounts": [
+    {
+     "name": "seatstay lock boss left lower",
+     "at": [
+      -197.3,
+      70.4,
+      194.8
+     ],
+     "note": "M5; spacing to suit the chosen lock (verify)"
+    },
+    {
+     "name": "seatstay lock boss left upper",
+     "at": [
+      -157.7,
+      69,
+      225.4
+     ],
+     "note": "M5; spacing to suit the chosen lock (verify)"
+    },
+    {
+     "name": "seatstay lock boss right lower",
+     "at": [
+      -197.3,
+      -70.4,
+      194.8
+     ],
+     "note": "M5; spacing to suit the chosen lock (verify)"
+    },
+    {
+     "name": "seatstay lock boss right upper",
+     "at": [
+      -157.7,
+      -69,
+      225.4
+     ],
+     "note": "M5; spacing to suit the chosen lock (verify)"
+    }
+   ]
+  },
+  "front_carrier_block": {
+   "forward_xz": [
+    0.9,
+    0.4
+   ],
+   "up_xz": [
+    -0.4,
+    0.9
+   ],
+   "mount_block": {
+    "centre": [
+     365.7,
+     0,
+     444.4
+    ],
+    "alongHT": 40,
+    "width": 24,
+    "depth": 12,
+    "holes": [
+     [
+      366.6,
+      0,
+      458.7
+     ],
+     [
+      375.9,
+      0,
+      434.4
+     ]
+    ],
+    "thread": "M5",
+    "holeSpacing": 26
+   },
+   "carrier_block": {
+    "centre": [
+     401.6,
+     0,
+     458.2
+    ],
+    "depth": 65,
+    "width": 60,
+    "height": 60,
+    "loadKg": 10
+   },
+   "note": "Brompton-style. A steel mounting block is brazed to the front of the head tube with two M5 threaded holes 26 mm apart along the head tube (Brompton fixes its block with 2 x M5x16 socket head screws at 4 Nm, data sheet ds-fcba). The carrier block is a box about 65 deep x 60 wide x 60 high (Brompton ColourLab block listing; units assumed mm) bolted to it, with a latch the luggage frame clips onto. Brompton rate it at 10 kg. Hole spacing comes from a third-party block listing: measure a real block before brazing."
+  },
+  "kickstand": {
+   "plate": {
+    "centre": [
+     -54.7,
+     0,
+     -7
+    ],
+    "length": 60,
+    "width": 81.14999999999999
+   },
+   "pivot": [
+    -54.7,
+    0,
+    -32
+   ],
+   "feet": [
+    [
+     -24.7,
+     160,
+     -263.5
+    ],
+    [
+     -24.7,
+     -160,
+     -263.5
+    ]
+   ],
+   "type": "two-leg centre stand"
+  }
  }
 }

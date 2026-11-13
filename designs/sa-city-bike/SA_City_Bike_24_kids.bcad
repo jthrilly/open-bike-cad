@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
-<comment>Created by Open Bike CAD on Fri Nov 13 2026 15:40:42 GMT+0000 (Coordinated Universal Time)</comment>
+<comment>Created by Open Bike CAD on Fri Nov 13 2026 16:40:24 GMT+0000 (Coordinated Universal Time)</comment>
 <entry key="Head angle">69.0</entry>
 <entry key="Seat angle">71.0</entry>
 <entry key="DISCONTINUOUS">false</entry>
@@ -29,26 +29,26 @@
 <entry key="Saddle angle">0.0</entry>
 <entry key="Wheel diameter rear">607.0</entry>
 <entry key="Wheel diameter front">607.0</entry>
-<entry key="FORK0L">342.1</entry>
+<entry key="FORK0L">347.1</entry>
 <entry key="FORK0R">45.0</entry>
 <entry key="DUAL_CROWN">false</entry>
 <entry key="Fork straight blade">false</entry>
 <entry key="Top tube front center measure style">3</entry>
 <entry key="FCD textfield">320.0</entry>
-<entry key="Stack">494.4</entry>
+<entry key="Stack">499.2</entry>
 <entry key="Head tube length textfield">150.0</entry>
-<entry key="Top tube angle textfield">41.0</entry>
+<entry key="Top tube angle textfield">41.4</entry>
 <entry key="BB textfield">40.0</entry>
 <entry key="CS textfield">400.0</entry>
 <entry key="ST measure style">1</entry>
 <entry key="Head tube upper extension2">85.0</entry>
 <entry key="Head tube lower extension2">28.0</entry>
 <entry key="Seat tube extension2">240.0</entry>
-<entry key="Head tube upper extension">78.4</entry>
-<entry key="Head tube lower extension">1.4</entry>
-<entry key="Seat tube extension">219.2</entry>
+<entry key="Head tube upper extension">78.5</entry>
+<entry key="Head tube lower extension">1.2</entry>
+<entry key="Seat tube extension">219.1</entry>
 <entry key="Seat tube length">330.0</entry>
-<entry key="Seat stay junction0">-175.0</entry>
+<entry key="Seat stay junction0">-200.0</entry>
 <entry key="Top tube diameter">25.4</entry>
 <entry key="Down tube front diameter">31.8</entry>
 <entry key="Down tube diameter">31.8</entry>
@@ -78,7 +78,7 @@
 <entry key="DROPPER">false</entry>
 <entry key="bottle DOWNTUBE0 show">true</entry>
 <entry key="bottle SEATTUBE0 show">false</entry>
-<entry key="Seat stay wishbone">false</entry>
+<entry key="Seat stay wishbone">true</entry>
 <entry key="Chain stay wishbone">false</entry>
 <entry key="Teeth on chainring 0">33</entry>
 <entry key="Number of chainrings">0</entry>
@@ -108,9 +108,12 @@
 <entry key="OpenBikeCAD.stBottomSection">0.0</entry>
 <entry key="OpenBikeCAD.mixteRearOffset">0.0</entry>
 <entry key="OpenBikeCAD.chainstayLength">400.0</entry>
-<entry key="OpenBikeCAD.ssSeatOffset">-175.0</entry>
-<entry key="OpenBikeCAD.seatstayStyle">standard</entry>
-<entry key="OpenBikeCAD.wishboneLength">120.0</entry>
+<entry key="OpenBikeCAD.ssSeatOffset">-200.0</entry>
+<entry key="OpenBikeCAD.seatstayStyle">wishbone</entry>
+<entry key="OpenBikeCAD.wishboneLength">40.0</entry>
+<entry key="OpenBikeCAD.ssMonoOD">25.4</entry>
+<entry key="OpenBikeCAD.ssMonoWall">1.6</entry>
+<entry key="OpenBikeCAD.wishboneSpread">120.0</entry>
 <entry key="OpenBikeCAD.rearSpacing">132.0</entry>
 <entry key="OpenBikeCAD.frontSpacing">100.0</entry>
 <entry key="OpenBikeCAD.dropoutStyle">horizontal</entry>
@@ -121,12 +124,13 @@
 <entry key="OpenBikeCAD.ssDropoutOffset">35.0</entry>
 <entry key="OpenBikeCAD.bbShellWidth">68.0</entry>
 <entry key="OpenBikeCAD.bbShellOD">40.0</entry>
-<entry key="OpenBikeCAD.csWidthAtBB">70.0</entry>
+<entry key="OpenBikeCAD.csWidthAtBB">50.0</entry>
 <entry key="OpenBikeCAD.csYoke">false</entry>
-<entry key="OpenBikeCAD.csBridgePos">70.0</entry>
+<entry key="OpenBikeCAD.csDimple">7.0</entry>
+<entry key="OpenBikeCAD.csBridgePos">85.0</entry>
 <entry key="OpenBikeCAD.ssBridgePos">130.0</entry>
 <entry key="OpenBikeCAD.forkType">rigid</entry>
-<entry key="OpenBikeCAD.forkLength">345.0</entry>
+<entry key="OpenBikeCAD.forkLength">350.0</entry>
 <entry key="OpenBikeCAD.forkRake">45.0</entry>
 <entry key="OpenBikeCAD.forkBladeBendLength">110.0</entry>
 <entry key="OpenBikeCAD.forkCrownHeight">25.0</entry>
@@ -229,7 +233,17 @@
 <entry key="OpenBikeCAD.bossSpacing">64.0</entry>
 <entry key="OpenBikeCAD.fenders">true</entry>
 <entry key="OpenBikeCAD.fenderClearance">14.0</entry>
+<entry key="OpenBikeCAD.fenderRearStart">5.0</entry>
+<entry key="OpenBikeCAD.fenderRearEnd">200.0</entry>
+<entry key="OpenBikeCAD.fenderFrontStart">40.0</entry>
+<entry key="OpenBikeCAD.fenderFrontEnd">195.0</entry>
 <entry key="OpenBikeCAD.rearRack">true</entry>
+<entry key="OpenBikeCAD.rackTubeOD">12.0</entry>
+<entry key="OpenBikeCAD.rackHeightAboveTyre">40.0</entry>
+<entry key="OpenBikeCAD.rackLoad">25.0</entry>
+<entry key="OpenBikeCAD.chainguard">true</entry>
+<entry key="OpenBikeCAD.ringLock">true</entry>
+<entry key="OpenBikeCAD.carrierBlock">true</entry>
 <entry key="OpenBikeCAD.frontRack">false</entry>
 <entry key="OpenBikeCAD.pump">false</entry>
 <entry key="OpenBikeCAD.cableGuides">true</entry>
@@ -273,7 +287,7 @@
 <entry key="OpenBikeCAD.size">Riders ~125-150 cm</entry>
 <entry key="OpenBikeCAD.material">Mild / high-tensile ERW steel, fillet brazed (bronze)</entry>
 <entry key="OpenBikeCAD.drawingDate"></entry>
-<entry key="OpenBikeCAD.notes">Kids version of the twin straight-tube step-through. Same head tube, seat tube, BB shell, dropouts and 132 mm hub spacing as the adult frame so parts and jigs are shared. Rear rack mounts for ~25 kg (no passengers).</entry>
+<entry key="OpenBikeCAD.notes">Kids version of the twin straight-tube step-through, wishbone seatstays (120 mm yoke), chainstays dimpled 7 mm. Same head tube, seat tube, BB shell, dropouts and 132 mm hub spacing as the adult frame so parts and jigs are shared. Rear rack mounts for ~25 kg (no passengers).</entry>
 <entry key="OpenBikeCAD.sheetSize">A3</entry>
 <entry key="OpenBikeCAD.titleBlockColor">#2f6fde</entry>
 <entry key="OpenBikeCAD.showDims">true</entry>
@@ -288,5 +302,5 @@
 <entry key="OpenBikeCAD.dimTextSize">14.0</entry>
 <entry key="OpenBikeCAD.dimColor">#c2410c</entry>
 <entry key="OpenBikeCAD.dimSet">stack,reach,ha,sa,htl,cs,bbdrop,bbh,wb,fc,trail,st,tt,dt,standover,fork,rake</entry>
-<entry key="OpenBikeCAD.fingerprint">5c2fd81d</entry>
+<entry key="OpenBikeCAD.fingerprint">59b5dd19</entry>
 </properties>
