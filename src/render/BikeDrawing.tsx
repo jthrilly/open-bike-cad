@@ -366,7 +366,8 @@ function EAssistSide({ asm, outline, sw }: { asm: Assembly; outline: string; sw:
           <path d={svgPath(box(b.pack))} fill="#3d4450" stroke={outline} strokeWidth={sw} />
           <path d={svgPath([side(b.brace.boss), side(b.brace.from)], false)} stroke="#8a9099" strokeWidth={8} strokeLinecap="round" fill="none" />
           <circle cx={sx(side(b.brace.boss))} cy={sy(side(b.brace.boss))} r={5} fill="#c9ccd1" stroke={outline} strokeWidth={sw * 0.6} />
-          <circle cx={sx(side(b.headlight))} cy={sy(side(b.headlight))} r={14} fill="#f2e6a0" stroke={outline} strokeWidth={sw * 0.7} />
+          <path d={svgPath([side(b.headlight), side(b.headlightLamp)], false)} stroke="#8a9099" strokeWidth={8} fill="none" />
+          <circle cx={sx(side(b.headlightLamp))} cy={sy(side(b.headlightLamp))} r={14} fill="#f2e6a0" stroke={outline} strokeWidth={sw * 0.7} />
         </g>
       )}
     </g>

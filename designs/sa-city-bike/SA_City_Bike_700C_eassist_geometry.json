@@ -137,6 +137,11 @@
    "ok": true
   },
   {
+   "what": "Carrier block to front tyre/fender at full steering lock",
+   "mm": 123.9,
+   "ok": true
+  },
+  {
    "what": "Battery pack to front tyre/fender at full steering lock",
    "mm": 110.4,
    "ok": true
@@ -144,6 +149,11 @@
   {
    "what": "Motor controller to front tyre/fender at full steering lock",
    "mm": 108.9,
+   "ok": true
+  },
+  {
+   "what": "Headlight to front tyre/fender at full steering lock",
+   "mm": 75.6,
    "ok": true
   },
   {
@@ -1569,8 +1579,10 @@
     "height": 60,
     "loadKg": 10
    },
+   "position": "standard",
    "note": "Brompton-style. A steel mounting block is brazed to the front of the head tube with two M5 threaded holes 26 mm apart along the head tube (Brompton fixes its block with 2 x M5x16 socket head screws at 4 Nm, data sheet ds-fcba). The carrier block is a box about 65 deep x 60 wide x 60 high (Brompton ColourLab block listing; units assumed mm) bolted to it, with a latch the luggage frame clips onto. Brompton rate it at 10 kg. Hole spacing comes from a third-party block listing: measure a real block before brazing."
   },
+  "front_bag": null,
   "e_assist": {
    "forward_xz": [
     0.9,
@@ -1635,15 +1647,22 @@
      584.2
     ],
     "charge_port": [
-     550.4,
-     44.5,
-     687.1
+     497,
+     42.5,
+     668.2
     ],
     "headlight": [
-     597.2,
+     599.4,
      0,
-     573.3
+     567.7
     ],
+    "headlight_lamp": [
+     607.2,
+     0,
+     547.2
+    ],
+    "headlight_note": "headlight = bracket mount on the cradle floor front lip; headlight_lamp = lamp body centre, hanging 22 mm below the cradle floor, clear of the pack.",
+    "charge_port_note": "Left face of the pack, in the BMS zone 10 mm forward of the pack back face (not over the cell ends), 28.5 mm below the pack top.",
     "removal_xz": [
      -0.4,
      0.9

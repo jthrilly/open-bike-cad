@@ -323,4 +323,11 @@
 <entry key="OpenBikeCAD.motorPower">250.0</entry>
 <entry key="OpenBikeCAD.pasSensor">cadence</entry>
 <entry key="OpenBikeCAD.blockBatteryLayout">10S2P of 21700 cells (5.0 Ah, 21.7 x 70.8 mm, ~69 g). Cells lie across the bike (axis = y) in a 4 deep x 5 high grid on 22.2 mm holder pitch: core 88.8 deep x 111 high x 74.5 wide incl. holders and nickel. Adds: kapton/fish-paper wrap 1 mm a side; 10S 20 A BMS (~60 x 45 x 8 mm) plus leads on the back face, 12 mm; EVA foam 1.5 mm a side; ABS/alu case wall 2.5 mm a side; slide-in lock and contact block under the cells 18 mm; carry handle and charge port in the top cap 12 mm. Pack 111 deep x 151 high x 85 wide, ~2.2 kg (cells 1.38 kg). Controller is not in the pack.</entry>
+<entry key="OpenBikeCAD.carrierBlockPosition">standard</entry>
+<entry key="OpenBikeCAD.carrierBlockLowPos">60.0</entry>
+<entry key="OpenBikeCAD.frontBag">false</entry>
+<entry key="OpenBikeCAD.frontBagHeight">300.0</entry>
+<entry key="OpenBikeCAD.frontBagDepth">180.0</entry>
+<entry key="OpenBikeCAD.frontBagWidth">330.0</entry>
+<entry key="OpenBikeCAD.frontBagBelowBlock">60.0</entry>
 </properties>

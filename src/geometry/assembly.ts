@@ -108,7 +108,10 @@ export interface EAssist {
     controller: Box3;
     keyLock: P3;
     chargePort: P3;
+    /** Headlight bracket mount on the cradle floor's front lip. */
     headlight: P3;
+    /** Lamp body centre: hangs 22 mm below the cradle floor on a short bracket, clear of the pack. */
+    headlightLamp: P3;
     /** Direction the pack lifts out (side view). */
     removal: Vec;
     /** Flat-bar brace from the cradle floor to an M5 boss low on the front of the head tube, so pothole loads don't all go through the block's two M5 screws. */
@@ -650,8 +653,10 @@ export function buildAssembly(d: Design, g: Geometry): Assembly {
         pack: { ...pack, wh: numOf(d, 'blockBatteryWh'), kg, volts: 36, layout: String(d.blockBatteryLayout ?? '') },
         controller: ctrl,
         keyLock: p3(at(face, plate + baseT + pd * 0.5, lift - ph / 2 + 15), -(pw / 2 + 4)),
-        chargePort: p3(at(face, plate + baseT + pd * 0.6, lift + ph / 2 - 30), pw / 2 + 2),
-        headlight: p3(at(face, plate + baseT + pd * 0.5 + 14, cradleBottom + 6)), // on the cradle floor's front lip, so it stays when the pack is lifted out
+        // Charge port on the left face in the BMS zone behind the cells (not over the cell ends), above the cradle cheeks.
+        chargePort: p3(at(face, plate + baseT + 10, lift + ph / 2 - 28.5), pw / 2),
+        headlight: p3(at(face, plate + baseT + pd * 0.5 + 14, cradleBottom)),
+        headlightLamp: p3(at(face, plate + baseT + pd * 0.5 + 14, cradleBottom - 22)),
         removal: up,
         brace: (() => {
           const htR = numOf(d, 'htOD') / 2;
@@ -663,6 +668,8 @@ export function buildAssembly(d: Design, g: Geometry): Assembly {
       };
       check('Battery pack to front tyre/fender at full steering lock', boxDist(pack, swept), 25);
       check('Motor controller to front tyre/fender at full steering lock', boxDist(ctrl, swept), 25);
+      const lampBox: Box3 = { centre: battery.headlightLamp, depth: 32, height: 28, width: 28 };
+      check('Headlight to front tyre/fender at full steering lock', boxDist(lampBox, swept), 25);
       check('Battery pack to handlebar at full steering lock', boxDist(pack, barSwept) - 12, 30);
       check('Battery pack slid 50 mm up to unlock, to handlebar (bars straight)', boxDist({ ...pack, centre: p3(at(packC, 0, 50)) }, barPts) - 12, 15);
     }
