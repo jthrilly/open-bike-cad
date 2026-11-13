@@ -4,16 +4,21 @@ Run headless from designs/sa-city-bike:
   blender -b -P blender/build_school_bag.py -- [--no-render] [--samples N] OUT_DIR SA_City_Bike_24_kids_geometry.json
 
 It builds the bike with build_bike.py, hangs the bag on accessories.front_carrier_block,
-prints a clearance report (fender, tyre, bars, hands and steering lock) and writes into OUT_DIR:
-  school_bag.glb / .blend              the bag alone, straps out (backpack mode)
-  school_bag_on_bike.glb / .blend      the bike with the bag clipped on, straps stowed
-  school_bag_clearance.txt             the clearance report
-  school_bag_front34.png, school_bag_back34.png, school_bag_side.png,
-  school_bag_on_bike_side.png, school_bag_on_bike_front34.png, school_bag_on_bike_steer.png
+prints a clearance report (fender, tyre, bars, hands and steering lock) and writes, for each
+layout (--layout upright|flat, default both; prefix school_bag or school_bag_flat), into OUT_DIR:
+  <prefix>.glb / .blend              the bag alone, straps out (backpack mode)
+  <prefix>_on_bike.glb / .blend      the bike with the bag clipped on, straps stowed
+  <prefix>_clearance.txt             the clearance report
+  <prefix>_front34.png, <prefix>_back34.png, <prefix>_side.png,
+  <prefix>_on_bike_side.png, <prefix>_on_bike_front34.png, <prefix>_on_bike_steer.png
 
-The bag hangs with its back vertical. Because the block's faces follow the head tube, the
-receiver moulding is a wedge: it wraps the block's front face, sides and top, and its back
-is vertical where it bolts through the bag's back panel to the aluminium frame.
+upright: the frame is on the back panel, which faces the rider; the bag rises above the bars.
+flat: the bag lies on its back panel over the wheel with its frame on its base, so it reaches
+further forward and stays below the bars.
+
+The frame plane is vertical. Because the block's faces follow the head tube, the receiver
+moulding is a wedge: it wraps the block's front face, sides and top, and its back is vertical
+where it bolts through the bag to the aluminium frame.
 """
 
 import json
@@ -237,7 +242,8 @@ def build_bag(g, M, straps_out, lay):
     rounded_box(part("bag_pocket", "trim"), (D - 10, -120, pz0), (D + POCKET_D, 120, pz1), min(20, POCKET_D), 5, T)
     box(part("bag_reflective", "reflect"), L(D + POCKET_D + 0.6, 0, pz1 - 25), (1.5, 200, 22), R3)
     for s in (1, -1):
-        box(part("bag_reflective", "reflect"), L(D * 0.5, s * (hw + 0.8), H * 0.4), (110, 1.5, 18), R3)
+        # side bands run horizontally as the bag sits on the bike
+        box(part("bag_reflective", "reflect"), L(D * 0.5, s * (hw + 0.8), H * 0.4), (18, 1.5, 120) if flat else (110, 1.5, 18), R3)
     box(part("bag_reflective", "reflect"), L(D + POCKET_D + 0.6, 0, (pz0 + pz1) / 2 - 20), (1.2, 90, 50), R3)
     if flat:
         # the top of the bag faces traffic on the bike, so it carries a reflective band too
@@ -314,7 +320,10 @@ def build_bag(g, M, straps_out, lay):
 # ---------------------------------------------------------------- clearance
 
 
-STEERED = ("fork", "front_hub", "front_rim", "front_spokes", "front_tyre", "handlebar", "grips", "brake_levers", "stem", "spacers")
+STEERED = (
+    "fork", "front_hub", "front_rim", "front_spokes", "front_tyre", "handlebar", "grips", "brake_levers",
+    "brake_lever_blades", "shifter", "shifter_paddle", "stem", "spacers",
+)  # cables flex, so they are left out
 STEERED_FRONT_PART = ("fenders", "fender_stays", "brakes")  # objects that also hold rear parts
 
 

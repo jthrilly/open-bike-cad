@@ -42,7 +42,16 @@ block's front, sides and top, has a release lever on top, and is a wedge so the 
 vertically even though the block follows the head tube. The shoulder straps stow in a zipped
 pocket between the frame rails, and two spacer-mesh pads stand proud of the receiver for walking.
 
-It writes `school_bag.glb`/`.blend` (the bag alone, straps out), `school_bag_on_bike.glb`/`.blend`
+It builds two layouts (`--layout upright|flat`, default both). **Upright** hangs the bag with its
+back panel, frame and receiver facing the rider; it rises above the bars. **Flat** turns the bag
+so it lies on its back panel over the front wheel, with the frame and receiver on its base: it
+is 340 W × 330 L × 170 H mm on the bike and stays below the bars, so nothing touches it through
+70° of steering, but its load sits about 200 mm ahead of the block instead of about 115 mm. In the
+flat layout the main zip is a clamshell, so the lid opens upwards on the bike, and the back pads
+are 10 mm deep because nothing on the back panel needs to clear them. Flat outputs use the
+prefix `school_bag_flat`.
+
+For the upright layout it writes `school_bag.glb`/`.blend` (the bag alone, straps out), `school_bag_on_bike.glb`/`.blend`
 (the bike with the bag clipped on, straps stowed) and renders, and `school_bag_clearance.txt`.
 That file reports the gap to every steered part straight ahead, and the steering angle at which
 each first touches the bag, with a 25 mm allowance for a child's hand on the grips. It builds
