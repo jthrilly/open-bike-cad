@@ -13,7 +13,13 @@ and Cycles renders `<name>_side.png` (orthographic, drive side), `<name>_front34
 report: tyre to crown, seat tube, step tube and down tube, and whether a fender fits under
 the crown.
 
-The rear rack comes from `accessories.rear_rack` when it holds geometry. The saddle is a
-sprung leather city saddle (twin coil springs, rivets) sized from `saddle.saddle_length`.
+Accessories are built only from the `accessories` section of the geometry (format version 2):
+fenders and their stays, the rear rack tubes, the chainguard outline and lip, the ring lock,
+the front carrier block, the kickstand and the V-brakes. Nothing there is invented by the
+script, so a change to a drawing shows up in the model once the JSON is regenerated. The
+saddle is a sprung leather city saddle (twin coil springs, rivets) sized from
+`saddle.saddle_length`; it is the one part not described by the JSON.
+
+The clearance report also prints the JSON's own `clearances` list.
 
 Options: `--no-render` skips the renders; `--samples N` sets Cycles samples (default 96).

@@ -209,6 +209,10 @@ def point_at_distance(poly, centre, dist):
     return None, None
 
 
+def first(v):
+    return v[0] if isinstance(v, list) else v
+
+
 def dist_point_segment(p, a, b):
     p, a, b = Vector(p), Vector(a), Vector(b)
     ab = b - a
@@ -225,6 +229,7 @@ def build(g):
     paint = fr["paint"]
     M = {
         "main": material("paint_main", paint["main"], 0.0, 0.25, 0.8),
+        "fork": material("paint_fork", paint.get("fork", paint["main"]), 0.0, 0.25, 0.8),
         "stays": material("paint_stays", paint["stays"], 0.0, 0.25, 0.8),
         "head": material("paint_head_tube", paint["head_tube"], 0.0, 0.25, 0.8),
         "accent": material("paint_accent", paint["accent"], 0.0, 0.3, 0.6),
@@ -248,16 +253,19 @@ def build(g):
     for t in fr["tubes"]:
         name = t["name"].split(" (")[0]
         mat = M["head"] if name == "head tube" else (M["stays"] if "stay" in name else M["main"])
+        if t["od"] and len(t["centreline"]) >= 2 and name.startswith("seatstay"):
+            # round the ends of the stays where they meet (wishbone yoke)
+            for end in t["centreline"]:
+                bmesh.ops.create_uvsphere(part("frame_stays", M["stays"]).bm, u_segments=16, v_segments=8, radius=t["od"] / 2, matrix=Matrix.Translation(end))
         key = "frame_head_tube" if name == "head tube" else ("frame_stays" if "stay" in name else "frame_main")
         sweep(part(key, mat), t["centreline"], t["od"] / 2, segs=32)
     # fillet joints: small spheres approximating the bronze fillets where tubes meet
     fillet = part("frame_main", M["main"])
-    joints = [tubes["step tube"]["centreline"][0], tubes["step tube"]["centreline"][1], tubes["down tube"]["centreline"][1]]
+    upper = tubes.get("top tube") or tubes["step tube"]
+    joints = [upper["centreline"][0], upper["centreline"][1], tubes["down tube"]["centreline"][1]]
     for j in joints:
         bmesh.ops.create_uvsphere(fillet.bm, u_segments=24, v_segments=12, radius=18, matrix=Matrix.Translation(j))
     st_top = Vector(tubes["seat tube"]["centreline"][1])
-    ss_top = Vector(tubes["seatstay left"]["centreline"][1])
-    sweep(part("frame_stays", M["stays"]), [ss_top, Vector((ss_top.x, -ss_top.y, ss_top.z))], 9, segs=16)
     # seat tube top: seat collar
     st_dir = (st_top - Vector(tubes["seat tube"]["centreline"][0])).normalized()
     lathe(part("seat_collar", M["black"]), disc_profile(15.5, 21, 18), st_top - st_dir * 6, st_dir, segs=32)
@@ -268,7 +276,7 @@ def build(g):
 
     # rear dropouts: plates around the axle, slot forward
     rd = fr["rear_dropouts"]
-    ps, th = rd["plate_size"], rd["plate_thickness"]
+    ps, th = rd.get("plate_size", 50), rd["plate_thickness"]
     for ax in rd["axle"]:
         a = Vector(ax)
         side = 1 if a.y > 0 else -1
@@ -292,21 +300,21 @@ def build(g):
     # fork
     fk = g["fork"]
     st = fk["steerer"]
-    sweep(part("fork", M["main"]), [st["from"], st["to"]], st["od"] / 2, segs=24)
+    sweep(part("fork", M["fork"]), [st["from"], st["to"]], st["od"] / 2, segs=24)
     crown_top, crown_bot = Vector(fk["crown"]["top"]), Vector(fk["crown"]["bottom"])
     hw = fk["crown"]["half_width"]
     crown_axis = (crown_top - crown_bot).normalized()
     crown_rot = basis_from(Y, crown_axis)
     cc = (crown_top + crown_bot) / 2
-    box(part("fork", M["main"]), cc, (2 * hw + fk["blade_od"], 34, (crown_top - crown_bot).length), crown_rot)
+    box(part("fork", M["fork"]), cc, (2 * hw + fk["blade_od"], 34, (crown_top - crown_bot).length), crown_rot)
     for key in ("blade_left", "blade_right"):
         pts = fk[key]
         n = len(pts)
         radii = [fk["blade_od"] / 2 * (1 - 0.35 * max(0, i - 1) / (n - 2)) for i in range(n)]
-        sweep(part("fork", M["main"]), pts, 0, segs=24, radii=radii)
+        sweep(part("fork", M["fork"]), pts, 0, segs=24, radii=radii)
         tip = Vector(pts[-1])
         prism(
-            part("fork", M["main"]),
+            part("fork", M["fork"]),
             [(tip.x - 14, tip.z - 12), (tip.x + 14, tip.z - 12), (tip.x + 12, tip.z + 22), (tip.x - 12, tip.z + 22)],
             tip.y - 2.5,
             tip.y + 2.5,
@@ -480,13 +488,14 @@ def wheel(parts, part, M, w, g):
     lathe(part(f"{name}_rim", M["alu"]), [(r_bead - w["rim_depth"], -rim_w / 4), (r_bead + 2, -rim_w / 2), (r_bead + 4, -rim_w / 2), (r_bead + 4, rim_w / 2), (r_bead + 2, rim_w / 2), (r_bead - w["rim_depth"], rim_w / 4)], ax, Y, 96)
     hub = w["hub"]
     old = hub["old"]
-    if "shell_dia" in hub:  # internal gear hub drum
-        shell_r = hub["shell_dia"] / 2
+    shell_dia = hub.get("shell_dia") or (hub["flange_dia"] if hub.get("flange_dia", 0) >= 80 else None)
+    if shell_dia:  # internal gear hub drum
+        shell_r = shell_dia / 2
         lathe(part(f"{name}_hub", M["alu"]), [(8, -old / 2), (18, -old / 2 + 4), (shell_r - 8, -40), (shell_r, -30), (shell_r, 30), (shell_r - 8, 40), (18, old / 2 - 4), (8, old / 2)], ax, Y, 48)
         flange_r, flange_off = shell_r + 6, 26
     else:
         lathe(part(f"{name}_hub", M["alu"]), [(5, -old / 2), (14, -old / 2 + 4), (16, -30), (16, 30), (14, old / 2 - 4), (5, old / 2)], ax, Y, 32)
-        flange_r, flange_off = 27, 34
+        flange_r, flange_off = hub.get("flange_dia", 54) / 2, 34
     for s in (1, -1):
         lathe(part(f"{name}_hub", M["alu"]), disc_profile(10, flange_r + 3, 3), ax + Y * s * flange_off, Y, 48)
     lathe(part(f"{name}_hub", M["steel"]), disc_profile(0, 5, old + 20), ax, Y, 16)
@@ -507,15 +516,17 @@ def wheel(parts, part, M, w, g):
 
 def drivetrain(part, M, g, rear):
     d = g["drivetrain"]
-    y = -d["chainline"]
-    bb = Vector(d["bb_centre"])
-    r_ring = 12.7 / (2 * math.sin(math.pi / d["chainring_teeth"]))
-    r_cog = 12.7 / (2 * math.sin(math.pi / d["sprocket_teeth"]))
+    y = d.get("chain_y", -d["chainline"])
+    bb = Vector(d.get("bb_centre") or g["frame"]["bb_shell"]["centre"])
+    ring_teeth = first(d["chainring_teeth"])
+    cog_teeth = first(d["sprocket_teeth"])
+    r_ring = first(d.get("chainring_radius")) or 12.7 / (2 * math.sin(math.pi / ring_teeth))
+    r_cog = first(d.get("sprocket_radius")) or 12.7 / (2 * math.sin(math.pi / cog_teeth))
     rear_ax = Vector(rear["axle"])
     # chainring with teeth
     ring = part("chainring", M["steel"], smooth=False)
     outline = []
-    nt = d["chainring_teeth"]
+    nt = ring_teeth
     for k in range(nt * 4):
         a = 2 * math.pi * k / (nt * 4)
         rr = r_ring + (4 if k % 4 in (1, 2) else -3)
@@ -523,7 +534,7 @@ def drivetrain(part, M, g, rear):
     prism(ring, outline, y - 1.5, y + 1.5)
     lathe(part("crankset", M["alu"]), disc_profile(0, r_ring * 0.55, 8), bb + Vector((0, y - 6, 0)), Y, 48)
     # cog
-    nt = d["sprocket_teeth"]
+    nt = cog_teeth
     outline = []
     for k in range(nt * 4):
         a = 2 * math.pi * k / (nt * 4)
@@ -557,169 +568,168 @@ def drivetrain(part, M, g, rear):
 
 
 def accessories(part, M, g, wheels, tubes):
+    """Accessories, built only from the explicit geometry in accessories.* (no invented shapes)."""
     acc = g["accessories"]
-    fr = g["frame"]
     front, rear = wheels["front"], wheels["rear"]
     fa, ra = Vector(front["axle"]), Vector(rear["axle"])
-    d = g["drivetrain"]
 
-    # fenders
-    if "fenders" in acc:
-        clr = acc["fenders"]["clearance"]
-        for w, a0, a1 in ((front, -5, 205), (rear, 15, 195)):
-            ax = Vector(w["axle"])
-            R = w["outer_diameter"] / 2 + clr + 1
-            width = w["tyre_width"] + 14
-            fp = part("fenders", M["black"])
-            n = 64
-            prof_k = 9
-            rings = []
-            for i in range(n + 1):
-                a = math.radians(a0 + (a1 - a0) * i / n)
-                radial = Vector((math.cos(a), 0, math.sin(a)))
-                ring = []
-                for j in range(prof_k):
-                    yy = -width / 2 + width * j / (prof_k - 1)
-                    drop = 10 * (2 * yy / width) ** 2
-                    ring.append(fp.bm.verts.new(ax + radial * (R - drop) + Vector((0, yy, 0))))
-                rings.append(ring)
-            for r0, r1 in zip(rings, rings[1:]):
-                for j in range(prof_k - 1):
-                    fp.bm.faces.new((r0[j], r1[j], r1[j + 1], r0[j + 1]))
-            # stays
-            for s in (1, -1):
-                tip = ax + Vector((math.cos(math.radians(a0 + 25)), 0, math.sin(math.radians(a0 + 25)))) * R + Vector((0, s * width / 2, 0))
-                sweep(part("fender_stays", M["steel"]), [ax + Vector((0, s * (w["hub"]["old"] / 2 + 4), 0)), tip], 2.5, segs=8)
-                if w is rear:
-                    tip2 = ax + Vector((math.cos(math.radians(a1 - 20)), 0, math.sin(math.radians(a1 - 20)))) * R + Vector((0, s * width / 2, 0))
-                    sweep(part("fender_stays", M["steel"]), [ax + Vector((0, s * (w["hub"]["old"] / 2 + 4), 0)), tip2], 2.5, segs=8)
+    def boss(p, r=5, length=8):
+        lathe(part("mount_bosses", M["steel"]), disc_profile(0, r, length), p, Y, 16)
 
-    # rear rack, from accessories.rear_rack when it carries geometry
+    # fenders: an arc around the axle with a slightly crowned section, plus stays
+    for which, f in (acc.get("fenders") or {}).items():
+        if not isinstance(f, dict):
+            continue
+        c = Vector((f["centre_xz"][0], 0, f["centre_xz"][1]))
+        R, width = f["radius_inner"], f["width"]
+        a0, a1 = math.radians(f["start_deg"]), math.radians(f["end_deg"])
+        fp = part("fenders", M["black"])
+        n = max(16, int(abs(a1 - a0) / math.radians(3)))
+        cols = 9
+        thick = 1.5
+        outer_rows, inner_rows = [], []
+        for i in range(n + 1):
+            a = a0 + (a1 - a0) * i / n
+            radial = Vector((math.cos(a), 0, math.sin(a)))
+            o_row, i_row = [], []
+            for j in range(cols):
+                yy = -width / 2 + width * j / (cols - 1)
+                drop = 8 * (2 * yy / width) ** 2
+                base = c + radial * (R - drop) + Vector((0, yy, 0))
+                i_row.append(fp.bm.verts.new(base))
+                o_row.append(fp.bm.verts.new(base + radial * thick))
+            outer_rows.append(o_row)
+            inner_rows.append(i_row)
+        for rows, flip in ((outer_rows, False), (inner_rows, True)):
+            for r0, r1 in zip(rows, rows[1:]):
+                for j in range(cols - 1):
+                    q = (r0[j], r1[j], r1[j + 1], r0[j + 1])
+                    fp.bm.faces.new(tuple(reversed(q)) if flip else q)
+        for j in (0, cols - 1):
+            for k in range(n):
+                q = (inner_rows[k][j], inner_rows[k + 1][j], outer_rows[k + 1][j], outer_rows[k][j])
+                fp.bm.faces.new(q if j == 0 else tuple(reversed(q)))
+        for k in (0, n):
+            for j in range(cols - 1):
+                q = (inner_rows[k][j], outer_rows[k][j], outer_rows[k][j + 1], inner_rows[k][j + 1])
+                fp.bm.faces.new(q if k == 0 else tuple(reversed(q)))
+        for st in f.get("stays", []):
+            sweep(part("fender_stays", M["steel"]), [st["from"], st["to"]], st.get("od", 5) / 2, segs=10)
+        for m in f.get("mounts", []):
+            boss(Vector(m["at"]), 4, 6)
+
+    # rear rack: exact tube polylines
     rack = acc.get("rear_rack")
     if isinstance(rack, dict):
-        rp = part("rear_rack", M["steel"])
         r = rack.get("tube_od", 12) / 2
-        pf = rack["platform"]
-        for rail in pf["rails"]:
-            sweep(rp, rail, r, segs=12)
-        hw = pf["width"] / 2
-        for x in pf["cross_bars_x"]:
-            sweep(rp, [(x, -hw, pf["z"]), (x, hw, pf["z"])], r * 0.8, segs=12)
-        mounts = rack.get("frame_mounts", {})
-        for leg, eyelet in zip(rack["legs"], mounts.get("dropout_eyelets", [None] * 2)):
-            sweep(rp, leg, r, segs=12)
-            if eyelet:
-                sweep(rp, [leg[-1], eyelet], r * 0.7, segs=10)
-                lathe(rp, disc_profile(2.5, 7, 5), eyelet, Y, 16)
-        for stay, boss in zip(rack["front_stays"], mounts.get("seatstay_bosses", [None] * 2)):
-            sweep(rp, stay, r * 0.6, segs=10)
-            if boss:
-                sweep(rp, [stay[-1], boss], r * 0.6, segs=10)
-                lathe(rp, disc_profile(2.5, 6, 5), boss, Y, 16)
+        for t in rack.get("tubes", []):
+            sweep(part("rear_rack", M["steel"]), t["pts"], t.get("od", 2 * r) / 2, segs=12)
+        for m in rack.get("mounts", []):
+            boss(Vector(m["at"]))
 
-    # kickstand: two-leg, plate between chainstays behind BB, legs down to the ground
-    if "kickstand" in acc:
-        gz = g["groundZ"]
-        cs = [Vector(p) for p in tubes["chainstay left"]["centreline"]]
-        mount = cs[1].lerp(cs[0], 0.12)
-        box(part("kickstand", M["black"]), Vector((mount.x, 0, mount.z - 15)), (60, 2 * mount.y + 20, 8))
-        for s in (1, -1):
-            sweep(part("kickstand", M["black"]), [(mount.x + 10, s * 25, mount.z - 20), (mount.x + 40, s * 150, gz + 15)], 9, segs=12)
-            box(part("kickstand", M["black"]), (mount.x + 42, s * 152, gz + 5), (40, 30, 10))
+    # chainguard: outer plate in y = plate_y, top lip running inward to lip_to_y
+    cg = acc.get("chainguard")
+    if cg:
+        t = cg.get("plate_thickness", 1.5)
+        y = cg["plate_y"]
+        cp = part("chainguard", M["black"], smooth=False)
+        outline = cg["outline_xz"]
+        a_ring = [cp.bm.verts.new((x, y - t / 2, z)) for x, z in outline]
+        b_ring = [cp.bm.verts.new((x, y + t / 2, z)) for x, z in outline]
+        nv = len(outline)
+        for i in range(nv):
+            j = (i + 1) % nv
+            cp.bm.faces.new((a_ring[i], a_ring[j], b_ring[j], b_ring[i]))
+        # concave outline: keep each side as one n-gon, Blender's polyfill triangulates it correctly
+        cp.bm.faces.new(list(reversed(a_ring)))
+        cp.bm.faces.new(b_ring)
+        lip = cg.get("lip_xz")
+        if lip:
+            y0, y1 = cg.get("lip_from_y", y), cg["lip_to_y"]
+            ra_ = [cp.bm.verts.new((x, y0, z)) for x, z in lip]
+            rb_ = [cp.bm.verts.new((x, y1, z)) for x, z in lip]
+            rc_ = [cp.bm.verts.new((x, y1, z + t)) for x, z in lip]
+            rd_ = [cp.bm.verts.new((x, y0, z + t)) for x, z in lip]
+            for k in range(len(lip) - 1):
+                for u, v in ((ra_, rb_), (rb_, rc_), (rc_, rd_), (rd_, ra_)):
+                    cp.bm.faces.new((u[k], u[k + 1], v[k + 1], v[k]))
+        for m in cg.get("mounts", []):
+            boss(Vector(m["at"]), 4, 6)
 
-    # V-brakes
-    brake_r = front["rim_bsd"] / 2
-    brakes = []
-    blade_post, blade_dir = point_at_distance(g["fork"]["blade_left"], fa, brake_r)
-    if blade_post is not None:
-        brakes.append((fa, blade_post))
-    ss = tubes["seatstay left"]["centreline"]
-    ss_post, _ = point_at_distance(list(reversed(ss)), ra, brake_r)
-    if ss_post is not None:
-        brakes.append((ra, ss_post))
-    for ax, post in brakes:
-        radial = (post - Vector((ax.x, post.y, ax.z))).normalized()
-        for s in (1, -1):
-            p = Vector((post.x, s * abs(post.y), post.z))
-            out = Vector((0, s * 14, 0))
-            top = p + radial * 105 + out
-            sweep(part("brakes", M["alu"]), [p + out * 0.5, p + radial * 30 + out, top], 0, segs=12, radii=[6, 5, 4])
-            box(part("brakes", M["black"]), p + radial * 8 + Vector((0, s * 6, 0)) - radial * 0, (8, 8, 30), basis_from(radial.cross(Y), radial))
-        sweep(part("brakes", M["steel"]), [post + radial * 100 + Vector((0, 16, 0)), post + radial * 100 + Vector((0, -16, 0))], 2, segs=8)
+    # ring (frame) lock: a U-shaped body around the tyre plus the shackle through the spokes
+    rl = acc.get("ring_lock")
+    if isinstance(rl, dict):
+        c = Vector(rl["centre"])
+        radial = Vector((rl["radial_xz"][0], 0, rl["radial_xz"][1])).normalized()
+        travel = Y.cross(radial).normalized()
+        ri, ro, L = rl["inner_radius"], rl["outer_radius"], rl["body_length"]
+        half = math.radians(rl["body_arc_deg"]) / 2
+        lp = part("ring_lock", M["black"])
+        n = 40
+        rings = []
+        for i in range(n + 1):
+            phi = -half + 2 * half * i / n
+            d = math.cos(phi) * radial + math.sin(phi) * Y
+            rings.append([lp.bm.verts.new(c + d * rr + travel * tt) for rr, tt in ((ri, -L / 2), (ro, -L / 2), (ro, L / 2), (ri, L / 2))])
+        for r0, r1 in zip(rings, rings[1:]):
+            for k in range(4):
+                lp.bm.faces.new((r0[k], r1[k], r1[(k + 1) % 4], r0[(k + 1) % 4]))
+        lp.bm.faces.new(list(reversed(rings[0])))
+        lp.bm.faces.new(rings[-1])
+        shackle = []
+        for i in range(25):
+            phi = half + (2 * math.pi - 2 * half) * i / 24
+            d = math.cos(phi) * radial + math.sin(phi) * Y
+            shackle.append(c + d * (ri + ro) / 2)
+        sweep(part("ring_lock_shackle", M["steel"]), shackle, 4.5, segs=12)
+        for m in rl.get("mounts", []):
+            boss(Vector(m["at"]), 4, 6)
 
-    # front carrier block
+    # Brompton-style front carrier block: brazed mount block plus the bolted-on block
     cb = acc.get("front_carrier_block")
-    if cb:
-        ht = [Vector(p) for p in tubes["head tube"]["centreline"]]
-        up = (ht[0] - ht[1]).normalized()
-        fwd = Y.cross(up).normalized() * -1 if Y.cross(up).x < 0 else Y.cross(up).normalized()
-        c = Vector(cb["centre"]) + fwd * 12
-        box(part("carrier_block", M["black"]), c, (46, 50, 24), basis_from(up, fwd))
+    if isinstance(cb, dict):
+        fwd = Vector((cb["forward_xz"][0], 0, cb["forward_xz"][1])).normalized()
+        up = Vector((cb["up_xz"][0], 0, cb["up_xz"][1])).normalized()
+        rot = Matrix((fwd, Y, up)).transposed()
+        mb = cb["mount_block"]
+        box(part("frame_head_tube", M["head"]), Vector(mb["centre"]), (mb["depth"], mb["width"], mb["alongHT"]), rot)
+        for h in mb.get("holes", []):
+            lathe(part("carrier_block_bolts", M["steel"]), disc_profile(0, 4.25, 4), Vector(h) + fwd * (mb["depth"] / 2 + cb["carrier_block"]["depth"] + 2), fwd, 16)
+        blk = cb["carrier_block"]
+        box(part("carrier_block", M["black"]), Vector(blk["centre"]), (blk["depth"], blk["width"], blk["height"]), rot)
 
-    # chainguard: outer plate and top lip over the upper run of the chain
-    if acc.get("chainguard"):
-        y = -d["chainline"]
-        r_ring = 12.7 / (2 * math.sin(math.pi / d["chainring_teeth"]))
-        r_cog = 12.7 / (2 * math.sin(math.pi / d["sprocket_teeth"]))
-        bb = Vector(d["bb_centre"])
-        off = 18
-        samples = []
-        for c, r in ((bb, r_ring + off), (ra, r_cog + off)):
-            for k in range(180):
-                a = 2 * math.pi * k / 180
-                samples.append((round(c.x + r * math.cos(a), 3), round(c.z + r * math.sin(a), 3)))
-        hull = hull2d(samples)
-        # keep the part of the hull above the line through both centres, plus a little below at each end
-        nrm = Vector((-(bb.z - ra.z), bb.x - ra.x)).normalized()
-        if nrm.y < 0:
-            nrm = -nrm
+    # two-leg centre stand
+    ks = acc.get("kickstand")
+    if isinstance(ks, dict):
+        pl = ks["plate"]
+        pc = Vector(pl["centre"])
+        box(part("kickstand", M["black"]), pc, (pl["length"], pl["width"], 6))
+        pivot = Vector(ks["pivot"])
+        box(part("kickstand", M["black"]), (pc + pivot) / 2, (40, 50, (pc - pivot).length + 6))
+        for foot in ks["feet"]:
+            sweep(part("kickstand", M["black"]), [pivot + Vector((0, math.copysign(15, foot[1]), 0)), foot], 8, segs=12)
 
-        def above(p):
-            return (p[0] - ra.x) * nrm.x + (p[1] - ra.z) * nrm.y > -10
-
-        upper = [p for p in hull if above(p)]
-        # order the upper points from rear to front along the hull
-        i0 = max(range(len(hull)), key=lambda i: (not above(hull[i - 1])) and above(hull[i]))
-        ordered = []
-        i = i0
-        for _ in range(len(hull)):
-            if above(hull[i % len(hull)]):
-                ordered.append(hull[i % len(hull)])
-            i += 1
-        ordered = ordered[: len(upper)]
-        prism(part("chainguard", M["black"], smooth=False), ordered, y - 16, y - 14)
-        lip = [Vector((x, y - 14, z)) for x, z in ordered]
-        lp = part("chainguard", M["black"], smooth=False)
-        a_row = [lp.bm.verts.new(p) for p in lip]
-        b_row = [lp.bm.verts.new(p + Vector((0, 26, 0))) for p in lip]
-        for k in range(len(lip) - 1):
-            lp.bm.faces.new((a_row[k], a_row[k + 1], b_row[k + 1], b_row[k]))
-
-    # ring lock on the seatstays above the rear rim
-    if "ring_lock" in acc:
-        ss = [Vector(p) for p in tubes["seatstay left"]["centreline"]]
-        post, _ = point_at_distance([list(p) for p in reversed(ss)], ra, rear["outer_diameter"] / 2 + 30)
+    # V-brakes (accessories.brakes names the type; arms are a generic V-brake at the rim)
+    if acc.get("brakes"):
+        brake_r = front["rim_bsd"] / 2
+        brakes = []
+        if "blade_left" in g["fork"]:
+            post, _ = point_at_distance(g["fork"]["blade_left"], fa, brake_r)
+            if post is not None:
+                brakes.append((fa, post))
+        ss = tubes["seatstay left"]["centreline"]
+        post, _ = point_at_distance(list(reversed(ss)), ra, brake_r)
         if post is not None:
-            radial = (Vector((post.x, 0, post.z)) - Vector((ra.x, 0, ra.z))).normalized()
-            tangent = Y.cross(radial)
-            centre = Vector((post.x, 0, post.z)) - radial * 5
-            body = basis_from(tangent, radial)
-            box(part("ring_lock", M["black"]), centre + radial * 10, (40, 2 * abs(post.y) + 30, 30), body)
-            arc = []
-            for k in range(25):
-                a = math.pi * k / 24
-                arc.append(centre + radial * (10 - 45 * math.sin(a)) + Y * (abs(post.y) + 10) * math.cos(a))
-            sweep(part("ring_lock", M["steel"]), arc, 4, segs=10)
-
-    # bottle bosses on the down tube
-    dt = [Vector(p) for p in tubes["down tube"]["centreline"]]
-    dt_dir = (dt[1] - dt[0]).normalized()
-    up = Y.cross(dt_dir)
-    if up.z < 0:
-        up = -up
-    for f in (0.4, 0.4 + 64 / (dt[1] - dt[0]).length):
-        p = dt[0].lerp(dt[1], f) + up * tubes["down tube"]["od"] / 2
-        lathe(part("bosses", M["steel"]), disc_profile(2.5, 4.5, 6), p, up, 16)
+            brakes.append((ra, post))
+        for ax, post in brakes:
+            radial = (post - Vector((ax.x, post.y, ax.z))).normalized()
+            for s in (1, -1):
+                p = Vector((post.x, s * abs(post.y), post.z))
+                out = Vector((0, s * 14, 0))
+                top = p + radial * 105 + out
+                sweep(part("brakes", M["alu"]), [p + out * 0.5, p + radial * 30 + out, top], 0, segs=12, radii=[6, 5, 4])
+                box(part("brakes", M["black"]), p + radial * 8 + Vector((0, s * 6, 0)), (8, 8, 30), basis_from(radial.cross(Y), radial))
+            sweep(part("brakes", M["steel"]), [post + radial * 100 + Vector((0, abs(post.y) + 16, 0)) - Vector((0, post.y, 0)), post + radial * 100 - Vector((0, abs(post.y) + 16, 0)) - Vector((0, post.y, 0))], 2, segs=8)
 
 
 def decal(col, mat, tube, text):
@@ -756,30 +766,14 @@ def decal(col, mat, tube, text):
 
 
 def clearance_report(g):
-    fk = g["fork"]
     lines = []
-    front = [w for w in g["wheels"] if w["which"] == "front"][0]
-    rear = [w for w in g["wheels"] if w["which"] == "rear"][0]
-    fa, ra = Vector(front["axle"]), Vector(rear["axle"])
-    fR, rR = front["outer_diameter"] / 2, rear["outer_diameter"] / 2
-    crown_bot = Vector(fk["crown"]["bottom"])
-    c = (crown_bot - fa).length - fR
-    lines.append(f"tyre to fork crown underside: {c:.1f} mm")
-    fender = g["accessories"].get("fenders")
-    if fender:
-        need = fender["clearance"] + 2
-        ok = "OK" if c >= need else f"TOO TIGHT: fender at {fender['clearance']} mm clearance plus ~2 mm thickness needs {need} mm"
-        lines.append(f"  front fender under crown: {ok}")
-    tubes = {t["name"].split(" (")[0]: t for t in g["frame"]["tubes"]}
-    for name in ("seat tube", "step tube", "down tube"):
-        a, b = tubes[name]["centreline"]
-        dist = dist_point_segment(Vector((ra.x, 0, ra.z)), a, b) - rR - tubes[name]["od"] / 2
-        lines.append(f"rear tyre to {name}: {dist:.1f} mm")
-    a, b = tubes["down tube"]["centreline"]
-    dist = dist_point_segment(Vector((fa.x, 0, fa.z)), a, b) - fR - tubes["down tube"]["od"] / 2
-    lines.append(f"front tyre to down tube (fork straight): {dist:.1f} mm")
+    for c in g.get("clearances", []):
+        flag = "" if c.get("ok", True) else "  << NOT OK"
+        lines.append(f"{c['what']}: {c['mm']} mm{flag}")
     gz = g["groundZ"]
-    lines.append(f"wheel ground contact check: front {fa.z - fR - gz:+.1f} mm, rear {ra.z - rR - gz:+.1f} mm from ground plane")
+    for w in g["wheels"]:
+        gap = w["axle"][2] - w["outer_diameter"] / 2 - gz
+        lines.append(f"{w['which']} tyre to ground plane: {gap:+.1f} mm")
     return lines
 
 
